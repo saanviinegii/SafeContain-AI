@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: safecontain-backend-svc
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+  selector:
+    app: safecontain-backend
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: safecontain-frontend-svc
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 80
+      name: http
+  selector:
+    app: safecontain-frontend
