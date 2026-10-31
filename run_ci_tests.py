@@ -1,16 +1,21 @@
 import sys
-import io
 import pytest
+
+class DiagnosticPlugin:
+    def pytest_collectreport(self, report):
+        if report.failed:
+            err_msg = str(report.longrepr).replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+            print(f"::error title=CollectError::{err_msg}")
+
+    def pytest_sessionfinish(self, session, exitstatus):
+        items_count = len(getattr(session, 'items', []))
+        print(f"::notice title=SessionSummary::ExitStatus={exitstatus}, items_collected={items_count}")
 
 def main():
     print("=== STARTING PYTEST TEST EXECUTION ===")
-    # Capture output
-    buf = io.StringIO()
-    # Run pytest
-    ret = pytest.main(["tests", "-v", "--tb=short", "-p", "no:warnings"])
+    plugin = DiagnosticPlugin()
+    ret = pytest.main(["tests", "-v", "--tb=short", "-p", "no:warnings"], plugins=[plugin])
     print(f"=== PYTEST FINISHED WITH EXIT CODE: {ret} ===")
-    if ret != 0:
-        print(f"::error title=Pytest Failure::Pytest exited with status code {ret}")
     return ret
 
 if __name__ == "__main__":
