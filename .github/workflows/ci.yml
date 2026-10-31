@@ -28,7 +28,12 @@ jobs:
         env:
           PYTHONPATH: .
         run: |
-          python -m pytest -v
+          python -m pytest tests -v --tb=short 2>&1 | tee pytest_output.txt || true
+          echo "### Pytest Execution Output" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat pytest_output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          python -m pytest tests -v
 
 
   frontend-build:
