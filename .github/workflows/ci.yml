@@ -24,8 +24,10 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run Pytest Test Suite
+        env:
+          PYTHONPATH: .
         run: |
-          pytest -v --strict-markers
+          python -m pytest -v --strict-markers
 
   frontend-build:
     name: Frontend Build & Typecheck
