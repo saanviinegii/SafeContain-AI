@@ -34,3 +34,4 @@ audit_ledger.jsonl
 Thumbs.db
 .vscode/
 .idea/
+*.zip
