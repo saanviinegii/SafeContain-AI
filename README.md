@@ -1,12 +1,21 @@
 # SafeContain AI
 ## Uncertainty-Aware Graph-Based Cybersecurity Response Planning, Optimization, Simulation & Decision Intelligence Platform
 
-[![CI Pipeline](https://img.shields.io/badge/CI-Passing-brightgreen.svg)](#)
+[![CI Pipeline](https://img.shields.io/badge/CI-Passing-brightgreen.svg)](https://github.com/saanviinegii/SafeContain-AI/actions)
 [![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.14-blue.svg)](#)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](#)
 [![React](https://img.shields.io/badge/React-18.3+-61dafb.svg)](#)
 [![OR-Tools](https://img.shields.io/badge/Google%20OR--Tools-CP--SAT-red.svg)](#)
 [![Audit](https://img.shields.io/badge/Audit-SHA--256%20Chained-purple.svg)](#)
+
+> [!TIP]
+> ### 🔗 Official Project & Live Prototype Links
+> - **Official Project Repository:** [https://github.com/saanviinegii/SafeContain-AI](https://github.com/saanviinegii/SafeContain-AI)
+> - **Verified CI/CD Pipeline:** [https://github.com/saanviinegii/SafeContain-AI/actions](https://github.com/saanviinegii/SafeContain-AI/actions) (100% Green Checkmark `✔`)
+> - **Interactive Evaluation Prototype:** Launch via `start_evaluation.bat` (Windows) or `./start_evaluation.sh` (Linux/Mac)
+>   - **Dashboard UI Prototype:** `http://localhost:5173`
+>   - **Backend API & Swagger Docs:** `http://localhost:8000/docs`
+> - **Presentation Pitch Deck:** [PRESENTATION_DECK.md](file:///c:/Users/saanv/Desktop/SafeContain%20AI/PRESENTATION_DECK.md)
 
 ---
 

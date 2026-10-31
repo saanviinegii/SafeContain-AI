@@ -4,13 +4,18 @@ Welcome to the **SafeContain AI** Evaluation Package. This guide provides step-b
 
 ---
 
-## 1. Submission Overview
+## 1. Submission Overview & Prototype Links
 
 - **Author / Lead Architect:** Saanvi Negi
 - **System Classification:** Government-Ready, Uncertainty-Aware Cybersecurity Containment Planning & Simulation Platform
+- **Official Project Repository:** [https://github.com/saanviinegii/SafeContain-AI](https://github.com/saanviinegii/SafeContain-AI)
+- **Verified CI/CD Pipeline:** [https://github.com/saanviinegii/SafeContain-AI/actions](https://github.com/saanviinegii/SafeContain-AI/actions)
+- **Interactive Evaluation Prototype:**
+  - **Frontend UI Prototype:** `http://localhost:5173` (via `start_evaluation.bat` / `start_evaluation.sh`)
+  - **FastAPI OpenAPI / Swagger Endpoint:** `http://localhost:8000/docs`
+  - **System Health API:** `http://localhost:8000/api/v1/health`
 - **Test Suite Pass Rate:** 100% (37 of 37 passed)
 - **CI/CD Pipeline Status:** Verified Green (`✔`) on GitHub Actions
-- **Official GitHub Repository:** [https://github.com/saanviinegii/SafeContain-AI](https://github.com/saanviinegii/SafeContain-AI)
 
 ---
 
