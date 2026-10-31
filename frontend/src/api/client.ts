@@ -39,7 +39,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ budget_limit: budgetLimit, strategy }),
     }),
-  runSimulation: () => fetchApi<any>('/simulation/run', { method: 'POST' }),
+  runSimulation: (req?: { action_ids?: string[]; strategy?: string; budget_limit?: number }) =>
+    fetchApi<any>('/simulation/run', {
+      method: 'POST',
+      body: req ? JSON.stringify(req) : undefined,
+    }),
   getExplanation: () => fetchApi<any>('/explanation/recommendation'),
   transitionGovernance: (targetStatus: string, actorRole: string, notes: string) =>
     fetchApi<any>('/governance/transition', {

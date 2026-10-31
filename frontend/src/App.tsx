@@ -67,6 +67,9 @@ export const App: React.FC = () => {
   const [metrics, setMetrics] = useState<any>(null);
   const [selectedNode, setSelectedNode] = useState<any>(null);
   const [notification, setNotification] = useState<string | null>(null);
+  const [isSimulating, setIsSimulating] = useState<boolean>(false);
+  const [selectedActionIds, setSelectedActionIds] = useState<string[]>([]);
+  const [simulationStrategy, setSimulationStrategy] = useState<string>('CONSTRAINT_CPSAT');
 
   const showNotification = (msg: string) => {
     setNotification(msg);
@@ -98,6 +101,9 @@ export const App: React.FC = () => {
       setCandidateActions(cands);
       setStrategyComparison(comp);
       setSimulationResult(sim);
+      if (sim?.applied_action_ids) {
+        setSelectedActionIds(sim.applied_action_ids);
+      }
       setExplanation(exp);
       setAuditEvents(ledger);
       setAuditIntegrity(intReport);
@@ -109,6 +115,49 @@ export const App: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRunSimulation = async (actionIds?: string[], strategy?: string) => {
+    setIsSimulating(true);
+    try {
+      const idsToSimulate = actionIds !== undefined ? actionIds : selectedActionIds;
+      const stratToSimulate = strategy || simulationStrategy;
+      if (strategy) {
+        setSimulationStrategy(strategy);
+      }
+      const sim = await api.runSimulation({
+        action_ids: idsToSimulate,
+        strategy: stratToSimulate,
+      });
+      setSimulationResult(sim);
+      if (sim?.applied_action_ids) {
+        setSelectedActionIds(sim.applied_action_ids);
+      }
+
+      // Non-blocking background sync of explanation, audit ledger, and metrics
+      const [exp, ledger, mets] = await Promise.all([
+        api.getExplanation(),
+        api.getAuditLedger(50),
+        api.getMetrics(),
+      ]);
+      setExplanation(exp);
+      setAuditEvents(ledger);
+      setMetrics(mets);
+      showNotification(
+        `Simulation finished: Residual risk ${sim.residual_risk_score}/100, ${sim.residual_attack_path_count} paths remaining.`
+      );
+    } catch (err: any) {
+      console.error('Simulation failed:', err);
+      showNotification(`Simulation error: ${err.message}`);
+    } finally {
+      setIsSimulating(false);
+    }
+  };
+
+  const toggleAction = (id: string) => {
+    setSelectedActionIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
   };
 
   useEffect(() => {
@@ -751,6 +800,7 @@ export const App: React.FC = () => {
                           <th>Predicted Residual</th>
                           <th>SLA Satisfied</th>
                           <th>Solver Latency</th>
+                          <th>Simulate</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -764,6 +814,18 @@ export const App: React.FC = () => {
                               <td>{strategyComparison.strategies.BASELINE_SEVERITY.predicted_residual_risk}</td>
                               <td><span className="badge badge-crimson">FALSE</span></td>
                               <td>{strategyComparison.benchmarks.baseline_latency_ms} ms</td>
+                              <td>
+                                <button
+                                  className="btn-secondary"
+                                  style={{ padding: '3px 8px', fontSize: '11px' }}
+                                  onClick={() => {
+                                    handleRunSimulation(undefined, 'BASELINE_SEVERITY');
+                                    setActiveView('SIMULATION_SANDBOX');
+                                  }}
+                                >
+                                  Simulate
+                                </button>
+                              </td>
                             </tr>
                             <tr>
                               <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Strategy 2: Greedy Risk-Per-Cost</td>
@@ -773,6 +835,18 @@ export const App: React.FC = () => {
                               <td>{strategyComparison.strategies.GREEDY_RISK_COST.predicted_residual_risk}</td>
                               <td><span className="badge badge-emerald">TRUE</span></td>
                               <td>{strategyComparison.benchmarks.greedy_latency_ms} ms</td>
+                              <td>
+                                <button
+                                  className="btn-secondary"
+                                  style={{ padding: '3px 8px', fontSize: '11px' }}
+                                  onClick={() => {
+                                    handleRunSimulation(undefined, 'GREEDY_RISK_COST');
+                                    setActiveView('SIMULATION_SANDBOX');
+                                  }}
+                                >
+                                  Simulate
+                                </button>
+                              </td>
                             </tr>
                             <tr style={{ background: 'rgba(6, 182, 212, 0.08)' }}>
                               <td style={{ fontWeight: 700, color: 'var(--accent-cyan)' }}>Strategy 3: Constraint CP-SAT (Recommended)</td>
@@ -782,6 +856,18 @@ export const App: React.FC = () => {
                               <td>{strategyComparison.strategies.CONSTRAINT_CPSAT.predicted_residual_risk}</td>
                               <td><span className="badge badge-emerald">TRUE</span></td>
                               <td>{strategyComparison.benchmarks.cpsat_latency_ms} ms</td>
+                              <td>
+                                <button
+                                  className="btn-primary"
+                                  style={{ padding: '3px 8px', fontSize: '11px' }}
+                                  onClick={() => {
+                                    handleRunSimulation(undefined, 'CONSTRAINT_CPSAT');
+                                    setActiveView('SIMULATION_SANDBOX');
+                                  }}
+                                >
+                                  Simulate
+                                </button>
+                              </td>
                             </tr>
                           </>
                         )}
@@ -797,7 +883,9 @@ export const App: React.FC = () => {
                   <div className="grid-cards">
                     <div className="metric-card">
                       <div className="metric-title">Simulation Status</div>
-                      <div className="metric-value" style={{ color: '#34d399' }}>COMPLETED</div>
+                      <div className="metric-value" style={{ color: '#34d399' }}>
+                        {isSimulating ? 'SIMULATING...' : 'COMPLETED'}
+                      </div>
                       <div className="metric-desc">Executed on isolated graph snapshot</div>
                     </div>
                     <div className="metric-card">
@@ -817,14 +905,100 @@ export const App: React.FC = () => {
                   <div className="data-table-container">
                     <div className="table-header">
                       <div className="table-title">Forensic Snapshot Verification</div>
-                      <span className="badge badge-purple">SHA-256: {simulationResult?.audit_hash.slice(0, 16)}...</span>
+                      <span className="badge badge-purple">SHA-256: {simulationResult?.audit_hash?.slice(0, 16)}...</span>
                     </div>
                     <div style={{ padding: '20px' }}>
                       <p style={{ lineHeight: 1.6, marginBottom: '14px' }}>{simulationResult?.explanation}</p>
-                      <button className="btn-primary" onClick={() => loadAllData()}>
-                        <RefreshCw size={14} /> Re-run What-If Simulation
-                      </button>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        <button
+                          className="btn-primary"
+                          onClick={() => handleRunSimulation()}
+                          disabled={isSimulating}
+                        >
+                          <RefreshCw size={14} className={isSimulating ? 'spin' : ''} />
+                          {isSimulating ? 'Executing Isolated Simulation...' : 'Re-run What-If Simulation'}
+                        </button>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
+                          Active interventions in snapshot: {selectedActionIds.length} of {candidateActions.length}
+                        </span>
+                      </div>
                     </div>
+                  </div>
+
+                  <div className="data-table-container">
+                    <div className="table-header">
+                      <div className="table-title">What-If Intervention Selector</div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          className="btn-secondary"
+                          style={{ padding: '4px 10px', fontSize: '12px' }}
+                          onClick={() => {
+                            const optIds = strategyComparison?.strategies?.CONSTRAINT_CPSAT?.actions?.map((a: any) => a.id) || [];
+                            setSelectedActionIds(optIds);
+                            handleRunSimulation(optIds, 'CONSTRAINT_CPSAT');
+                          }}
+                        >
+                          CP-SAT Optimal
+                        </button>
+                        <button
+                          className="btn-secondary"
+                          style={{ padding: '4px 10px', fontSize: '12px' }}
+                          onClick={() => {
+                            const allIds = candidateActions.map(a => a.id);
+                            setSelectedActionIds(allIds);
+                            handleRunSimulation(allIds);
+                          }}
+                        >
+                          Select All
+                        </button>
+                        <button
+                          className="btn-secondary"
+                          style={{ padding: '4px 10px', fontSize: '12px' }}
+                          onClick={() => {
+                            setSelectedActionIds([]);
+                            handleRunSimulation([]);
+                          }}
+                        >
+                          Clear All (0 Actions)
+                        </button>
+                      </div>
+                    </div>
+                    <table className="safe-table">
+                      <thead>
+                        <tr>
+                          <th style={{ width: '40px' }}>Simulate</th>
+                          <th>Action ID</th>
+                          <th>Type</th>
+                          <th>Target Entity</th>
+                          <th>Risk Reduction</th>
+                          <th>Cost</th>
+                          <th>Disruption</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {candidateActions.map(a => {
+                          const isSelected = selectedActionIds.includes(a.id);
+                          return (
+                            <tr key={a.id} style={{ background: isSelected ? 'rgba(56, 189, 248, 0.05)' : undefined }}>
+                              <td>
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => toggleAction(a.id)}
+                                  style={{ cursor: 'pointer', accentColor: 'var(--accent-cyan)' }}
+                                />
+                              </td>
+                              <td style={{ fontFamily: 'var(--font-mono)' }}>{a.id}</td>
+                              <td><span className="badge badge-blue">{a.action_type}</span></td>
+                              <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{a.target_node_name}</td>
+                              <td>+{a.estimated_risk_reduction}</td>
+                              <td>${a.implementation_cost}</td>
+                              <td>{a.operational_disruption_score}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               )}

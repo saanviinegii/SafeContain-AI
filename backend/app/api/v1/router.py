@@ -6,6 +6,7 @@ counterfactual explanation, multi-tier governance, and cryptographic audit.
 """
 
 import json
+import uuid
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
@@ -211,20 +212,60 @@ def optimize_containment(req: OptimizeRequest) -> Dict[str, Any]:
 # SIMULATION & DECISION EXPLANATION ENDPOINTS
 # =====================================================================
 
+class SimulationRequest(BaseModel):
+    action_ids: Optional[List[str]] = None
+    strategy: Optional[OptimizationStrategy] = None
+    budget_limit: Optional[float] = None
+
+
 @api_router.post("/simulation/run", response_model=SimulationResult, tags=["Simulation"])
-def run_isolated_simulation() -> SimulationResult:
+def run_isolated_simulation(req: Optional[SimulationRequest] = None) -> SimulationResult:
     """Executes isolated snapshot simulation and verifies residual attack paths."""
-    if not platform_ctx.current_plan:
-        # Generate default optimal plan if none exists
-        paths = platform_ctx.engine.find_attack_paths()
-        nodes = {n.id: n for n in platform_ctx.engine.get_all_nodes()}
-        candidates = ActionCatalog.generate_candidate_actions(paths, nodes)
-        platform_ctx.current_plan = CPSATOptimizer.plan(
-            candidates, platform_ctx.twin, platform_ctx.engine, 10000.0
+    paths = platform_ctx.engine.find_attack_paths()
+    nodes = {n.id: n for n in platform_ctx.engine.get_all_nodes()}
+    candidates = ActionCatalog.generate_candidate_actions(paths, nodes)
+    candidate_map = {a.id: a for a in candidates}
+
+    target_plan: Optional[ContainmentPlan] = None
+
+    if req and req.action_ids is not None:
+        # Build plan with specifically requested containment actions
+        selected_actions = [candidate_map[aid] for aid in req.action_ids if aid in candidate_map]
+        total_cost = sum(a.implementation_cost for a in selected_actions)
+        total_disruption = sum(a.operational_disruption_score for a in selected_actions)
+        strat = req.strategy or (
+            platform_ctx.current_plan.strategy if platform_ctx.current_plan else OptimizationStrategy.CONSTRAINT_CPSAT
         )
+        target_plan = ContainmentPlan(
+            id=f"plan-whatif-{uuid.uuid4().hex[:8]}",
+            strategy=strat,
+            actions=selected_actions,
+            total_cost=total_cost,
+            total_disruption_score=total_disruption,
+            predicted_risk_reduction=sum(a.estimated_risk_reduction for a in selected_actions),
+            predicted_residual_risk=0.0,
+            satisfies_all_constraints=True,
+            objective_score=1.0,
+            status=ApprovalStatus.DRAFT,
+            explanation=f"What-If custom simulation applying {len(selected_actions)} selected containment actions.",
+        )
+    elif req and req.strategy is not None:
+        budget = req.budget_limit or 10000.0
+        if req.strategy == OptimizationStrategy.CONSTRAINT_CPSAT:
+            target_plan = CPSATOptimizer.plan(candidates, platform_ctx.twin, platform_ctx.engine, budget)
+        elif req.strategy == OptimizationStrategy.GREEDY_RISK_COST:
+            target_plan = GreedyOptimizer.plan(candidates, budget)
+        else:
+            target_plan = BaselinePlanner.plan(candidates, budget)
+    elif platform_ctx.current_plan:
+        target_plan = platform_ctx.current_plan
+    else:
+        target_plan = CPSATOptimizer.plan(candidates, platform_ctx.twin, platform_ctx.engine, 10000.0)
+
+    platform_ctx.current_plan = target_plan
 
     sim_result = SimulationSandbox.simulate_containment_plan(
-        platform_ctx.current_plan, platform_ctx.engine, platform_ctx.twin
+        target_plan, platform_ctx.engine, platform_ctx.twin
     )
     platform_ctx.current_plan.status = ApprovalStatus.SIMULATED
     platform_ctx.last_simulation = sim_result
@@ -241,6 +282,7 @@ def run_isolated_simulation() -> SimulationResult:
             "initial_risk": sim_result.initial_risk_score,
             "residual_risk": sim_result.residual_risk_score,
             "residual_paths": sim_result.residual_attack_path_count,
+            "applied_actions": sim_result.applied_action_ids,
             "audit_hash": sim_result.audit_hash,
         },
     )

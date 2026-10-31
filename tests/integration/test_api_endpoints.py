@@ -62,6 +62,37 @@ def test_planning_optimization_and_simulation():
     assert len(sim_data["audit_hash"]) == 64
 
 
+def test_whatif_simulation_with_custom_actions_and_strategies():
+    # 1. Fetch candidates
+    res_cands = client.get("/api/v1/planning/candidates")
+    assert res_cands.status_code == 200
+    candidates = res_cands.json()
+    assert len(candidates) > 0
+
+    # 2. Simulate empty action list -> threat remains uncontained
+    res_empty = client.post("/api/v1/simulation/run", json={"action_ids": []})
+    assert res_empty.status_code == 200
+    empty_data = res_empty.json()
+    assert empty_data["residual_attack_path_count"] == empty_data["initial_attack_path_count"]
+    assert empty_data["is_fully_contained"] is False
+    assert empty_data["residual_risk_score"] == empty_data["initial_risk_score"]
+
+    # 3. Simulate with all candidate actions -> risk reduction achieved
+    all_ids = [c["id"] for c in candidates]
+    res_all = client.post("/api/v1/simulation/run", json={"action_ids": all_ids})
+    assert res_all.status_code == 200
+    all_data = res_all.json()
+    assert all_data["residual_risk_score"] < empty_data["residual_risk_score"]
+    assert all_data["residual_attack_path_count"] < empty_data["residual_attack_path_count"]
+    assert len(all_data["applied_action_ids"]) == len(all_ids)
+
+    # 4. Simulate with strategy selection
+    res_strat = client.post("/api/v1/simulation/run", json={"strategy": "GREEDY_RISK_COST", "budget_limit": 5000.0})
+    assert res_strat.status_code == 200
+    strat_data = res_strat.json()
+    assert "residual_risk_score" in strat_data
+
+
 def test_governance_and_audit_verification():
     # Ensure a plan has been simulated so its status is SIMULATED
     client.post("/api/v1/simulation/run")
