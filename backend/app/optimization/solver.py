@@ -7,8 +7,10 @@ Implements:
    preserving critical workflow SLAs under budget bounds.
 """
 
+from __future__ import annotations
+
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from ortools.sat.python import cp_model
 
 from backend.app.business.twin import BusinessContinuityTwin
