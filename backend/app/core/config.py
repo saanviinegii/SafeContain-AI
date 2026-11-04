@@ -4,8 +4,8 @@ Provides centralized, validated configuration for graph connections, database,
 risk thresholds, solver parameters, security policies, and audit retention.
 """
 
-from typing import List, Optional
-from pydantic import Field
+from typing import Any, List, Optional, Union
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "SafeContain AI"
     VERSION: str = "1.0.0"
     API_V1_PREFIX: str = "/api/v1"
+    PORT: int = Field(default=8000, description="Server port, automatically populated by Render/Cloud platforms")
     ENVIRONMENT: str = Field(default="development", description="development | testing | staging | production")
     DEBUG: bool = False
     
@@ -62,7 +63,23 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
     ]
-    
+
+    @field_validator("ALLOWED_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Any) -> List[str]:
+        if isinstance(v, str):
+            clean_str = v.strip()
+            if clean_str.startswith("["):
+                import json
+                try:
+                    return json.loads(clean_str)
+                except Exception:
+                    pass
+            return [origin.strip() for origin in clean_str.split(",") if origin.strip()]
+        elif isinstance(v, (list, tuple)):
+            return list(v)
+        return []
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

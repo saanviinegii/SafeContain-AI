@@ -1,0 +1,32 @@
+# ==============================================================================
+# SafeContain AI — Render Blueprint Infrastructure-as-Code Configuration
+# Deploy directly at: https://dashboard.render.com/blueprints
+# ==============================================================================
+version: "1"
+
+services:
+  # ----------------------------------------------------------------------------
+  # SafeContain AI Full-Stack Unified Service
+  # Runs FastAPI + React Enterprise Console on Render Container Cloud
+  # ----------------------------------------------------------------------------
+  - type: web
+    name: safecontain-ai
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free # Can be upgraded to starter or standard via Render Dashboard
+    region: oregon # Available: oregon, ohio, virginia, frankfurt, singapore
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: GRAPH_BACKEND
+        value: dual
+      - key: USE_SQLITE_FALLBACK
+        value: "true"
+      - key: AUDIT_LEDGER_STORAGE_PATH
+        value: "/app/data/audit_ledger.jsonl"
+      - key: VERIFY_AUDIT_INTEGRITY_ON_STARTUP
+        value: "true"
+      - key: SECRET_KEY
+        generateValue: true

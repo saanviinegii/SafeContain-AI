@@ -13,6 +13,9 @@
    - Full-stack compose deployment mounting Backend, Frontend, Neo4j (APOC), and PostgreSQL with automated health probes.
 3. **Cloud Native (Kubernetes / OpenShift):**
    - Multi-replica Deployment profiles in `k8s/` with ConfigMaps, ClusterIP, and LoadBalancer services for high-availability enterprise SOCs.
+4. **Cloud Managed Container (Render Cloud Platform):**
+   - Production multi-stage Docker deployment with automated CI/CD Blueprint (`render.yaml`).
+   - Serves unified FastAPI backend + React Enterprise Web Console with zero CORS friction. See [RENDER_DEPLOYMENT_GUIDE.md](file:///c:/Users/saanv/Desktop/SafeContain%20AI/RENDER_DEPLOYMENT_GUIDE.md).
 
 ---
 

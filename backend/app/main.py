@@ -5,8 +5,12 @@ CORS policies, and automatic scenario initialization.
 """
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+import os
+from pathlib import Path
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from backend.app.api.v1.router import api_router, platform_ctx
 from backend.app.core.config import settings
@@ -46,6 +50,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://.*\.onrender\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,7 +60,8 @@ app.add_middleware(
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 
-@app.get("/")
+@app.get("/api/v1")
+@app.get("/status")
 def root_status():
     """Platform identity and service locator."""
     return {
@@ -68,6 +74,30 @@ def root_status():
     }
 
 
+# Static file serving and SPA fallback for unified production deployment
+FRONTEND_DIST_DIR = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+
+if FRONTEND_DIST_DIR.exists() and (FRONTEND_DIST_DIR / "index.html").is_file():
+    assets_dir = FRONTEND_DIST_DIR / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="frontend_assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        if full_path.startswith("api/") or full_path in ("docs", "redoc", "openapi.json"):
+            raise HTTPException(status_code=404, detail="Resource not found")
+        target_file = FRONTEND_DIST_DIR / full_path
+        if full_path and target_file.is_file():
+            return FileResponse(target_file)
+        return FileResponse(FRONTEND_DIST_DIR / "index.html")
+else:
+    @app.get("/")
+    def default_root():
+        return root_status()
+
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("backend.app.main:app", host="127.0.0.1", port=8000, reload=True)
+    port = int(os.environ.get("PORT", settings.PORT))
+    uvicorn.run("backend.app.main:app", host="0.0.0.0", port=port, reload=False)
+

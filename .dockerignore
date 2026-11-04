@@ -1,0 +1,16 @@
+.git
+.github
+.venv
+frontend/node_modules
+frontend/dist
+.pytest_cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.env
+*.zip
+*.pdf
+tests/
+audit_ledger.jsonl
+*.egg-info
