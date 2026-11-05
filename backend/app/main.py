@@ -30,6 +30,8 @@ async def lifespan(app: FastAPI):
             platform_ctx.engine.add_edge(edge)
         platform_ctx.twin.discover_dependencies_from_graph(platform_ctx.engine)
         platform_ctx.active_scenario_name = "Operation Sovereign Gateway (Startup Synthetic)"
+        if platform_ctx.engine.is_neo4j_live:
+            platform_ctx.engine.sync_to_neo4j()
     yield
 
 

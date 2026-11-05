@@ -101,6 +101,9 @@ def load_synthetic_scenario(scenario_name: str = "Operation Sovereign Gateway") 
     platform_ctx.active_scenario_name = scenario_name
     MetricsCollector.record_ingestion(len(result.nodes) + len(result.edges))
 
+    if platform_ctx.engine.is_neo4j_live:
+        platform_ctx.engine.sync_to_neo4j()
+
     # Audit the ingestion
     platform_ctx.ledger.record_event(
         actor_id="soc-operator",
@@ -137,6 +140,43 @@ def get_graph_topology() -> Dict[str, Any]:
 def get_attack_paths() -> List[AttackPath]:
     """Discovers all directed attack paths from compromised nodes to crown jewels."""
     return platform_ctx.engine.find_attack_paths()
+
+
+@api_router.get("/graph/neo4j/status", tags=["Graph Intelligence"])
+def get_neo4j_connection_status() -> Dict[str, Any]:
+    """Returns real-time connection status and entity counts for live Neo4j."""
+    return platform_ctx.engine.get_neo4j_status()
+
+
+@api_router.post("/graph/neo4j/sync", tags=["Graph Intelligence"])
+def sync_topology_to_neo4j() -> Dict[str, Any]:
+    """Flushes and synchronizes active graph topology into live Neo4j instance."""
+    result = platform_ctx.engine.sync_to_neo4j()
+    platform_ctx.ledger.record_event(
+        actor_id="soc-admin",
+        actor_role=UserRole.INCIDENT_COMMANDER,
+        action="NEO4J_TOPOLOGY_SYNC",
+        resource_type="GraphTopology",
+        resource_id=f"neo4j-{settings.NEO4J_DATABASE}",
+        metadata=result,
+    )
+    return result
+
+
+@api_router.post("/graph/neo4j/load", tags=["Graph Intelligence"])
+def load_topology_from_neo4j() -> Dict[str, Any]:
+    """Imports topology from live Neo4j into in-memory traversal engine."""
+    result = platform_ctx.engine.load_from_neo4j()
+    platform_ctx.twin.discover_dependencies_from_graph(platform_ctx.engine)
+    platform_ctx.ledger.record_event(
+        actor_id="soc-admin",
+        actor_role=UserRole.INCIDENT_COMMANDER,
+        action="NEO4J_TOPOLOGY_IMPORT",
+        resource_type="GraphTopology",
+        resource_id=f"neo4j-{settings.NEO4J_DATABASE}",
+        metadata=result,
+    )
+    return result
 
 
 # =====================================================================
