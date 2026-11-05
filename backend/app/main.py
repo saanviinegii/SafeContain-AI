@@ -84,7 +84,7 @@ if FRONTEND_DIST_DIR.exists() and (FRONTEND_DIST_DIR / "index.html").is_file():
 
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
-        if full_path.startswith("api/") or full_path in ("docs", "redoc", "openapi.json"):
+        if full_path == "api" or full_path.startswith("api/") or full_path in ("docs", "redoc", "openapi.json"):
             raise HTTPException(status_code=404, detail="Resource not found")
         target_file = FRONTEND_DIST_DIR / full_path
         if full_path and target_file.is_file():

@@ -126,6 +126,9 @@ class ChainedAuditLedger:
     def _persist_event(self, event: AuditEvent) -> None:
         """Persists single event line to JSONL storage."""
         try:
+            parent_dir = os.path.dirname(self.storage_path)
+            if parent_dir and not os.path.exists(parent_dir):
+                os.makedirs(parent_dir, exist_ok=True)
             with open(self.storage_path, "a", encoding="utf-8") as f:
                 f.write(event.model_dump_json() + "\n")
         except Exception:

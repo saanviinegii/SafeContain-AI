@@ -13,6 +13,7 @@ services:
     name: safecontain-ai
     runtime: docker
     dockerfilePath: ./Dockerfile
+    dockerContext: .
     plan: free # Can be upgraded to starter or standard via Render Dashboard
     region: oregon # Available: oregon, ohio, virginia, frankfurt, singapore
     healthCheckPath: /api/v1/health
