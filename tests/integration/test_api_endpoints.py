@@ -4,10 +4,14 @@ import pytest
 from fastapi.testclient import TestClient
 from backend.app.main import app
 
-client = TestClient(app)
+
+@pytest.fixture
+def client():
+    with TestClient(app) as c:
+        yield c
 
 
-def test_health_and_security_headers():
+def test_health_and_security_headers(client):
     response = client.get("/api/v1/health")
     assert response.status_code == 200
     data = response.json()
@@ -19,7 +23,7 @@ def test_health_and_security_headers():
     assert "X-Correlation-ID" in response.headers
 
 
-def test_scenario_load_and_topology():
+def test_scenario_load_and_topology(client):
     res_load = client.post("/api/v1/scenario/load-synthetic?scenario_name=TestGateway")
     assert res_load.status_code == 200
     assert res_load.json()["provenance"] == "SYNTHETIC"
@@ -31,7 +35,7 @@ def test_scenario_load_and_topology():
     assert len(topo["edges"]) >= 5
 
 
-def test_attack_paths_and_decomposed_risk():
+def test_attack_paths_and_decomposed_risk(client):
     res_paths = client.get("/api/v1/graph/attack-paths")
     assert res_paths.status_code == 200
     paths = res_paths.json()
@@ -45,7 +49,7 @@ def test_attack_paths_and_decomposed_risk():
     assert len(risk["contributing_factors"]) == 3
 
 
-def test_planning_optimization_and_simulation():
+def test_planning_optimization_and_simulation(client):
     # Run optimization
     res_opt = client.post("/api/v1/planning/optimize", json={"budget_limit": 5000.0, "strategy": "CONSTRAINT_CPSAT"})
     assert res_opt.status_code == 200
@@ -62,7 +66,7 @@ def test_planning_optimization_and_simulation():
     assert len(sim_data["audit_hash"]) == 64
 
 
-def test_whatif_simulation_with_custom_actions_and_strategies():
+def test_whatif_simulation_with_custom_actions_and_strategies(client):
     # 1. Fetch candidates
     res_cands = client.get("/api/v1/planning/candidates")
     assert res_cands.status_code == 200
@@ -93,7 +97,7 @@ def test_whatif_simulation_with_custom_actions_and_strategies():
     assert "residual_risk_score" in strat_data
 
 
-def test_governance_and_audit_verification():
+def test_governance_and_audit_verification(client):
     # Ensure a plan has been simulated so its status is SIMULATED
     client.post("/api/v1/simulation/run")
 
@@ -131,7 +135,7 @@ def test_governance_and_audit_verification():
     assert audit_report["total_events_checked"] > 0
 
 
-def test_report_exports():
+def test_report_exports(client):
     res_json = client.get("/api/v1/reports/export?format=json")
     assert res_json.status_code == 200
     assert res_json.json()["format"] == "json"

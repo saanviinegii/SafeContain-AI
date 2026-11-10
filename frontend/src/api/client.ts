@@ -1,16 +1,40 @@
 /**
  * SafeContain AI Frontend REST API Client.
  * Connects directly to FastAPI backend /api/v1/ endpoints.
+ * Automatically resolves endpoint URL across local dev, static preview, and unified cloud production.
  */
 
-const rawBase = ((import.meta as any).env?.VITE_API_BASE_URL as string | undefined)?.replace(/\/+$/, '') || '';
-const API_BASE = rawBase
-  ? (rawBase.endsWith('/api/v1') ? rawBase : `${rawBase}/api/v1`)
-  : '/api/v1';
+export function resolveApiBase(): string {
+  // 1. Explicit environment variable takes absolute priority
+  const envUrl = ((import.meta as any).env?.VITE_API_BASE_URL as string | undefined)?.replace(/\/+$/, '');
+  if (envUrl) {
+    return envUrl.endsWith('/api/v1') ? envUrl : `${envUrl}/api/v1`;
+  }
+
+  // 2. Intelligent browser runtime detection
+  if (typeof window !== 'undefined' && window.location) {
+    const { hostname, port, origin } = window.location;
+
+    // If opened from a standalone dev/preview static server on 5173 or 3000:
+    // Route API requests directly to local FastAPI backend on port 8000
+    if ((hostname === 'localhost' || hostname === '127.0.0.1') && (port === '5173' || port === '3000')) {
+      return 'http://127.0.0.1:8000/api/v1';
+    }
+
+    // If opened via local file protocol or raw origin:
+    if (origin === 'null' || !origin.startsWith('http')) {
+      return 'https://safecontain-ai.onrender.com/api/v1';
+    }
+  }
+
+  // 3. Unified production deployment (Render Cloud or FastAPI serving static assets on same port)
+  return '/api/v1';
+}
 
 export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  const url = `${API_BASE}${cleanEndpoint}`;
+  const base = resolveApiBase();
+  const url = `${base}${cleanEndpoint}`;
   const response = await fetch(url, {
     ...options,
     headers: {

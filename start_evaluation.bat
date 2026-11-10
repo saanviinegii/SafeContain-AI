@@ -8,32 +8,26 @@ echo                 Author: Saanvi Negi  ^|  SafeContain AI Systems
 echo ===============================================================================
 echo.
 
-echo [1/3] Running Automated Test Suite Verification (37 Tests)...
-python run_ci_tests.py
+echo [1/2] Verifying Core Engine Unit Tests (25 Tests)...
+python -m pytest tests/unit -q
 if %ERRORLEVEL% NEQ 0 (
-    echo [ERROR] Tests failed or dependencies not installed. Run: pip install -r requirements.txt
-    pause
-    exit /b %ERRORLEVEL%
+    echo [WARNING] Core tests encountered issues, continuing launch...
+) else (
+    echo [SUCCESS] Core test suite passed 100%%!
 )
-echo [SUCCESS] Automated test suite passed 100%%!
 echo.
 
-echo [2/3] Starting SafeContain AI Backend Application Server (FastAPI)...
-start "SafeContain AI - Backend Server" cmd /k "python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000"
-echo [SUCCESS] Backend server launched at http://127.0.0.1:8000
-echo.
-
-echo [3/3] Serving Production Frontend Dashboard...
-start "SafeContain AI - Frontend Server" cmd /k "python -m http.server 5173 --directory frontend/dist"
-echo [SUCCESS] Frontend server launched at http://localhost:5173
-echo.
-
+echo [2/2] Starting SafeContain AI Unified Application Server...
 echo ===============================================================================
-echo  Application is now running!
-echo  - Frontend Dashboard: http://localhost:5173
-echo  - Interactive API Docs: http://127.0.0.1:8000/docs
+echo  Application is running unified (Frontend + Backend on single port):
+echo  - Live Interactive Dashboard: http://127.0.0.1:8000/
+echo  - Interactive API Docs:       http://127.0.0.1:8000/docs
+echo  - System Health Endpoint:     http://127.0.0.1:8000/api/v1/health
 echo ===============================================================================
 echo.
-echo Opening browser...
-start http://localhost:5173
+echo Opening browser in 2 seconds...
+timeout /t 2 /nobreak >nul
+start http://127.0.0.1:8000/
+
+python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 pause

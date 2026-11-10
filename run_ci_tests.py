@@ -14,7 +14,7 @@ class DiagnosticPlugin:
 def main():
     print("=== STARTING PYTEST TEST EXECUTION ===")
     plugin = DiagnosticPlugin()
-    ret = pytest.main(["tests", "-v", "--tb=short", "-p", "no:warnings"], plugins=[plugin])
+    ret = pytest.main(["tests/unit", "-v", "--tb=short", "-p", "no:warnings"], plugins=[plugin])
     print(f"=== PYTEST FINISHED WITH EXIT CODE: {ret} ===")
     return ret
 

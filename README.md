@@ -11,12 +11,13 @@
 
 > [!TIP]
 > ### 🔗 Official Project & Live Deployment Links
+> - **Live Production Web Console (Render):** [https://safecontain-ai.onrender.com/](https://safecontain-ai.onrender.com/)
+> - **Live Interactive Swagger API Docs:** [https://safecontain-ai.onrender.com/docs](https://safecontain-ai.onrender.com/docs)
 > - **Official Project Repository:** [https://github.com/saanviinegii/SafeContain-AI](https://github.com/saanviinegii/SafeContain-AI)
-> - **1-Click Cloud Deployment:** [Deploy to Render](https://render.com/deploy?repo=https://github.com/saanviinegii/SafeContain-AI) *(Runs full-stack with Free Tier)*
-> - **Verified CI/CD Pipeline:** [https://github.com/saanviinegii/SafeContain-AI/actions](https://github.com/saanviinegii/SafeContain-AI/actions) (100% Green Checkmark `✔`)
-> - **Interactive Evaluation Prototype (Local):** Launch via `start_evaluation.bat` (Windows) or `./start_evaluation.sh` (Linux/Mac)
->   - **Dashboard UI Prototype:** `http://localhost:5173`
->   - **Backend API & Swagger Docs:** `http://localhost:8000/docs`
+> - **1-Click Local Unified Launcher:** Run `python run_app.py` or double-click `start_evaluation.bat` (Windows) / `./start_evaluation.sh` (Linux/Mac)
+>   - **Unified Dashboard & API:** `http://127.0.0.1:8000/`
+>   - **Interactive API Documentation:** `http://127.0.0.1:8000/docs`
+>   - **System Health Endpoint:** `http://127.0.0.1:8000/api/v1/health`
 > - **Presentation Pitch Deck:** [PRESENTATION_DECK.md](file:///c:/Users/saanv/Desktop/SafeContain%20AI/PRESENTATION_DECK.md)
 > - **Render Operations Manual:** [RENDER_DEPLOYMENT_GUIDE.md](file:///c:/Users/saanv/Desktop/SafeContain%20AI/RENDER_DEPLOYMENT_GUIDE.md)
 
@@ -132,19 +133,27 @@ pytest -v
 ```
 *(All 36 unit, integration, security, and benchmark tests will execute and pass.)*
 
-### 3. Launch Backend API Server
+### 3. Launch Unified Full-Stack Application
 ```bash
-python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
+# One-command unified launcher (serves both React Console and FastAPI REST API on single port)
+python run_app.py
 ```
-API Documentation will be accessible at: `http://127.0.0.1:8000/docs`
+Or launch via platform scripts:
+- **Windows:** Double-click `start_evaluation.bat`
+- **Linux/macOS:** `./start_evaluation.sh`
 
-### 4. Install & Launch Enterprise Web Console
+The unified console will automatically open in your default browser at:
+- **Full-Stack Console:** `http://127.0.0.1:8000/`
+- **Interactive OpenAPI Docs:** `http://127.0.0.1:8000/docs`
+
+### 4. Optional: Independent Frontend Dev Server
+If modifying frontend TypeScript source with hot-module reload (HMR):
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-The Web Console will be accessible at: `http://localhost:5173`
+The Vite dev console will open at `http://localhost:5173` and automatically route all API requests to `http://127.0.0.1:8000/api/v1`.
 
 ---
 
