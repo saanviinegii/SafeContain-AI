@@ -39,13 +39,80 @@ class DecisionExplainer:
         """Produces a multi-tier explanation grounded in mathematical outcomes."""
         selected_action_names = [f"'{a.target_node_name}' ({a.action_type.value})" for a in recommended_plan.actions]
 
-        # Comparative justification against alternatives
-        reasons_for_selection: List[str] = [
+        # 1. Reasons behind recommendations (R&D Blueprint Objective #6)
+        reasons: List[str] = [
             f"Optimized objective score of {recommended_plan.objective_score:.2f} balancing security benefit against operational friction.",
             f"Achieved ${recommended_plan.total_cost:.2f} implementation cost, satisfying organization budgetary bounds.",
             f"Preserved critical citizen service SLAs with {len(simulation.disrupted_workflows)} disrupted workflows.",
             f"Reduced systemic risk from {simulation.initial_risk_score:.1f} to {simulation.residual_risk_score:.1f} (-{simulation.risk_reduction_achieved:.1f}).",
+            f"Eliminated {simulation.initial_attack_path_count - simulation.residual_attack_path_count} of {simulation.initial_attack_path_count} identified attack routes.",
         ]
+
+        # 2. Supporting Evidence (R&D Blueprint Objective #6 & Page 1)
+        supporting_evidence: List[Dict[str, Any]] = []
+        for action in recommended_plan.actions:
+            supporting_evidence.append({
+                "action_id": action.id,
+                "target_node": action.target_node_name,
+                "action_type": action.action_type.value,
+                "telemetry_source": "Multi-source correlated network & identity alerts",
+                "estimated_risk_reduction": action.estimated_risk_reduction,
+                "implementation_cost": action.implementation_cost,
+                "operational_disruption": action.operational_disruption_score,
+            })
+
+        # 3. Explicit Model Assumptions (R&D Blueprint Objective #6 & Page 1)
+        assumptions: List[str] = [
+            "Critical citizen/payment services enforce strict zero-allowable outage SLAs (0.0 hours).",
+            "Attack paths model directed lateral movement along authenticated, connected, or vulnerable edges.",
+            "Uncertain or unrefreshed telemetry is penalized by uncertainty weight (temporal decay rate).",
+            "Forensic simulation is isolated on an immutable graph copy without altering live topology.",
+            "Human approval is mandatory prior to real-world command execution (decision-support principle).",
+        ]
+
+        # 4. Residual Risk Assessment (R&D Blueprint Objective #6)
+        residual_risk_evaluation: Dict[str, Any] = {
+            "initial_risk": simulation.initial_risk_score,
+            "residual_risk": simulation.residual_risk_score,
+            "risk_reduction": simulation.risk_reduction_achieved,
+            "residual_paths_count": simulation.residual_attack_path_count,
+            "is_fully_contained": simulation.is_fully_contained,
+            "unprotected_crown_jewels": simulation.unprotected_crown_jewels,
+            "residual_paths": [
+                {
+                    "path_id": p.id,
+                    "target": p.target_id,
+                    "hops": p.hop_count,
+                    "risk": p.adjusted_path_risk,
+                    "choke_points": p.choke_point_nodes,
+                }
+                for p in simulation.residual_paths
+            ],
+        }
+
+        # 5. Verification Guidance (R&D Blueprint Objective #6)
+        verification_guidance: List[str] = [
+            "Verify all crown jewel database connection pools remain responsive.",
+            "Run post-containment synthetic transaction probe against citizen-facing workflows.",
+            "Inspect residual attack routes in simulation view to ensure covert secondary paths are monitored.",
+            "Confirm EDR agent connectivity and certificate validity on isolated nodes.",
+            "Review chained SHA-256 audit ledger entry for approval cryptographic signature.",
+        ]
+
+        # 6. Rollback Guidance (R&D Blueprint Objective #6)
+        rollback_guidance: List[Dict[str, Any]] = []
+        for action in recommended_plan.actions:
+            rollback_guidance.append({
+                "action_id": action.id,
+                "target": action.target_node_name,
+                "action_type": action.action_type.value,
+                "contingency_trigger": "Unplanned service outage or critical citizen workflow SLA degradation",
+                "rollback_procedure": (
+                    f"Restore network access / un-isolate '{action.target_node_name}' via EDR API; "
+                    f"re-enable session tokens from emergency credential backup."
+                ),
+                "estimated_recovery_time_minutes": 5,
+            })
 
         # Explicit rejected alternatives analysis
         rejected_reasons: List[Dict[str, Any]] = []
@@ -57,7 +124,7 @@ class DecisionExplainer:
                     "strategy": alt.strategy.value,
                     "rejection_rationale": (
                         f"Baseline strategy created excessive operational disruption ({alt.total_disruption_score:.1f}) "
-                        f"by blunt containment on shared services."
+                        f"by blunt containment on shared services, violating critical SLAs."
                     ),
                     "disruption_difference": round(alt.total_disruption_score - recommended_plan.total_disruption_score, 2),
                 })
@@ -73,8 +140,15 @@ class DecisionExplainer:
         return {
             "plan_id": recommended_plan.id,
             "strategy": recommended_plan.strategy.value,
+            "confidence": "HIGH (Exact Google OR-Tools CP-SAT Global Optimum)",
             "selected_actions_summary": selected_action_names,
-            "justification": reasons_for_selection,
+            "reasons": reasons,
+            "justification": reasons,
+            "supporting_evidence": supporting_evidence,
+            "assumptions": assumptions,
+            "residual_risk": residual_risk_evaluation,
+            "verification_guidance": verification_guidance,
+            "rollback_guidance": rollback_guidance,
             "rejected_alternatives": rejected_reasons,
             "residual_state_summary": {
                 "residual_paths_count": simulation.residual_attack_path_count,

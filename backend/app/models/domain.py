@@ -105,6 +105,7 @@ class UserRole(str, Enum):
     SECURITY_ADMIN = "SECURITY_ADMIN"
     SOC_ANALYST = "SOC_ANALYST"
     INCIDENT_RESPONDER = "INCIDENT_RESPONDER"
+    INCIDENT_COMMANDER = "INCIDENT_COMMANDER"
     SECURITY_MANAGER = "SECURITY_MANAGER"
     AUDITOR = "AUDITOR"
     READ_ONLY_VIEWER = "READ_ONLY_VIEWER"
@@ -150,6 +151,8 @@ class GraphEdge(BaseModel):
     confidence: float = Field(default=1.0, ge=0.0, le=1.0, description="Evidence confidence score [0.0 - 1.0]")
     weight: float = Field(default=1.0, gt=0.0, description="Traversal difficulty or cost weight")
     is_active: bool = Field(default=True, description="False if severed or contained")
+    evidence_reference: Optional[str] = Field(default=None, description="Primary reference ID to forensic evidence record")
+    evidence_references: List[str] = Field(default_factory=list, description="Supporting evidence record IDs")
     properties: Dict[str, Any] = Field(default_factory=dict)
     provenance: DataProvenance = Field(default=DataProvenance.LIVE_TELEMETRY)
     last_verified_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -306,9 +309,11 @@ class SimulationResult(BaseModel):
 # =====================================================================
 
 class AuditEvent(BaseModel):
-    """Cryptographically chained tamper-evident audit record."""
-    event_id: str
+    """Cryptographically chained tamper-evident audit record matching R&D on-chain specification."""
+    event_id: str = Field(description="Unique record identifier")
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    event_type: str = Field(default="DECISION_EVENT", description="On-chain event type: EVIDENCE_SNAPSHOT | RECOMMENDATION | SIMULATION_SUMMARY | APPROVAL")
+    approval_reference: Optional[str] = Field(default=None, description="Minimal on-chain approval reference / signature")
     actor_id: str
     actor_role: UserRole
     organization_id: str = "ORG-DEFAULT"

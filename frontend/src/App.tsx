@@ -70,16 +70,30 @@ export const App: React.FC = () => {
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
   const [selectedActionIds, setSelectedActionIds] = useState<string[]>([]);
   const [simulationStrategy, setSimulationStrategy] = useState<string>('CONSTRAINT_CPSAT');
+  const [blockchainStatus, setBlockchainStatus] = useState<any>(null);
 
   const showNotification = (msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 4000);
   };
 
+  const handleVerifyBlockchainRecord = async (eventId: string) => {
+    try {
+      const res = await api.verifyBlockchainRecord(eventId);
+      if (res.is_valid) {
+        showNotification(`✅ On-Chain Verified: ${eventId} anchored on block #${res.block_number} with hash match!`);
+      } else {
+        showNotification(`⚠️ Blockchain Check: ${res.verification_message}`);
+      }
+    } catch (err: any) {
+      showNotification(`Verification error: ${err.message}`);
+    }
+  };
+
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [topo, paths, risk, wfs, cands, comp, sim, exp, ledger, intReport, sens, mets] = await Promise.all([
+      const [topo, paths, risk, wfs, cands, comp, sim, exp, ledger, intReport, sens, mets, bStatus] = await Promise.all([
         api.getTopology(),
         api.getAttackPaths(),
         api.getDecomposedRisk(),
@@ -92,6 +106,7 @@ export const App: React.FC = () => {
         api.verifyAuditIntegrity(),
         api.getEvidenceSensitivity(),
         api.getMetrics(),
+        api.getBlockchainStatus().catch(() => null),
       ]);
 
       setTopology(topo);
@@ -109,6 +124,7 @@ export const App: React.FC = () => {
       setAuditIntegrity(intReport);
       setSensitivityList(sens);
       setMetrics(mets);
+      setBlockchainStatus(bStatus);
     } catch (err: any) {
       console.error('Failed loading data:', err);
       showNotification(`Error: ${err.message}`);
@@ -1040,18 +1056,113 @@ export const App: React.FC = () => {
                 <div>
                   <div className="data-table-container">
                     <div className="table-header">
-                      <div className="table-title">Grounded Mathematical Recommendation Justification</div>
-                      <span className="badge badge-emerald">ZERO HALLUCINATED METRICS</span>
+                      <div className="table-title">Explainable Decision Intelligence (R&D Blueprint Objective #6)</div>
+                      <span className="badge badge-emerald">{explanation?.confidence || 'HIGH CONFIDENCE'}</span>
                     </div>
                     <div style={{ padding: '20px' }}>
-                      <h4 style={{ color: 'var(--accent-cyan)', marginBottom: '12px' }}>Why This Strategy Was Selected:</h4>
-                      <ul style={{ paddingLeft: '20px', lineHeight: 1.8, marginBottom: '20px' }}>
-                        {explanation?.justification?.map((j: string, idx: number) => (
+                      {/* Section 1: Reasons Behind Recommendation */}
+                      <h4 style={{ color: 'var(--accent-cyan)', marginBottom: '12px' }}>1. Reasons Behind Recommendation:</h4>
+                      <ul style={{ paddingLeft: '20px', lineHeight: 1.8, marginBottom: '24px' }}>
+                        {(explanation?.reasons || explanation?.justification)?.map((j: string, idx: number) => (
                           <li key={idx}>{j}</li>
                         ))}
                       </ul>
 
-                      <h4 style={{ color: '#f87171', marginBottom: '12px' }}>Why Alternatives Were Rejected:</h4>
+                      {/* Section 2: Supporting Evidence */}
+                      <h4 style={{ color: 'var(--accent-cyan)', marginBottom: '12px' }}>2. Supporting Telemetry Evidence:</h4>
+                      <div style={{ marginBottom: '24px', overflowX: 'auto' }}>
+                        <table className="safe-table" style={{ fontSize: '12px' }}>
+                          <thead>
+                            <tr>
+                              <th>Action Target</th>
+                              <th>Action Type</th>
+                              <th>Telemetry Basis</th>
+                              <th>Risk Reduction</th>
+                              <th>Action Cost</th>
+                              <th>Operational Disruption</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {explanation?.supporting_evidence?.map((ev: any, idx: number) => (
+                              <tr key={idx}>
+                                <td style={{ fontWeight: 600 }}>{ev.target_node}</td>
+                                <td><span className="badge badge-blue">{ev.action_type}</span></td>
+                                <td>{ev.telemetry_source}</td>
+                                <td style={{ color: 'var(--accent-cyan)' }}>+{ev.estimated_risk_reduction}</td>
+                                <td>${ev.implementation_cost}</td>
+                                <td>{ev.operational_disruption}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Section 3: Model Assumptions */}
+                      <h4 style={{ color: 'var(--accent-cyan)', marginBottom: '12px' }}>3. Explicit Model Assumptions:</h4>
+                      <ul style={{ paddingLeft: '20px', lineHeight: 1.8, marginBottom: '24px', color: 'var(--text-secondary)' }}>
+                        {explanation?.assumptions?.map((asm: string, idx: number) => (
+                          <li key={idx}>⚠️ {asm}</li>
+                        ))}
+                      </ul>
+
+                      {/* Section 4: Residual Risk & Remaining Routes */}
+                      <h4 style={{ color: 'var(--accent-cyan)', marginBottom: '12px' }}>4. Residual Risk Assessment & Post-Containment Routes:</h4>
+                      <div style={{ marginBottom: '24px', padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                        <div style={{ display: 'flex', gap: '24px', marginBottom: '12px' }}>
+                          <div>Initial Risk: <strong>{explanation?.residual_risk?.initial_risk}</strong></div>
+                          <div>Residual Risk: <strong style={{ color: '#10b981' }}>{explanation?.residual_risk?.residual_risk}</strong></div>
+                          <div>Risk Reduction: <strong style={{ color: 'var(--accent-cyan)' }}>-{explanation?.residual_risk?.risk_reduction}</strong></div>
+                          <div>Remaining Open Paths: <strong>{explanation?.residual_risk?.residual_paths_count}</strong></div>
+                        </div>
+                        {explanation?.residual_risk?.residual_paths?.length > 0 && (
+                          <div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Monitored Residual Routes:</div>
+                            {explanation.residual_risk.residual_paths.map((p: any, idx: number) => (
+                              <div key={idx} style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--accent-amber)', marginBottom: '4px' }}>
+                                • Path {p.path_id}: Target {p.target} ({p.hops} hops, Risk: {p.risk}) [Choke Points: {p.choke_points?.join(', ')}]
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Section 5: Verification Guidance */}
+                      <h4 style={{ color: '#10b981', marginBottom: '12px' }}>5. Pre & Post Containment Verification Guidance:</h4>
+                      <ul style={{ paddingLeft: '20px', lineHeight: 1.8, marginBottom: '24px' }}>
+                        {explanation?.verification_guidance?.map((vg: string, idx: number) => (
+                          <li key={idx}>✅ {vg}</li>
+                        ))}
+                      </ul>
+
+                      {/* Section 6: Rollback Guidance */}
+                      <h4 style={{ color: '#fbbf24', marginBottom: '12px' }}>6. Action Rollback & Contingency Procedures:</h4>
+                      <div style={{ marginBottom: '24px', overflowX: 'auto' }}>
+                        <table className="safe-table" style={{ fontSize: '12px' }}>
+                          <thead>
+                            <tr>
+                              <th>Target</th>
+                              <th>Action</th>
+                              <th>Contingency Trigger</th>
+                              <th>Rollback Procedure</th>
+                              <th>Recovery Window</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {explanation?.rollback_guidance?.map((rb: any, idx: number) => (
+                              <tr key={idx}>
+                                <td style={{ fontWeight: 600 }}>{rb.target}</td>
+                                <td>{rb.action_type}</td>
+                                <td style={{ color: '#fbbf24' }}>{rb.contingency_trigger}</td>
+                                <td>{rb.rollback_procedure}</td>
+                                <td>~{rb.estimated_recovery_time_minutes} min</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Section 7: Why Alternatives Were Rejected */}
+                      <h4 style={{ color: '#f87171', marginBottom: '12px' }}>7. Why Alternative Strategies Were Rejected:</h4>
                       <ul style={{ paddingLeft: '20px', lineHeight: 1.8 }}>
                         {explanation?.rejected_alternatives?.map((r: any, idx: number) => (
                           <li key={idx}><strong>{r.strategy}:</strong> {r.rejection_rationale}</li>
@@ -1099,31 +1210,62 @@ export const App: React.FC = () => {
                 <div>
                   <div className="data-table-container">
                     <div className="table-header">
-                      <div className="table-title">Cryptographic SHA-256 Chained Audit Ledger</div>
-                      <span className={`badge ${auditIntegrity?.is_valid ? 'badge-emerald' : 'badge-crimson'}`}>
-                        {auditIntegrity?.status_summary}
-                      </span>
+                      <div className="table-title">Blockchain & Cryptographic SHA-256 Audit Ledger</div>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <span className="badge badge-purple">Smart Contract: SafeContainAuditLedger.sol</span>
+                        <span className={`badge ${auditIntegrity?.is_valid ? 'badge-emerald' : 'badge-crimson'}`}>
+                          {auditIntegrity?.status_summary}
+                        </span>
+                      </div>
                     </div>
+
+                    {/* Blockchain Design Banner matching R&D Page 2 */}
+                    <div style={{ padding: '16px 20px', background: 'rgba(139, 92, 246, 0.05)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                      <div style={{ fontSize: '12px' }}>
+                        <strong style={{ color: 'var(--accent-purple)' }}>Blockchain Design Principles:</strong>{' '}
+                        <span>On-Chain: <code>(Record ID, SHA-256 Hash, Timestamp, Event Type, Approval Ref)</code></span> |{' '}
+                        <span>Off-Chain: Detailed Telemetry & Graph Snapshots</span>
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                        Test Network: <code>{blockchainStatus?.network_id || 'safecontain-evm-testnet'}</code> (Height: #{blockchainStatus?.current_block_height || 1000})
+                      </div>
+                    </div>
+
                     <table className="safe-table">
                       <thead>
                         <tr>
-                          <th>Event ID</th>
+                          <th>Record ID</th>
+                          <th>Event Type</th>
+                          <th>Approval Ref</th>
                           <th>Action</th>
                           <th>Actor</th>
-                          <th>Resource</th>
                           <th>Previous Hash (Parent)</th>
                           <th>Current Record Hash</th>
+                          <th>On-Chain Verification</th>
                         </tr>
                       </thead>
                       <tbody>
                         {auditEvents.map(e => (
                           <tr key={e.event_id}>
-                            <td style={{ fontFamily: 'var(--font-mono)' }}>{e.event_id}</td>
-                            <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{e.action}</td>
+                            <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{e.event_id}</td>
+                            <td><span className="badge badge-purple" style={{ fontSize: '10px' }}>{e.event_type || 'DECISION_EVENT'}</span></td>
+                            <td style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: e.approval_reference ? 'var(--accent-cyan)' : 'var(--text-secondary)' }}>
+                              {e.approval_reference || 'N/A'}
+                            </td>
+                            <td style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{e.action}</td>
                             <td>{e.actor_id} ({e.actor_role})</td>
-                            <td>{e.resource_type}:{e.resource_id}</td>
-                            <td style={{ fontFamily: 'var(--font-mono)', fontSize: '11px' }}>{e.previous_hash.slice(0, 14)}...</td>
-                            <td style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--accent-cyan)' }}>{e.current_hash.slice(0, 14)}...</td>
+                            <td style={{ fontFamily: 'var(--font-mono)', fontSize: '11px' }}>{e.previous_hash.slice(0, 10)}...</td>
+                            <td style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--accent-cyan)' }}>{e.current_hash.slice(0, 10)}...</td>
+                            <td>
+                              <button
+                                className="btn-secondary"
+                                style={{ padding: '3px 8px', fontSize: '11px' }}
+                                onClick={() => handleVerifyBlockchainRecord(e.event_id)}
+                                title="Recompute off-chain hash and compare with blockchain entry"
+                              >
+                                Verify On-Chain
+                              </button>
+                            </td>
                           </tr>
                         ))}
                       </tbody>

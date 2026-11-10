@@ -102,3 +102,34 @@ def test_decision_explanation_and_counterfactual():
     assert cf_result.risk_reduction_delta == -55.0
     assert cf_result.counterfactual_disruption == 0.0
     assert "saves $300.00" in cf_result.explanation
+
+    # Test full explanation structure matching R&D Blueprint Objective #6
+    from backend.app.models.domain import SimulationResult
+    mock_sim = SimulationResult(
+        simulation_id="sim-test-01",
+        scenario_id="scen-01",
+        applied_action_ids=["act-dc-fw"],
+        initial_attack_path_count=3,
+        residual_attack_path_count=1,
+        initial_risk_score=95.0,
+        residual_risk_score=40.0,
+        risk_reduction_achieved=55.0,
+        disrupted_workflows=[],
+        residual_paths=[],
+        unprotected_crown_jewels=[],
+        is_fully_contained=False,
+        explanation="Test simulation",
+        audit_hash="0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    )
+    explanation = DecisionExplainer.explain_recommendation(plan, [], mock_sim)
+    assert len(explanation["reasons"]) >= 3
+    assert len(explanation["supporting_evidence"]) >= 1
+    assert len(explanation["assumptions"]) >= 3
+    assert explanation["residual_risk"]["residual_risk"] == 40.0
+    assert len(explanation["verification_guidance"]) >= 3
+    assert len(explanation["rollback_guidance"]) >= 1
+    assert "reasons" in explanation
+    assert "supporting_evidence" in explanation
+    assert "assumptions" in explanation
+    assert "verification_guidance" in explanation
+    assert "rollback_guidance" in explanation

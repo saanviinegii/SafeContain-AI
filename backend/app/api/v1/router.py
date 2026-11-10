@@ -245,6 +245,17 @@ def optimize_containment(req: OptimizeRequest) -> Dict[str, Any]:
     else:
         platform_ctx.current_plan = BaselinePlanner.plan(candidates, req.budget_limit)
 
+    # Anchor recommendation in audit ledger (R&D Blueprint Objective #7)
+    if platform_ctx.current_plan:
+        platform_ctx.ledger.record_recommendation(
+            plan_id=platform_ctx.current_plan.id,
+            strategy=platform_ctx.current_plan.strategy.value,
+            objective_score=platform_ctx.current_plan.objective_score,
+            total_cost=platform_ctx.current_plan.total_cost,
+            predicted_risk_reduction=platform_ctx.current_plan.predicted_risk_reduction,
+            actions_count=len(platform_ctx.current_plan.actions),
+        )
+
     return comparison
 
 
@@ -311,20 +322,17 @@ def run_isolated_simulation(req: Optional[SimulationRequest] = None) -> Simulati
     platform_ctx.last_simulation = sim_result
     MetricsCollector.record_simulation()
 
-    # Record simulation in audit ledger
-    platform_ctx.ledger.record_event(
+    # Record simulation in audit ledger (R&D Blueprint Objective #7)
+    platform_ctx.ledger.record_simulation_summary(
+        simulation_id=sim_result.simulation_id,
+        scenario_id=platform_ctx.active_scenario_name,
+        initial_risk=sim_result.initial_risk_score,
+        residual_risk=sim_result.residual_risk_score,
+        blocked_paths_count=len(sim_result.applied_action_ids),
+        residual_paths_count=sim_result.residual_attack_path_count,
+        disrupted_workflows_count=len(sim_result.disrupted_workflows),
         actor_id="soc-analyst",
         actor_role=UserRole.SOC_ANALYST,
-        action="RUN_ISOLATED_SIMULATION",
-        resource_type="Simulation",
-        resource_id=sim_result.simulation_id,
-        metadata={
-            "initial_risk": sim_result.initial_risk_score,
-            "residual_risk": sim_result.residual_risk_score,
-            "residual_paths": sim_result.residual_attack_path_count,
-            "applied_actions": sim_result.applied_action_ids,
-            "audit_hash": sim_result.audit_hash,
-        },
     )
 
     return sim_result
@@ -377,14 +385,15 @@ def transition_plan_status(req: GovernanceTransitionRequest) -> Dict[str, Any]:
         )
         platform_ctx.current_plan = updated_plan
 
-        # Record in cryptographic audit ledger
-        platform_ctx.ledger.record_event(
+        # Record in cryptographic audit ledger with approval reference (R&D Blueprint Objective #7)
+        approval_ref = f"sig-{decision.decision_id[:8]}-{req.actor_id}"
+        platform_ctx.ledger.record_approval(
+            plan_id=updated_plan.id,
+            approval_status=req.target_status.value,
+            approval_reference=approval_ref,
             actor_id=req.actor_id,
             actor_role=req.actor_role,
-            action=f"TRANSITION_TO_{req.target_status.value}",
-            resource_type="ContainmentPlan",
-            resource_id=updated_plan.id,
-            metadata={"notes": req.notes, "status": req.target_status.value},
+            notes=req.notes,
         )
 
         return {
@@ -410,6 +419,26 @@ def get_audit_ledger(limit: int = 50) -> List[AuditEvent]:
 def verify_audit_integrity() -> AuditIntegrityReport:
     """Performs full forward cryptographic SHA-256 hash-chain verification."""
     return platform_ctx.ledger.verify_integrity()
+
+
+@api_router.get("/audit/blockchain/status", tags=["Audit"])
+def get_blockchain_ledger_status() -> Dict[str, Any]:
+    """Returns smart contract ledger status and on-chain block count (R&D Blueprint Page 4)."""
+    return platform_ctx.ledger.blockchain_anchor.get_ledger_status()
+
+
+@api_router.get("/audit/blockchain/records", tags=["Audit"])
+def get_blockchain_anchored_records() -> List[Dict[str, Any]]:
+    """Returns all records anchored on the blockchain ledger."""
+    records = platform_ctx.ledger.blockchain_anchor.get_all_anchored_records()
+    return [r.model_dump(mode="json") for r in records]
+
+
+@api_router.post("/audit/blockchain/verify", tags=["Audit"])
+def verify_blockchain_record_hash(event_id: str = Query(..., description="Audit Event ID to verify on-chain")) -> Dict[str, Any]:
+    """Recomputes off-chain record hash and verifies against smart contract anchor (R&D Blueprint Page 2)."""
+    result = platform_ctx.ledger.verify_blockchain_integrity(event_id)
+    return result.model_dump(mode="json")
 
 
 # =====================================================================

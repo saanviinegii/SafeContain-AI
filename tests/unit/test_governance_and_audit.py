@@ -124,3 +124,61 @@ def test_chained_audit_ledger_tamper_detection(tmp_path):
     assert tamper_report.is_valid is False
     assert tamper_report.tampered_index == 1
     assert "Data tampering detected" in tamper_report.status_summary
+
+
+def test_blockchain_smart_contract_anchor_and_verification(tmp_path):
+    """Verifies R&D Blueprint Page 2 & 4: Blockchain Smart Contract On-Chain Anchoring and Off-Chain Check."""
+    storage_file = str(tmp_path / "test_blockchain_audit.jsonl")
+    ledger = ChainedAuditLedger(storage_path=storage_file)
+
+    # 1. Anchor evidence snapshot
+    e_snap = ledger.record_evidence_snapshot(
+        evidence_id="ev-crowdstrike-001",
+        source_system="CrowdStrike Falcon",
+        raw_payload_hash="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        status="CONFIRMED",
+        confidence=0.95,
+    )
+
+    # 2. Anchor recommendation
+    e_rec = ledger.record_recommendation(
+        plan_id="plan-exact-001",
+        strategy="CONSTRAINT_CPSAT",
+        objective_score=88.5,
+        total_cost=2500.0,
+        predicted_risk_reduction=45.0,
+        actions_count=2,
+    )
+
+    # 3. Anchor approval
+    e_appr = ledger.record_approval(
+        plan_id="plan-exact-001",
+        approval_status="APPROVED",
+        approval_reference="sig-mgr-raj-2026-auth",
+        actor_id="mgr-raj",
+        actor_role=UserRole.SECURITY_MANAGER,
+        notes="Containment verified and authorized.",
+    )
+
+    # Verify on-chain anchor records exist
+    anchored = ledger.blockchain_anchor.get_all_anchored_records()
+    assert len(anchored) == 3
+    assert anchored[0].event_type == "EVIDENCE_SNAPSHOT"
+    assert anchored[1].event_type == "RECOMMENDATION"
+    assert anchored[2].event_type == "APPROVAL"
+    assert anchored[2].approval_reference == "sig-mgr-raj-2026-auth"
+
+    # Verify blockchain integrity check passes for authentic event
+    v_res = ledger.verify_blockchain_integrity(e_appr.event_id)
+    assert v_res.is_valid is True
+    assert v_res.tamper_detected is False
+    assert "On-chain hash match verified" in v_res.verification_message
+
+    # Tamper with event e_appr in memory (off-chain modification)
+    ledger._events[2].metadata["review_notes"] = "Tampered notes!"
+
+    # Verify on-chain integrity check detects tampering
+    tamper_check = ledger.verify_blockchain_integrity(e_appr.event_id)
+    assert tamper_check.is_valid is False
+    assert tamper_check.tamper_detected is True
+    assert "TAMPER DETECTED" in tamper_check.verification_message

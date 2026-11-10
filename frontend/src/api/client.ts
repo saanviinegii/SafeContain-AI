@@ -64,5 +64,9 @@ export const api = {
     }),
   getAuditLedger: (limit = 50) => fetchApi<any[]>(`/audit/ledger?limit=${limit}`),
   verifyAuditIntegrity: () => fetchApi<any>('/audit/verify'),
+  getBlockchainStatus: () => fetchApi<any>('/audit/blockchain/status'),
+  getBlockchainRecords: () => fetchApi<any[]>('/audit/blockchain/records'),
+  verifyBlockchainRecord: (eventId: string) =>
+    fetchApi<any>(`/audit/blockchain/verify?event_id=${encodeURIComponent(eventId)}`, { method: 'POST' }),
   exportReport: (format: 'json' | 'csv' | 'text') => fetchApi<any>(`/reports/export?format=${format}`),
 };
