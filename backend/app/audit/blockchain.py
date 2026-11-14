@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
+from backend.app.core.config import settings
 from backend.app.models.domain import AuditEvent
 
 logger = logging.getLogger(__name__)
@@ -149,10 +150,12 @@ class BlockchainLedgerAnchor:
 
     def get_ledger_status(self) -> Dict[str, Any]:
         """Returns operational summary of the blockchain / smart contract anchor."""
-        return {
+        status_info = {
             "network_id": self.network_id,
             "smart_contract_name": "SafeContainAuditLedger",
             "smart_contract_standard": "Solidity 0.8.20 / EVM Compatible",
+            "contract_address": settings.BLOCKCHAIN_CONTRACT_ADDRESS,
+            "rpc_configured": bool(settings.BLOCKCHAIN_RPC_URL),
             "total_anchored_records": len(self._on_chain_store),
             "current_block_height": self._current_block,
             "status": "ONLINE",
@@ -163,4 +166,24 @@ class BlockchainLedgerAnchor:
                 "limitation": "Blockchain provides tamper evidence, not truth; false input can still be recorded immutably.",
             }
         }
+
+        # If live RPC is configured, query latest block from node
+        if settings.BLOCKCHAIN_RPC_URL:
+            try:
+                import urllib.request
+                req_data = json.dumps({"jsonrpc": "2.0", "method": "eth_blockNumber", "params": [], "id": 1}).encode("utf-8")
+                req = urllib.request.Request(
+                    settings.BLOCKCHAIN_RPC_URL,
+                    data=req_data,
+                    headers={"Content-Type": "application/json"},
+                )
+                with urllib.request.urlopen(req, timeout=3.0) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    if "result" in data:
+                        status_info["live_node_block_height"] = int(data["result"], 16)
+                        status_info["node_connectivity"] = "CONNECTED"
+            except Exception as e:
+                status_info["node_connectivity"] = f"RPC_UNAVAILABLE: {str(e)}"
+
+        return status_info
 

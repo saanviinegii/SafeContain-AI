@@ -44,6 +44,8 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     AUDIT_LEDGER_STORAGE_PATH: str = "audit_ledger.jsonl"
     VERIFY_AUDIT_INTEGRITY_ON_STARTUP: bool = True
+    BLOCKCHAIN_RPC_URL: Optional[str] = None
+    BLOCKCHAIN_CONTRACT_ADDRESS: Optional[str] = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
     
     # Optimization & Solvers
     OPTIMIZATION_DEFAULT_STRATEGY: str = "constraint_cpsat"

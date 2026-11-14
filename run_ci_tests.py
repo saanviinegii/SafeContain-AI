@@ -12,9 +12,10 @@ class DiagnosticPlugin:
         print(f"::notice title=SessionSummary::ExitStatus={exitstatus}, items_collected={items_count}")
 
 def main():
-    print("=== STARTING PYTEST TEST EXECUTION ===")
+    print("=== STARTING PYTEST COMPREHENSIVE TEST SUITE ===")
     plugin = DiagnosticPlugin()
-    ret = pytest.main(["tests/unit", "-v", "--tb=short", "-p", "no:warnings"], plugins=[plugin])
+    test_paths = ["tests/unit", "tests/performance", "tests/security", "tests/integration"]
+    ret = pytest.main(test_paths + ["-v", "--tb=short", "-p", "no:warnings"], plugins=[plugin])
     print(f"=== PYTEST FINISHED WITH EXIT CODE: {ret} ===")
     return ret
 

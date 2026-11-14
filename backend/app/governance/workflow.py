@@ -4,6 +4,7 @@ Enforces strict separation of duties, role hierarchy, and multi-step containment
 DRAFT -> ANALYZED -> SIMULATED -> PENDING_APPROVAL -> APPROVED / REJECTED -> EXECUTION_AUTHORIZED
 """
 
+import uuid
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 from pydantic import BaseModel, Field
@@ -17,6 +18,7 @@ from backend.app.models.domain import (
 
 class GovernanceDecision(BaseModel):
     """Recorded human decision on a containment plan."""
+    decision_id: str = Field(default_factory=lambda: f"dec-{uuid.uuid4().hex[:12]}")
     plan_id: str
     decision: ApprovalStatus # APPROVED | REJECTED | EXECUTION_AUTHORIZED
     actor_id: str
@@ -36,6 +38,7 @@ class GovernanceWorkflow:
             UserRole.INCIDENT_RESPONDER,
             UserRole.SECURITY_ADMIN,
             UserRole.SECURITY_MANAGER,
+            UserRole.INCIDENT_COMMANDER,
             UserRole.PLATFORM_ADMIN,
         ],
         ApprovalStatus.SIMULATED: [
@@ -43,6 +46,7 @@ class GovernanceWorkflow:
             UserRole.INCIDENT_RESPONDER,
             UserRole.SECURITY_ADMIN,
             UserRole.SECURITY_MANAGER,
+            UserRole.INCIDENT_COMMANDER,
             UserRole.PLATFORM_ADMIN,
         ],
         ApprovalStatus.PENDING_APPROVAL: [
@@ -50,18 +54,35 @@ class GovernanceWorkflow:
             UserRole.INCIDENT_RESPONDER,
             UserRole.SECURITY_ADMIN,
             UserRole.SECURITY_MANAGER,
+            UserRole.INCIDENT_COMMANDER,
+        ],
+        ApprovalStatus.PENDING: [
+            UserRole.SOC_ANALYST,
+            UserRole.INCIDENT_RESPONDER,
+            UserRole.SECURITY_ADMIN,
+            UserRole.SECURITY_MANAGER,
+            UserRole.INCIDENT_COMMANDER,
         ],
         ApprovalStatus.APPROVED: [
             UserRole.SECURITY_MANAGER,
             UserRole.SECURITY_ADMIN,
+            UserRole.INCIDENT_COMMANDER,
         ],
         ApprovalStatus.REJECTED: [
             UserRole.SECURITY_MANAGER,
             UserRole.SECURITY_ADMIN,
+            UserRole.INCIDENT_COMMANDER,
+            UserRole.INCIDENT_RESPONDER,
+        ],
+        ApprovalStatus.REVISION_REQUESTED: [
+            UserRole.SECURITY_MANAGER,
+            UserRole.SECURITY_ADMIN,
+            UserRole.INCIDENT_COMMANDER,
             UserRole.INCIDENT_RESPONDER,
         ],
         ApprovalStatus.EXECUTION_AUTHORIZED: [
             UserRole.SECURITY_MANAGER,
+            UserRole.INCIDENT_COMMANDER,
             UserRole.PLATFORM_ADMIN,
         ],
     }
@@ -70,10 +91,12 @@ class GovernanceWorkflow:
     VALID_TRANSITIONS: Dict[ApprovalStatus, List[ApprovalStatus]] = {
         ApprovalStatus.DRAFT: [ApprovalStatus.ANALYZED],
         ApprovalStatus.ANALYZED: [ApprovalStatus.SIMULATED],
-        ApprovalStatus.SIMULATED: [ApprovalStatus.PENDING_APPROVAL],
-        ApprovalStatus.PENDING_APPROVAL: [ApprovalStatus.APPROVED, ApprovalStatus.REJECTED],
-        ApprovalStatus.APPROVED: [ApprovalStatus.EXECUTION_AUTHORIZED, ApprovalStatus.REJECTED],
+        ApprovalStatus.SIMULATED: [ApprovalStatus.PENDING_APPROVAL, ApprovalStatus.PENDING],
+        ApprovalStatus.PENDING_APPROVAL: [ApprovalStatus.APPROVED, ApprovalStatus.REJECTED, ApprovalStatus.REVISION_REQUESTED],
+        ApprovalStatus.PENDING: [ApprovalStatus.APPROVED, ApprovalStatus.REJECTED, ApprovalStatus.REVISION_REQUESTED],
+        ApprovalStatus.APPROVED: [ApprovalStatus.EXECUTION_AUTHORIZED, ApprovalStatus.REJECTED, ApprovalStatus.REVISION_REQUESTED],
         ApprovalStatus.REJECTED: [ApprovalStatus.DRAFT], # Re-planning required
+        ApprovalStatus.REVISION_REQUESTED: [ApprovalStatus.DRAFT, ApprovalStatus.ANALYZED],
         ApprovalStatus.EXECUTION_AUTHORIZED: [], # Terminal governance state
     }
 

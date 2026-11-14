@@ -44,7 +44,7 @@ class IngestionResult(BaseModel):
 class BaseConnector(ABC):
     """Abstract base class for all security telemetry connectors."""
 
-    def __init__(self, name: str, provenance: DataProvenance = DataProvenance.LIVE_TELEMETRY):
+    def __init__(self, name: str = "Generic_Security_Connector", provenance: DataProvenance = DataProvenance.LIVE_TELEMETRY):
         self.name = name
         self.provenance = provenance
         self._seen_event_hashes: set = set()

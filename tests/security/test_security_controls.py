@@ -8,13 +8,20 @@ Verifies:
 """
 
 import pytest
-from fastapi.testclient import TestClient
+from fastapi import HTTPException
+from starlette.requests import Request
+from starlette.responses import Response
 
-from backend.app.main import app
-from backend.app.models.domain import UserRole
-from backend.app.security.middleware import sanitize_graph_query_input
-
-client = TestClient(app)
+from backend.app.api.v1.router import (
+    GovernanceTransitionRequest,
+    load_synthetic_scenario,
+    platform_ctx,
+    run_isolated_simulation,
+    transition_plan_status,
+)
+from backend.app.governance.workflow import GovernanceWorkflow
+from backend.app.models.domain import ApprovalStatus, UserRole
+from backend.app.security.middleware import SecurityHeadersMiddleware, sanitize_graph_query_input
 
 
 def test_cypher_injection_sanitization():
@@ -39,42 +46,67 @@ def test_cypher_injection_sanitization():
 
 def test_role_escalation_denial():
     """Verify lower privileged roles cannot execute administrative transitions."""
-    # Ensure fresh plan in PENDING_APPROVAL state
-    client.post("/api/v1/simulation/run")
-    client.post(
-        "/api/v1/governance/transition",
-        json={
-            "target_status": "PENDING_APPROVAL",
-            "actor_id": "soc-analyst-1",
-            "actor_role": "SOC_ANALYST",
-            "notes": "Ready for manager review.",
-        }
+    # 0. Load scenario so candidate containment actions exist
+    load_synthetic_scenario()
+
+    # 1. Ensure plan is in PENDING_APPROVAL state
+    run_isolated_simulation()
+    transition_plan_status(
+        GovernanceTransitionRequest(
+            target_status=ApprovalStatus.PENDING_APPROVAL,
+            actor_id="soc-analyst-1",
+            actor_role=UserRole.SOC_ANALYST,
+            notes="Ready for manager review.",
+        )
     )
 
     unauthorized_roles = [
-        UserRole.READ_ONLY_VIEWER.value,
-        UserRole.SOC_ANALYST.value,
+        UserRole.READ_ONLY_VIEWER,
+        UserRole.SOC_ANALYST,
     ]
 
     for role in unauthorized_roles:
-        res = client.post(
-            "/api/v1/governance/transition",
-            json={
-                "target_status": "APPROVED",
-                "actor_id": "attacker-user",
-                "actor_role": role,
-                "notes": "Attempting unauthorized approval.",
-            }
-        )
-        assert res.status_code == 403
-        assert "not authorized" in res.json()["detail"]
+        with pytest.raises(HTTPException) as exc:
+            transition_plan_status(
+                GovernanceTransitionRequest(
+                    target_status=ApprovalStatus.APPROVED,
+                    actor_id="attacker-user",
+                    actor_role=role,
+                    notes="Attempting unauthorized approval.",
+                )
+            )
+        assert exc.value.status_code == 403
+        assert "not authorized" in str(exc.value.detail).lower()
+
+    # Direct workflow engine check
+    can_proceed, reason = GovernanceWorkflow.can_transition(
+        ApprovalStatus.PENDING_APPROVAL, ApprovalStatus.APPROVED, UserRole.SOC_ANALYST
+    )
+    assert can_proceed is False
+    assert "not authorized" in str(reason).lower()
 
 
 def test_security_headers_verification():
     """Verify HTTP security response headers prevent MIME sniffing, clickjacking, and XSS."""
-    res = client.get("/api/v1/health")
-    assert res.headers["X-Content-Type-Options"] == "nosniff"
-    assert res.headers["X-Frame-Options"] == "DENY"
-    assert res.headers["X-XSS-Protection"] == "1; mode=block"
-    assert "Strict-Transport-Security" in res.headers
-    assert "Content-Security-Policy" in res.headers
+    base_response = Response(content="{}", media_type="application/json")
+    secured_response = SecurityHeadersMiddleware.apply_security_headers(
+        response=base_response,
+        path="/api/v1/health",
+        correlation_id="test-corr-id-1234",
+    )
+
+    assert secured_response.headers["X-Correlation-ID"] == "test-corr-id-1234"
+    assert secured_response.headers["X-Content-Type-Options"] == "nosniff"
+    assert secured_response.headers["X-Frame-Options"] == "DENY"
+    assert secured_response.headers["X-XSS-Protection"] == "1; mode=block"
+    assert secured_response.headers["Strict-Transport-Security"] == "max-age=31536000; includeSubDomains"
+    assert secured_response.headers["Content-Security-Policy"] == "default-src 'self'; frame-ancestors 'none';"
+    assert secured_response.headers["Referrer-Policy"] == "strict-origin-when-cross-origin"
+    assert secured_response.headers["Permissions-Policy"] == "geolocation=(), microphone=(), camera=()"
+
+    # Verify docs path allows swagger assets
+    docs_response = SecurityHeadersMiddleware.apply_security_headers(
+        response=Response(content="<html></html>"),
+        path="/docs",
+    )
+    assert "cdn.jsdelivr.net" in docs_response.headers["Content-Security-Policy"]

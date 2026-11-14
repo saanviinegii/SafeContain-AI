@@ -16,7 +16,13 @@ from backend.app.business.twin import BusinessContinuityTwin
 from backend.app.evidence.engine import EvidenceEngine, SensitivityScenarioResult
 from backend.app.explanation.engine import DecisionExplainer
 from backend.app.graph.engine import GraphEngine
-from backend.app.ingestion.connectors import SyntheticScenarioGenerator
+from backend.app.ingestion.connectors import (
+    EDRConnector,
+    IAMConnector,
+    SIEMConnector,
+    SyntheticScenarioGenerator,
+)
+from backend.app.ingestion.contracts import IngestionResult
 from backend.app.models.domain import (
     ApprovalStatus,
     AttackPath,
@@ -53,6 +59,9 @@ class PlatformContext:
         self.twin = BusinessContinuityTwin()
         self.evidence_eng = EvidenceEngine()
         self.ledger = ChainedAuditLedger()
+        self.siem_connector = SIEMConnector()
+        self.edr_connector = EDRConnector()
+        self.iam_connector = IAMConnector()
         self.current_plan: Optional[ContainmentPlan] = None
         self.last_simulation: Optional[SimulationResult] = None
         self.active_scenario_name = "Uninitialized (Clean State)"
@@ -85,6 +94,107 @@ def get_metrics() -> SystemMetrics:
 # =====================================================================
 # SCENARIO & INGESTION ENDPOINTS
 # =====================================================================
+
+@api_router.get("/ingestion/connectors", tags=["Ingestion"])
+def get_registered_connectors() -> List[Dict[str, Any]]:
+    """Returns all registered enterprise security connectors, sync modes, and deduplication stats."""
+    return [
+        {
+            "name": platform_ctx.siem_connector.name,
+            "provenance": platform_ctx.siem_connector.provenance.value,
+            "system_type": "SIEM / Security Information and Event Management",
+            "seen_fingerprints": len(platform_ctx.siem_connector._seen_event_hashes),
+            "status": "ONLINE",
+        },
+        {
+            "name": platform_ctx.edr_connector.name,
+            "provenance": platform_ctx.edr_connector.provenance.value,
+            "system_type": "EDR / Endpoint Detection & Response",
+            "seen_fingerprints": len(platform_ctx.edr_connector._seen_event_hashes),
+            "status": "ONLINE",
+        },
+        {
+            "name": platform_ctx.iam_connector.name,
+            "provenance": platform_ctx.iam_connector.provenance.value,
+            "system_type": "IAM / Identity & Access Management",
+            "seen_fingerprints": len(platform_ctx.iam_connector._seen_event_hashes),
+            "status": "ONLINE",
+        },
+        {
+            "name": "SyntheticScenarioGenerator",
+            "provenance": "SYNTHETIC",
+            "system_type": "Calibrated Scenario Generator",
+            "seen_fingerprints": 0,
+            "status": "ONLINE",
+        },
+    ]
+
+
+@api_router.post("/ingestion/siem", response_model=IngestionResult, tags=["Ingestion"])
+def ingest_siem_telemetry(payload: List[Dict[str, Any]]) -> IngestionResult:
+    """Ingests raw SIEM security alerts with SHA-256 deduplication and schema validation."""
+    result = platform_ctx.siem_connector.ingest(payload)
+    for node in result.nodes:
+        platform_ctx.engine.add_node(node)
+        if platform_ctx.engine.is_neo4j_live:
+            platform_ctx.engine.create_or_update_node_in_neo4j(node)
+    for edge in result.edges:
+        platform_ctx.engine.add_edge(edge)
+        if platform_ctx.engine.is_neo4j_live:
+            platform_ctx.engine.create_or_update_edge_in_neo4j(edge)
+
+    MetricsCollector.record_ingestion(result.nodes_created + result.edges_created)
+    platform_ctx.twin.discover_dependencies_from_graph(platform_ctx.engine)
+
+    platform_ctx.ledger.record_event(
+        actor_id="siem-connector",
+        actor_role=UserRole.SOC_ANALYST,
+        action="INGEST_SIEM_TELEMETRY",
+        resource_type="TelemetryBatch",
+        resource_id=f"siem-batch-{uuid.uuid4().hex[:8]}",
+        metadata={
+            "received": result.total_received,
+            "nodes_created": result.nodes_created,
+            "edges_created": result.edges_created,
+            "duplicates_skipped": result.duplicates_skipped,
+            "errors": result.errors_encountered,
+        },
+    )
+    return result
+
+
+@api_router.post("/ingestion/edr", response_model=IngestionResult, tags=["Ingestion"])
+def ingest_edr_telemetry(payload: List[Dict[str, Any]]) -> IngestionResult:
+    """Ingests raw EDR host detections with SHA-256 deduplication and validation."""
+    result = platform_ctx.edr_connector.ingest(payload)
+    for node in result.nodes:
+        platform_ctx.engine.add_node(node)
+        if platform_ctx.engine.is_neo4j_live:
+            platform_ctx.engine.create_or_update_node_in_neo4j(node)
+    for edge in result.edges:
+        platform_ctx.engine.add_edge(edge)
+        if platform_ctx.engine.is_neo4j_live:
+            platform_ctx.engine.create_or_update_edge_in_neo4j(edge)
+
+    MetricsCollector.record_ingestion(result.nodes_created + result.edges_created)
+    platform_ctx.twin.discover_dependencies_from_graph(platform_ctx.engine)
+
+    platform_ctx.ledger.record_event(
+        actor_id="edr-connector",
+        actor_role=UserRole.SOC_ANALYST,
+        action="INGEST_EDR_TELEMETRY",
+        resource_type="TelemetryBatch",
+        resource_id=f"edr-batch-{uuid.uuid4().hex[:8]}",
+        metadata={
+            "received": result.total_received,
+            "nodes_created": result.nodes_created,
+            "edges_created": result.edges_created,
+            "duplicates_skipped": result.duplicates_skipped,
+            "errors": result.errors_encountered,
+        },
+    )
+    return result
+
 
 @api_router.post("/scenario/load-synthetic", tags=["Ingestion"])
 def load_synthetic_scenario(scenario_name: str = "Operation Sovereign Gateway") -> Dict[str, Any]:
@@ -146,6 +256,12 @@ def get_attack_paths() -> List[AttackPath]:
 def get_neo4j_connection_status() -> Dict[str, Any]:
     """Returns real-time connection status and entity counts for live Neo4j."""
     return platform_ctx.engine.get_neo4j_status()
+
+
+@api_router.get("/graph/neo4j/statistics", tags=["Graph Intelligence"])
+def get_neo4j_database_statistics() -> Dict[str, Any]:
+    """Returns database statistics across labels, relationship types, and evidence certainty."""
+    return platform_ctx.engine.get_database_statistics()
 
 
 @api_router.post("/graph/neo4j/sync", tags=["Graph Intelligence"])

@@ -5,6 +5,7 @@ Enforces HTTP security response headers, correlation IDs, and Cypher/SQL injecti
 
 import re
 import uuid
+from typing import Optional
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
@@ -19,19 +20,23 @@ CYPHER_INJECTION_PATTERN = re.compile(
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Enforces enterprise security headers across all API responses."""
 
-    async def dispatch(self, request: Request, call_next) -> Response:
-        correlation_id = request.headers.get("X-Correlation-ID") or f"req-{uuid.uuid4().hex[:12]}"
-        response: Response = await call_next(request)
-
-        # Standard OWASP / CERT-In Recommended Response Headers
-        response.headers["X-Correlation-ID"] = correlation_id
+    @classmethod
+    def apply_security_headers(
+        cls,
+        response: Response,
+        path: str = "/",
+        correlation_id: Optional[str] = None
+    ) -> Response:
+        """Applies standard OWASP / CERT-In Recommended Response Headers to any HTTP response."""
+        cid = correlation_id or f"req-{uuid.uuid4().hex[:12]}"
+        response.headers["X-Correlation-ID"] = cid
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-        
+
         # Permit Swagger UI CDN assets and inline initialization scripts on documentation endpoints
-        if request.url.path in ("/docs", "/redoc", "/openapi.json"):
+        if path in ("/docs", "/redoc", "/openapi.json"):
             response.headers["Content-Security-Policy"] = (
                 "default-src 'self'; "
                 "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
@@ -43,8 +48,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none';"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
-
         return response
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        correlation_id = request.headers.get("X-Correlation-ID")
+        response: Response = await call_next(request)
+        return self.apply_security_headers(response, request.url.path, correlation_id)
 
 
 def sanitize_graph_query_input(user_input: str) -> str:

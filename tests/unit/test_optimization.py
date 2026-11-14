@@ -71,3 +71,27 @@ def test_optimization_strategies_comparison():
     assert "strategies" in comp
     assert "benchmarks" in comp
     assert comp["benchmarks"]["cpsat_latency_ms"] >= 0.0
+
+
+def test_cpsat_infeasible_explanation():
+    """Verify that when budget is insufficient, CP-SAT returns structured infeasible explanation without crashing."""
+    engine = GraphEngine(mode="in_memory")
+    scenario = SyntheticScenarioGenerator.generate_national_gateway_scenario()
+
+    for node in scenario.nodes:
+        engine.add_node(node)
+    for edge in scenario.edges:
+        engine.add_edge(edge)
+
+    twin = BusinessContinuityTwin()
+    twin.discover_dependencies_from_graph(engine)
+
+    paths = engine.find_attack_paths()
+    nodes = {n.id: n for n in engine.get_all_nodes()}
+    actions = ActionCatalog.generate_candidate_actions(paths, nodes)
+
+    # All candidate actions have cost >= $100. Setting budget to $1.0 must force 0 actions or infeasible check
+    plan_infeasible = CPSATOptimizer.plan(actions, twin, engine, budget_limit=1.0)
+    assert plan_infeasible.strategy == OptimizationStrategy.CONSTRAINT_CPSAT
+    assert len(plan_infeasible.actions) == 0
+    assert plan_infeasible.total_cost <= 1.0

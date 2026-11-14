@@ -93,4 +93,12 @@ export const api = {
   verifyBlockchainRecord: (eventId: string) =>
     fetchApi<any>(`/audit/blockchain/verify?event_id=${encodeURIComponent(eventId)}`, { method: 'POST' }),
   exportReport: (format: 'json' | 'csv' | 'text') => fetchApi<any>(`/reports/export?format=${format}`),
+  getConnectors: () => fetchApi<any[]>('/ingestion/connectors'),
+  ingestSiem: (payload: any[]) =>
+    fetchApi<any>('/ingestion/siem', { method: 'POST', body: JSON.stringify(payload) }),
+  ingestEdr: (payload: any[]) =>
+    fetchApi<any>('/ingestion/edr', { method: 'POST', body: JSON.stringify(payload) }),
+  ingestIam: (payload: any[]) =>
+    fetchApi<any>('/ingestion/iam', { method: 'POST', body: JSON.stringify(payload) }),
+  getNeo4jStatistics: () => fetchApi<any>('/graph/neo4j/statistics'),
 };

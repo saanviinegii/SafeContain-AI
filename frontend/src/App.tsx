@@ -71,6 +71,7 @@ export const App: React.FC = () => {
   const [selectedActionIds, setSelectedActionIds] = useState<string[]>([]);
   const [simulationStrategy, setSimulationStrategy] = useState<string>('CONSTRAINT_CPSAT');
   const [blockchainStatus, setBlockchainStatus] = useState<any>(null);
+  const [neo4jStats, setNeo4jStats] = useState<any>(null);
 
   const showNotification = (msg: string) => {
     setNotification(msg);
@@ -93,7 +94,7 @@ export const App: React.FC = () => {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [topo, paths, risk, wfs, cands, comp, sim, exp, ledger, intReport, sens, mets, bStatus] = await Promise.all([
+      const [topo, paths, risk, wfs, cands, comp, sim, exp, ledger, intReport, sens, mets, bStatus, nStats] = await Promise.all([
         api.getTopology(),
         api.getAttackPaths(),
         api.getDecomposedRisk(),
@@ -107,6 +108,7 @@ export const App: React.FC = () => {
         api.getEvidenceSensitivity(),
         api.getMetrics(),
         api.getBlockchainStatus().catch(() => null),
+        api.getNeo4jStatistics().catch(() => null),
       ]);
 
       setTopology(topo);
@@ -125,6 +127,7 @@ export const App: React.FC = () => {
       setSensitivityList(sens);
       setMetrics(mets);
       setBlockchainStatus(bStatus);
+      setNeo4jStats(nStats);
     } catch (err: any) {
       console.error('Failed loading data:', err);
       showNotification(`Error: ${err.message}`);
@@ -187,6 +190,67 @@ export const App: React.FC = () => {
       showNotification('Synthetic scenario reloaded successfully with strict SYNTHETIC provenance.');
     } catch (err: any) {
       showNotification(`Reload failed: ${err.message}`);
+    }
+  };
+
+  const handleIngestSiemAlert = async () => {
+    try {
+      const sample = [
+        {
+          alert_id: `siem-ui-${Date.now()}`,
+          title: 'Suspicious Lateral Movement Probe',
+          severity: 0.88,
+          source_ip: '10.0.1.15',
+          target_ip: '10.0.3.50',
+          signature: 'MITRE-T1021.002',
+        },
+      ];
+      const res = await api.ingestSiem(sample);
+      showNotification(`SIEM Ingestion Success: ${res.nodes_created} nodes, ${res.edges_created} edges created.`);
+      await loadAllData();
+    } catch (err: any) {
+      showNotification(`SIEM Ingestion Failed: ${err.message}`);
+    }
+  };
+
+  const handleIngestEdrTelemetry = async () => {
+    try {
+      const sample = [
+        {
+          device_id: `dev-edr-${Date.now().toString().slice(-4)}`,
+          hostname: 'wrk-fin-lead-09',
+          os: 'Windows 11 Enterprise',
+          agent_version: '7.12.0',
+          status: 'ISOLATED',
+          compromised: true,
+          ip_address: '10.0.2.77',
+        },
+      ];
+      const res = await api.ingestEdr(sample);
+      showNotification(`EDR Ingestion Success: ${res.nodes_created} nodes, ${res.edges_created} edges created.`);
+      await loadAllData();
+    } catch (err: any) {
+      showNotification(`EDR Ingestion Failed: ${err.message}`);
+    }
+  };
+
+  const handleIngestIamGrant = async () => {
+    try {
+      const sample = [
+        {
+          permission_id: `perm-iam-${Date.now().toString().slice(-4)}`,
+          name: 'Domain Elevated Backup Operator',
+          resource: 'DC01-AD-FOREST',
+          action: 'FULL_CONTROL',
+          risk_level: 0.9,
+          user_id: 'usr-analyst-external',
+        },
+      ];
+      const res = await api.ingestIam(sample);
+      showNotification(`IAM Ingestion Success: ${res.nodes_created} nodes, ${res.edges_created} edges created.`);
+      await loadAllData();
+    } catch (err: any) {
+      showNotification(`IAM Ingestion Failed: ${err.message}`);
     }
   };
 
@@ -1280,6 +1344,20 @@ export const App: React.FC = () => {
                   <div className="table-header">
                     <div className="table-title">Enterprise Security Connectors & Provenance</div>
                   </div>
+
+                  <div style={{ padding: '16px 20px', background: 'rgba(255, 255, 255, 0.02)', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--accent-cyan)' }}>Live Telemetry Ingestion Triggers:</span>
+                    <button className="btn-secondary" style={{ fontSize: '12px' }} onClick={handleIngestSiemAlert}>
+                      + Ingest SIEM Alert
+                    </button>
+                    <button className="btn-secondary" style={{ fontSize: '12px' }} onClick={handleIngestEdrTelemetry}>
+                      + Ingest EDR Telemetry
+                    </button>
+                    <button className="btn-secondary" style={{ fontSize: '12px' }} onClick={handleIngestIamGrant}>
+                      + Ingest IAM Grant
+                    </button>
+                  </div>
+
                   <table className="safe-table">
                     <thead>
                       <tr>
@@ -1376,6 +1454,37 @@ export const App: React.FC = () => {
                       <div className="metric-title">Graph Engine</div>
                       <div className="metric-value" style={{ fontSize: '18px', color: 'var(--accent-cyan)' }}>
                         {topology.backend}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="data-table-container" style={{ marginTop: '24px', padding: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                      <h3 style={{ color: 'var(--text-primary)' }}>Neo4j AuraDB Dedicated Graph Service</h3>
+                      <span className={`badge ${neo4jStats?.neo4j_live ? 'badge-emerald' : 'badge-amber'}`}>
+                        {neo4jStats?.neo4j_live ? 'LIVE AURA INSTANCE' : 'IN-MEMORY DUAL ENGINE'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                      <div style={{ padding: '12px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Status</div>
+                        <div style={{ fontWeight: 600, color: neo4jStats?.neo4j_live ? '#10b981' : 'var(--accent-amber)' }}>
+                          {neo4jStats?.status || 'Active Dual Mode'}
+                        </div>
+                      </div>
+                      <div style={{ padding: '12px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Total Nodes</div>
+                        <div style={{ fontWeight: 600 }}>{neo4jStats?.total_nodes || topology.nodes.length}</div>
+                      </div>
+                      <div style={{ padding: '12px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Total Relationships</div>
+                        <div style={{ fontWeight: 600 }}>{neo4jStats?.total_relationships || topology.edges.length}</div>
+                      </div>
+                      <div style={{ padding: '12px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Constraints / Indexes</div>
+                        <div style={{ fontWeight: 600, color: 'var(--accent-cyan)' }}>
+                          {neo4jStats?.schema_constraints_active !== undefined ? String(neo4jStats?.schema_constraints_active) : 'Ready'}
+                        </div>
                       </div>
                     </div>
                   </div>

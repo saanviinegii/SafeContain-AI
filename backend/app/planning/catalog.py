@@ -38,8 +38,8 @@ class ActionCatalog:
             if not node:
                 continue
 
-            # 1. Endpoints & Workstations -> ISOLATE_ENDPOINT
-            if node.type in (NodeType.ENDPOINT, NodeType.HOST) and nid not in seen_targets:
+            # 1. Endpoints, Hosts & Physical Devices -> ISOLATE_ENDPOINT
+            if node.type in (NodeType.ENDPOINT, NodeType.HOST, NodeType.DEVICE) and nid not in seen_targets:
                 seen_targets.add(nid)
                 candidates.append(ContainmentAction(
                     id=f"act-isolate-{nid}",
@@ -54,7 +54,26 @@ class ActionCatalog:
                     required_role=UserRole.INCIDENT_RESPONDER,
                     preconditions=["EDR_AGENT_ONLINE", "VALID_DEVICE_CERTIFICATE"],
                     mitigated_path_ids=[p.id for p in paths if nid in p.node_sequence],
-                    rationale=f"Sever network layer connectivity for endpoint '{node.name}' to halt lateral movement.",
+                    rationale=f"Sever network layer connectivity for endpoint/device '{node.name}' to halt lateral movement.",
+                ))
+
+            # 1b. Specific Permission Tokens -> REMOVE_PRIVILEGES
+            elif node.type == NodeType.PERMISSION and nid not in seen_targets:
+                seen_targets.add(nid)
+                candidates.append(ContainmentAction(
+                    id=f"act-revoke-perm-{nid}",
+                    action_type=SecurityActionType.REMOVE_PRIVILEGES,
+                    target_node_id=nid,
+                    target_node_name=node.name,
+                    estimated_risk_reduction=50.0,
+                    operational_disruption_score=25.0,
+                    implementation_cost=150.0,
+                    estimated_duration_minutes=10,
+                    reversibility=True,
+                    required_role=UserRole.SECURITY_ADMIN,
+                    preconditions=["DIRECTORY_REPLICATION_HEALTHY"],
+                    mitigated_path_ids=[p.id for p in paths if nid in p.node_sequence],
+                    rationale=f"Revoke delegated permission token '{node.name}' to invalidate lateral movement authorization.",
                 ))
 
             # 2. Privileged Identities & Users -> REVOKE_SESSION / DISABLE_ACCOUNT / ROTATE_CREDENTIALS

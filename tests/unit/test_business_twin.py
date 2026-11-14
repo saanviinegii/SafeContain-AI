@@ -57,10 +57,10 @@ def test_action_disruption_evaluation():
         rationale="Blunt containment isolating production database.",
     )
     assessments_destructive = twin.assess_action_disruption(destructive_action, engine)
-    assert len(assessments_destructive) == 1
-    assert assessments_destructive[0].workflow_id == "wf-citizen-auth-service"
-    assert assessments_destructive[0].violates_sla is True
-    assert assessments_destructive[0].financial_impact > 0.0
+    assert len(assessments_destructive) >= 2, "Disrupting core database must disrupt both citizen auth and payment workflows"
+    assert any(a.workflow_id == "wf-citizen-auth-service" and a.violates_sla for a in assessments_destructive)
+    assert any(a.workflow_id == "wf-payment-clearing-switch" and a.violates_sla for a in assessments_destructive)
+    assert all(a.financial_impact > 0.0 for a in assessments_destructive)
 
     # Action B: Targeted Action - Isolating perimeter gateway or lateral workstation
     surgical_action = ContainmentAction(

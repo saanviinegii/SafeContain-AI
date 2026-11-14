@@ -217,6 +217,8 @@ class CPSATOptimizer:
         total_risk_reduct = 0.0
         constraint_violations: List[str] = []
 
+        obj_score = 0.0
+        is_optimal = False
         if solver_status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             for i in range(num_actions):
                 if solver.Value(x[i]) == 1:
@@ -225,14 +227,24 @@ class CPSATOptimizer:
                     total_cost += a.implementation_cost
                     total_disruption += a.operational_disruption_score
                     total_risk_reduct += a.estimated_risk_reduction
+            obj_score = round(solver.ObjectiveValue() / 100.0, 2)
+            is_optimal = solver_status == cp_model.OPTIMAL
+            explanation = (
+                f"CP-SAT optimization achieved {'mathematically optimal' if is_optimal else 'feasible'} "
+                f"containment across {len(selected)} actions while strictly preserving critical citizen SLAs. "
+                f"Total cost: ${total_cost:.2f}, Disruption: {total_disruption:.1f}."
+            )
         else:
-            # Fallback to greedy if CP-SAT proved infeasible
-            constraint_violations.append("CP-SAT solver proved infeasible under strict SLA constraints.")
-            greedy_fallback = GreedyOptimizer.plan(candidate_actions, budget_limit)
-            return greedy_fallback
+            constraint_violations.append(
+                f"CP-SAT solver proved INFEASIBLE under strict SLA constraints and budget cap of ${budget_limit:.2f}."
+            )
+            explanation = (
+                f"CP-SAT optimization is INFEASIBLE: No combination of candidate actions satisfies "
+                f"the budget cap of ${budget_limit:.2f} while strictly preserving zero-allowable outage SLAs "
+                f"on mission-critical citizen workflows."
+            )
 
         predicted_residual = max(0.0, 100.0 - total_risk_reduct)
-        is_optimal = solver_status == cp_model.OPTIMAL
 
         return ContainmentPlan(
             id="plan-strat3-cpsat",
@@ -244,13 +256,9 @@ class CPSATOptimizer:
             predicted_residual_risk=round(predicted_residual, 2),
             satisfies_all_constraints=len(constraint_violations) == 0,
             constraint_violations=constraint_violations,
-            objective_score=round(solver.ObjectiveValue() / 100.0, 2),
+            objective_score=obj_score,
             status=ApprovalStatus.ANALYZED,
-            explanation=(
-                f"CP-SAT optimization achieved {'mathematically optimal' if is_optimal else 'feasible'} "
-                f"containment across {len(selected)} actions while strictly preserving critical citizen SLAs. "
-                f"Total cost: ${total_cost:.2f}, Disruption: {total_disruption:.1f}."
-            ),
+            explanation=explanation,
         )
 
 

@@ -22,6 +22,9 @@ from backend.app.models.domain import (
 class SIEMConnector(BaseConnector):
     """Ingests security incident alerts and log telemetry from SIEM platforms."""
 
+    def __init__(self, name: str = "Splunk_SIEM", provenance: DataProvenance = DataProvenance.LIVE_TELEMETRY):
+        super().__init__(name=name, provenance=provenance)
+
     def ingest(self, raw_payload: List[Dict[str, Any]]) -> IngestionResult:
         nodes: List[GraphNode] = []
         edges: List[GraphEdge] = []
@@ -133,6 +136,9 @@ class SIEMConnector(BaseConnector):
 class EDRConnector(BaseConnector):
     """Ingests Endpoint Detection and Response telemetry."""
 
+    def __init__(self, name: str = "CrowdStrike_Falcon", provenance: DataProvenance = DataProvenance.LIVE_TELEMETRY):
+        super().__init__(name=name, provenance=provenance)
+
     def ingest(self, raw_payload: List[Dict[str, Any]]) -> IngestionResult:
         nodes: List[GraphNode] = []
         edges: List[GraphEdge] = []
@@ -217,6 +223,9 @@ class EDRConnector(BaseConnector):
 
 class IAMConnector(BaseConnector):
     """Ingests Identity, Role, and Privilege Access telemetry."""
+
+    def __init__(self, name: str = "ActiveDirectory_IAM", provenance: DataProvenance = DataProvenance.LIVE_TELEMETRY):
+        super().__init__(name=name, provenance=provenance)
 
     def ingest(self, raw_payload: List[Dict[str, Any]]) -> IngestionResult:
         nodes: List[GraphNode] = []
@@ -324,7 +333,26 @@ class SyntheticScenarioGenerator:
                 properties={"subnet": "10.0.1.0/24", "cve": "CVE-2026-4428"},
                 provenance=DataProvenance.SYNTHETIC,
             ),
-            # Internal Workstation & Identity
+            GraphNode(
+                id="vpn-ext-gateway",
+                name="Remote Access SSL-VPN Concentrator",
+                type=NodeType.SERVER,
+                criticality=0.80,
+                is_compromised=True,
+                properties={"subnet": "10.0.2.0/24", "protocol": "OpenVPN/IPsec"},
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            # Security Alert Entity
+            GraphNode(
+                id="alert-cve-exploit-dmz",
+                name="SIEM Alert #9011: RCE Exploit Detected on DMZ Gateway",
+                type=NodeType.ALERT,
+                criticality=0.88,
+                is_compromised=True,
+                properties={"severity": "CRITICAL", "signature": "SIG-EXPLOIT-4428", "mitre_technique": "T1190"},
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            # Internal Workstation & Device
             GraphNode(
                 id="wrk-operator-14",
                 name="SOC Operator Workstation 14",
@@ -335,6 +363,16 @@ class SyntheticScenarioGenerator:
                 provenance=DataProvenance.SYNTHETIC,
             ),
             GraphNode(
+                id="dev-operator-terminal-14",
+                name="Operator Physical Workstation Hardware (Asset #4012)",
+                type=NodeType.DEVICE,
+                criticality=0.5,
+                is_compromised=True,
+                properties={"mac_address": "00:1A:2B:3C:4D:5E", "os": "Windows 11 Enterprise"},
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            # Identity & Permission
+            GraphNode(
                 id="usr-admin-rajesh",
                 name="Rajesh Verma (Domain Admin)",
                 type=NodeType.PRIVILEGED_IDENTITY,
@@ -343,6 +381,16 @@ class SyntheticScenarioGenerator:
                 properties={"privilege": "Enterprise Admin", "mfa": False},
                 provenance=DataProvenance.SYNTHETIC,
             ),
+            GraphNode(
+                id="perm-domain-admin-access",
+                name="Active Directory Enterprise Admin Privilege Token",
+                type=NodeType.PERMISSION,
+                criticality=0.95,
+                is_compromised=True,
+                properties={"scope": "Forest Root", "delegated": True},
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            # Servers & Staging
             GraphNode(
                 id="srv-ad-dc01",
                 name="Primary Domain Controller (DC01)",
@@ -353,7 +401,6 @@ class SyntheticScenarioGenerator:
                 properties={"role": "Identity Provider / Kerberos KDC"},
                 provenance=DataProvenance.SYNTHETIC,
             ),
-            # Staging & Lateral Hop
             GraphNode(
                 id="srv-backup-stage",
                 name="Disaster Recovery Backup Stage",
@@ -374,7 +421,7 @@ class SyntheticScenarioGenerator:
                 properties={"records_count": 85000000, "encryption": "AES-256", "data_tier": "Confidential"},
                 provenance=DataProvenance.SYNTHETIC,
             ),
-            # Mission Critical Workflow Node
+            # Mission Critical Workflow 1: Citizen Auth Portal
             GraphNode(
                 id="wf-citizen-auth-service",
                 name="National Citizen Identity Verification Portal",
@@ -384,6 +431,20 @@ class SyntheticScenarioGenerator:
                     "criticality_tier": "TIER_1_MISSION_CRITICAL",
                     "citizen_facing": True,
                     "hourly_downtime_cost": 250000.0,
+                    "max_allowable_downtime_hours": 0.0,
+                },
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            # Mission Critical Workflow 2: Payment Clearing & Direct Benefit Transfer Switch
+            GraphNode(
+                id="wf-payment-clearing-switch",
+                name="National DBT & Treasury Payment Clearing Switch",
+                type=NodeType.BUSINESS_WORKFLOW,
+                criticality=1.0,
+                properties={
+                    "criticality_tier": "TIER_1_MISSION_CRITICAL",
+                    "citizen_facing": True,
+                    "hourly_downtime_cost": 500000.0,
                     "max_allowable_downtime_hours": 0.0,
                 },
                 provenance=DataProvenance.SYNTHETIC,
@@ -399,6 +460,17 @@ class SyntheticScenarioGenerator:
                 type=RelationshipType.EXPOSED_TO,
                 evidence_status=EvidenceStatus.CONFIRMED,
                 confidence=1.0,
+                evidence_reference="EVID-SIEM-9011",
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            GraphEdge(
+                id="edge-dmz-alert",
+                source="dmz-gateway-01",
+                target="alert-cve-exploit-dmz",
+                type=RelationshipType.GENERATED_ALERT,
+                evidence_status=EvidenceStatus.CONFIRMED,
+                confidence=0.99,
+                evidence_reference="EVID-SIEM-9011",
                 provenance=DataProvenance.SYNTHETIC,
             ),
             GraphEdge(
@@ -408,6 +480,17 @@ class SyntheticScenarioGenerator:
                 type=RelationshipType.CONNECTED_TO,
                 evidence_status=EvidenceStatus.CONFIRMED,
                 confidence=0.92,
+                evidence_reference="EVID-NET-4001",
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            GraphEdge(
+                id="edge-wrk-device",
+                source="wrk-operator-14",
+                target="dev-operator-terminal-14",
+                type=RelationshipType.USES_DEVICE,
+                evidence_status=EvidenceStatus.CONFIRMED,
+                confidence=0.98,
+                evidence_reference="EVID-EDR-4402",
                 provenance=DataProvenance.SYNTHETIC,
             ),
             GraphEdge(
@@ -417,6 +500,17 @@ class SyntheticScenarioGenerator:
                 type=RelationshipType.AUTHENTICATES_TO,
                 evidence_status=EvidenceStatus.CONFIRMED,
                 confidence=0.95,
+                evidence_reference="EVID-IAM-1022",
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            GraphEdge(
+                id="edge-user-perm",
+                source="usr-admin-rajesh",
+                target="perm-domain-admin-access",
+                type=RelationshipType.CAN_ACCESS,
+                evidence_status=EvidenceStatus.CONFIRMED,
+                confidence=1.0,
+                evidence_reference="EVID-IAM-1022",
                 provenance=DataProvenance.SYNTHETIC,
             ),
             GraphEdge(
@@ -426,6 +520,7 @@ class SyntheticScenarioGenerator:
                 type=RelationshipType.HAS_ACCESS_TO,
                 evidence_status=EvidenceStatus.CONFIRMED,
                 confidence=1.0,
+                evidence_reference="EVID-IAM-1022",
                 provenance=DataProvenance.SYNTHETIC,
             ),
             GraphEdge(
@@ -435,9 +530,10 @@ class SyntheticScenarioGenerator:
                 type=RelationshipType.HAS_ACCESS_TO,
                 evidence_status=EvidenceStatus.CONFIRMED,
                 confidence=0.98,
+                evidence_reference="EVID-DB-3031",
                 provenance=DataProvenance.SYNTHETIC,
             ),
-            # Secondary / Alternative Attack Path (Uncertain & Suspected)
+            # Secondary Attack Path (Uncertain & Suspected via Backup Stage)
             GraphEdge(
                 id="edge-dmz-to-backup",
                 source="dmz-gateway-01",
@@ -445,6 +541,7 @@ class SyntheticScenarioGenerator:
                 type=RelationshipType.CONNECTED_TO,
                 evidence_status=EvidenceStatus.SUSPECTED,
                 confidence=0.60,
+                evidence_reference="EVID-FLOW-7701",
                 provenance=DataProvenance.SYNTHETIC,
             ),
             GraphEdge(
@@ -454,13 +551,62 @@ class SyntheticScenarioGenerator:
                 type=RelationshipType.DEPENDS_ON,
                 evidence_status=EvidenceStatus.SUSPECTED,
                 confidence=0.55,
+                evidence_reference="EVID-FLOW-7702",
                 provenance=DataProvenance.SYNTHETIC,
             ),
-            # Business Continuity Mapping Edge
+            # Tertiary Attack Path (Unknown/Covert route via Compromised SSL-VPN)
+            GraphEdge(
+                id="edge-c2-to-vpn",
+                source="ext-attacker-c2",
+                target="vpn-ext-gateway",
+                type=RelationshipType.EXPOSED_TO,
+                evidence_status=EvidenceStatus.CONFIRMED,
+                confidence=0.88,
+                evidence_reference="EVID-VPN-5001",
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            GraphEdge(
+                id="edge-vpn-to-dc",
+                source="vpn-ext-gateway",
+                target="srv-ad-dc01",
+                type=RelationshipType.CONNECTED_TO,
+                evidence_status=EvidenceStatus.UNKNOWN,
+                confidence=0.45,
+                evidence_reference="EVID-HEURISTIC-101",
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            # Business Continuity Mapping Edges
             GraphEdge(
                 id="edge-db-supports-portal",
                 source="db-citizen-identity-prod",
                 target="wf-citizen-auth-service",
+                type=RelationshipType.SUPPORTS_WORKFLOW,
+                evidence_status=EvidenceStatus.CONFIRMED,
+                confidence=1.0,
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            GraphEdge(
+                id="edge-dc-supports-portal",
+                source="srv-ad-dc01",
+                target="wf-citizen-auth-service",
+                type=RelationshipType.SUPPORTS_WORKFLOW,
+                evidence_status=EvidenceStatus.CONFIRMED,
+                confidence=1.0,
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            GraphEdge(
+                id="edge-db-supports-payment",
+                source="db-citizen-identity-prod",
+                target="wf-payment-clearing-switch",
+                type=RelationshipType.SUPPORTS_WORKFLOW,
+                evidence_status=EvidenceStatus.CONFIRMED,
+                confidence=1.0,
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            GraphEdge(
+                id="edge-dc-supports-payment",
+                source="srv-ad-dc01",
+                target="wf-payment-clearing-switch",
                 type=RelationshipType.SUPPORTS_WORKFLOW,
                 evidence_status=EvidenceStatus.CONFIRMED,
                 confidence=1.0,

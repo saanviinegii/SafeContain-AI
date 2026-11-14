@@ -83,3 +83,41 @@ def test_synthetic_scenario_generator_provenance():
     crown_jewels = [n for n in result.nodes if n.is_crown_jewel]
     assert len(crown_jewels) >= 2
     assert any(n.id == "db-citizen-identity-prod" for n in crown_jewels)
+
+
+def test_iam_connector_and_ingestion_api_router():
+    """Verify IAM connector and API ingestion endpoints."""
+    connector = IAMConnector(name="ActiveDirectory_IAM", provenance=DataProvenance.LIVE_TELEMETRY)
+    payload = [
+        {
+            "username": "rajesh_verma",
+            "is_privileged": True,
+            "department": "Infrastructure",
+            "accessible_resources": ["srv-ad-dc01", "db-citizen-identity-prod"],
+        }
+    ]
+    result = connector.ingest(payload)
+    assert result.is_success is True
+    assert result.nodes_created == 1
+    assert result.edges_created == 2
+
+    # Test API router ingestion functions directly
+    from backend.app.api.v1.router import (
+        get_registered_connectors,
+        ingest_edr_telemetry,
+        ingest_siem_telemetry,
+    )
+    connectors = get_registered_connectors()
+    assert len(connectors) >= 3
+
+    siem_res = ingest_siem_telemetry([
+        {
+            "alert_id": "API-ALERT-001",
+            "source_ip": "10.0.5.10",
+            "dest_ip": "10.0.5.20",
+            "threat_name": "API Lateral Probe",
+            "severity_score": 0.9,
+        }
+    ])
+    assert siem_res.is_success is True
+    assert siem_res.nodes_created >= 1

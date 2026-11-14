@@ -167,14 +167,22 @@ class GraphEngine:
             "CREATE CONSTRAINT c_host_id IF NOT EXISTS FOR (h:Host) REQUIRE h.id IS UNIQUE",
             "CREATE CONSTRAINT c_server_id IF NOT EXISTS FOR (s:Server) REQUIRE s.id IS UNIQUE",
             "CREATE CONSTRAINT c_endpoint_id IF NOT EXISTS FOR (e:Endpoint) REQUIRE e.id IS UNIQUE",
+            "CREATE CONSTRAINT c_device_id IF NOT EXISTS FOR (dev:Device) REQUIRE dev.id IS UNIQUE",
             "CREATE CONSTRAINT c_database_id IF NOT EXISTS FOR (d:Database) REQUIRE d.id IS UNIQUE",
             "CREATE CONSTRAINT c_user_id IF NOT EXISTS FOR (u:User) REQUIRE u.id IS UNIQUE",
+            "CREATE CONSTRAINT c_permission_id IF NOT EXISTS FOR (p:Permission) REQUIRE p.id IS UNIQUE",
+            "CREATE CONSTRAINT c_alert_id IF NOT EXISTS FOR (a:Alert) REQUIRE a.id IS UNIQUE",
             "CREATE CONSTRAINT c_workflow_id IF NOT EXISTS FOR (w:BusinessWorkflow) REQUIRE w.id IS UNIQUE",
             "CREATE CONSTRAINT c_threat_id IF NOT EXISTS FOR (t:Threat) REQUIRE t.id IS UNIQUE",
         ]
+        indexes = [
+            "CREATE INDEX idx_host_compromised IF NOT EXISTS FOR (h:Host) ON (h.is_compromised)",
+            "CREATE INDEX idx_server_crown_jewel IF NOT EXISTS FOR (s:Server) ON (s.is_crown_jewel)",
+            "CREATE INDEX idx_db_crown_jewel IF NOT EXISTS FOR (d:Database) ON (d.is_crown_jewel)",
+        ]
         try:
             with self._neo4j_driver.session(database=settings.NEO4J_DATABASE) as session:
-                for statement in constraints:
+                for statement in constraints + indexes:
                     try:
                         session.run(statement)
                     except Exception:
@@ -385,3 +393,232 @@ class GraphEngine:
         except Exception as e:
             logger.error("Failed to load topology from Neo4j: %s", str(e))
             return {"status": "ERROR", "error": str(e)}
+
+    def create_or_update_node_in_neo4j(self, node: GraphNode) -> bool:
+        """Persists or updates an individual node in live Neo4j."""
+        if not self.is_neo4j_live or not self._neo4j_driver:
+            return False
+        label = node.type.value if hasattr(node.type, "value") else str(node.type)
+        clean_label = "".join(c for c in label if c.isalnum() or c == "_") or "Node"
+        cypher = f"""
+        MERGE (n:{clean_label} {{id: $id}})
+        SET n.name = $name,
+            n.type = $type,
+            n.criticality = $criticality,
+            n.is_compromised = $is_compromised,
+            n.is_crown_jewel = $is_crown_jewel,
+            n.provenance = $provenance
+        """
+        try:
+            with self._neo4j_driver.session(database=settings.NEO4J_DATABASE) as session:
+                session.run(
+                    cypher,
+                    id=node.id,
+                    name=node.name,
+                    type=clean_label,
+                    criticality=node.criticality,
+                    is_compromised=node.is_compromised,
+                    is_crown_jewel=node.is_crown_jewel,
+                    provenance=node.provenance.value if hasattr(node.provenance, "value") else str(node.provenance),
+                )
+            return True
+        except Exception as e:
+            logger.error("Failed to persist node %s to Neo4j: %s", node.id, str(e))
+            return False
+
+    def get_node_from_neo4j(self, node_id: str) -> Optional[GraphNode]:
+        """Retrieves an individual node from live Neo4j by ID."""
+        if not self.is_neo4j_live or not self._neo4j_driver:
+            return None
+        cypher = "MATCH (n {id: $id}) RETURN n.id as id, n.name as name, n.type as type, n.criticality as criticality, n.is_compromised as is_compromised, n.is_crown_jewel as is_crown_jewel, n.provenance as provenance, labels(n) as labels"
+        try:
+            with self._neo4j_driver.session(database=settings.NEO4J_DATABASE) as session:
+                result = session.run(cypher, id=node_id)
+                rec = result.single()
+                if not rec:
+                    return None
+                type_str = rec["type"] or (rec["labels"][0] if rec["labels"] else "Host")
+                try:
+                    ntype = NodeType(type_str)
+                except Exception:
+                    ntype = NodeType.HOST
+                prov_str = rec["provenance"] or "LIVE_TELEMETRY"
+                try:
+                    prov = DataProvenance(prov_str)
+                except Exception:
+                    prov = DataProvenance.LIVE_TELEMETRY
+                return GraphNode(
+                    id=rec["id"],
+                    name=rec["name"] or rec["id"],
+                    type=ntype,
+                    criticality=float(rec["criticality"] or 0.5),
+                    is_compromised=bool(rec["is_compromised"] or False),
+                    is_crown_jewel=bool(rec["is_crown_jewel"] or False),
+                    provenance=prov,
+                )
+        except Exception as e:
+            logger.error("Failed to retrieve node %s from Neo4j: %s", node_id, str(e))
+            return None
+
+    def delete_node_from_neo4j(self, node_id: str) -> bool:
+        """Deletes a node and all its incident relationships from live Neo4j."""
+        if not self.is_neo4j_live or not self._neo4j_driver:
+            return False
+        cypher = "MATCH (n {id: $id}) DETACH DELETE n"
+        try:
+            with self._neo4j_driver.session(database=settings.NEO4J_DATABASE) as session:
+                session.run(cypher, id=node_id)
+            return True
+        except Exception as e:
+            logger.error("Failed to delete node %s from Neo4j: %s", node_id, str(e))
+            return False
+
+    def create_or_update_edge_in_neo4j(self, edge: GraphEdge) -> bool:
+        """Persists or updates an individual relationship in live Neo4j."""
+        if not self.is_neo4j_live or not self._neo4j_driver:
+            return False
+        rel_type = edge.type.value if hasattr(edge.type, "value") else str(edge.type)
+        clean_rel = "".join(c for c in rel_type if c.isalnum() or c == "_") or "CONNECTED_TO"
+        cypher = f"""
+        MATCH (s {{id: $source}}), (t {{id: $target}})
+        MERGE (s)-[r:{clean_rel} {{id: $id}}]->(t)
+        SET r.type = $rel_type,
+            r.evidence_status = $evidence_status,
+            r.confidence = $confidence,
+            r.weight = $weight,
+            r.is_active = $is_active,
+            r.provenance = $provenance
+        """
+        try:
+            with self._neo4j_driver.session(database=settings.NEO4J_DATABASE) as session:
+                session.run(
+                    cypher,
+                    source=edge.source,
+                    target=edge.target,
+                    id=edge.id,
+                    rel_type=clean_rel,
+                    evidence_status=edge.evidence_status.value if hasattr(edge.evidence_status, "value") else str(edge.evidence_status),
+                    confidence=float(edge.confidence),
+                    weight=float(edge.weight),
+                    is_active=bool(edge.is_active),
+                    provenance=edge.provenance.value if hasattr(edge.provenance, "value") else str(edge.provenance),
+                )
+            return True
+        except Exception as e:
+            logger.error("Failed to persist edge %s to Neo4j: %s", edge.id, str(e))
+            return False
+
+    def get_edge_from_neo4j(self, edge_id: str) -> Optional[GraphEdge]:
+        """Retrieves an edge from live Neo4j by ID."""
+        if not self.is_neo4j_live or not self._neo4j_driver:
+            return None
+        cypher = "MATCH (s)-[r {id: $id}]->(t) RETURN r.id as id, s.id as source, t.id as target, type(r) as rel_type, r.evidence_status as evidence_status, r.confidence as confidence, r.weight as weight, r.is_active as is_active, r.provenance as provenance"
+        try:
+            with self._neo4j_driver.session(database=settings.NEO4J_DATABASE) as session:
+                result = session.run(cypher, id=edge_id)
+                rec = result.single()
+                if not rec:
+                    return None
+                r_str = rec["rel_type"] or "CONNECTED_TO"
+                try:
+                    rtype = RelationshipType(r_str)
+                except Exception:
+                    rtype = RelationshipType.CONNECTED_TO
+                ev_str = rec["evidence_status"] or "CONFIRMED"
+                try:
+                    ev_status = EvidenceStatus(ev_str)
+                except Exception:
+                    ev_status = EvidenceStatus.CONFIRMED
+                prov_str = rec["provenance"] or "LIVE_TELEMETRY"
+                try:
+                    prov = DataProvenance(prov_str)
+                except Exception:
+                    prov = DataProvenance.LIVE_TELEMETRY
+                return GraphEdge(
+                    id=rec["id"],
+                    source=rec["source"],
+                    target=rec["target"],
+                    type=rtype,
+                    evidence_status=ev_status,
+                    confidence=float(rec["confidence"] or 1.0),
+                    weight=float(rec["weight"] or 1.0),
+                    is_active=bool(rec["is_active"] if rec["is_active"] is not None else True),
+                    provenance=prov,
+                )
+        except Exception as e:
+            logger.error("Failed to retrieve edge %s from Neo4j: %s", edge_id, str(e))
+            return None
+
+    def delete_edge_from_neo4j(self, edge_id: str) -> bool:
+        """Deletes a relationship from live Neo4j by ID."""
+        if not self.is_neo4j_live or not self._neo4j_driver:
+            return False
+        cypher = "MATCH ()-[r {id: $id}]->() DELETE r"
+        try:
+            with self._neo4j_driver.session(database=settings.NEO4J_DATABASE) as session:
+                session.run(cypher, id=edge_id)
+            return True
+        except Exception as e:
+            logger.error("Failed to delete edge %s from Neo4j: %s", edge_id, str(e))
+            return False
+
+    def get_database_statistics(self) -> Dict[str, Any]:
+        """Returns deep statistics across nodes, labels, relationships, and evidence states."""
+        if not self.is_neo4j_live or not self._neo4j_driver:
+            # Return in-memory engine statistics
+            node_types = {}
+            for n in self._node_store.values():
+                val = n.type.value if hasattr(n.type, "value") else str(n.type)
+                node_types[val] = node_types.get(val, 0) + 1
+            rel_types = {}
+            ev_stats = {}
+            for e in self._edge_store.values():
+                rval = e.type.value if hasattr(e.type, "value") else str(e.type)
+                rel_types[rval] = rel_types.get(rval, 0) + 1
+                estat = e.evidence_status.value if hasattr(e.evidence_status, "value") else str(e.evidence_status)
+                ev_stats[estat] = ev_stats.get(estat, 0) + 1
+            return {
+                "backend": "in_memory_networkx",
+                "connected": False,
+                "total_nodes": len(self._node_store),
+                "total_edges": len(self._edge_store),
+                "nodes_by_label": node_types,
+                "edges_by_type": rel_types,
+                "edges_by_evidence_status": ev_stats,
+            }
+        try:
+            with self._neo4j_driver.session(database=settings.NEO4J_DATABASE) as session:
+                node_res = session.run("MATCH (n) RETURN labels(n)[0] as label, count(n) as count")
+                nodes_by_label = {rec["label"] or "Unlabeled": rec["count"] for rec in node_res}
+                edge_res = session.run("MATCH ()-[r]->() RETURN type(r) as rel_type, count(r) as count")
+                edges_by_type = {rec["rel_type"]: rec["count"] for rec in edge_res}
+                ev_res = session.run("MATCH ()-[r]->() RETURN coalesce(r.evidence_status, 'CONFIRMED') as ev_status, count(r) as count")
+                edges_by_evidence = {rec["ev_status"]: rec["count"] for rec in ev_res}
+                return {
+                    "backend": "live_neo4j",
+                    "connected": True,
+                    "uri": settings.NEO4J_URI,
+                    "database": settings.NEO4J_DATABASE,
+                    "total_nodes": sum(nodes_by_label.values()),
+                    "total_edges": sum(edges_by_type.values()),
+                    "nodes_by_label": nodes_by_label,
+                    "edges_by_type": edges_by_type,
+                    "edges_by_evidence_status": edges_by_evidence,
+                }
+        except Exception as e:
+            logger.error("Failed to query Neo4j database statistics: %s", str(e))
+            return {
+                "backend": "live_neo4j_error",
+                "connected": False,
+                "error": str(e),
+            }
+
+    def close(self) -> None:
+        """Safely closes the Neo4j driver connection lifecycle on shutdown."""
+        if self._neo4j_driver:
+            try:
+                self._neo4j_driver.close()
+                self._neo4j_available = False
+                logger.info("Neo4j driver connection safely closed.")
+            except Exception as e:
+                logger.warning("Error during Neo4j driver close: %s", str(e))

@@ -33,6 +33,9 @@ async def lifespan(app: FastAPI):
         if platform_ctx.engine.is_neo4j_live:
             platform_ctx.engine.sync_to_neo4j()
     yield
+    # Graceful connection lifecycle shutdown
+    if hasattr(platform_ctx.engine, "close"):
+        platform_ctx.engine.close()
 
 
 app = FastAPI(

@@ -91,3 +91,30 @@ def test_topology_export_import():
     new_engine.import_topology(exported)
     assert len(new_engine.get_all_nodes()) == len(engine.get_all_nodes())
     assert len(new_engine.get_all_edges()) == len(engine.get_all_edges())
+
+
+def test_database_statistics_and_lifecycle():
+    engine = GraphEngine(mode="in_memory")
+    scenario = SyntheticScenarioGenerator.generate_national_gateway_scenario()
+
+    for node in scenario.nodes:
+        engine.add_node(node)
+    for edge in scenario.edges:
+        engine.add_edge(edge)
+
+    stats = engine.get_database_statistics()
+    assert stats["backend"] == "in_memory_networkx"
+    assert stats["total_nodes"] == len(scenario.nodes)
+    assert stats["total_edges"] == len(scenario.edges)
+    assert "nodes_by_label" in stats
+    assert "edges_by_type" in stats
+    assert "edges_by_evidence_status" in stats
+
+    # Safe standalone CRUD calls when offline return safe fallbacks
+    assert engine.create_or_update_node_in_neo4j(scenario.nodes[0]) is False
+    assert engine.get_node_from_neo4j("non-existent") is None
+    assert engine.delete_node_from_neo4j("non-existent") is False
+
+    # Lifecycle close
+    engine.close()
+    assert engine.is_neo4j_live is False
