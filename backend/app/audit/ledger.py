@@ -283,28 +283,54 @@ class ChainedAuditLedger:
                 )
 
             # 2. Re-compute current hash from canonical contents
-            computed_current = self.compute_record_hash(
-                event_id=event.event_id,
-                timestamp_str=event.timestamp.isoformat(),
-                actor_id=event.actor_id,
-                actor_role=event.actor_role.value if hasattr(event.actor_role, "value") else str(event.actor_role),
-                organization_id=event.organization_id,
-                action=event.action,
-                resource_type=event.resource_type,
-                resource_id=event.resource_id,
-                metadata=event.metadata,
-                previous_hash=event.previous_hash,
-                event_type=event.event_type,
-                approval_reference=event.approval_reference,
-            )
+            ts_variants = [
+                event.timestamp.isoformat(),
+                event.timestamp.isoformat().replace("+00:00", "Z"),
+                event.timestamp.isoformat().replace("Z", "+00:00"),
+            ]
+            matched = False
+            last_computed = ""
 
-            if computed_current != event.current_hash:
+            for ts in ts_variants:
+                # Primary: R&D canonical hash formula
+                computed_current = self.compute_record_hash(
+                    event_id=event.event_id,
+                    timestamp_str=ts,
+                    actor_id=event.actor_id,
+                    actor_role=event.actor_role.value if hasattr(event.actor_role, "value") else str(event.actor_role),
+                    organization_id=event.organization_id,
+                    action=event.action,
+                    resource_type=event.resource_type,
+                    resource_id=event.resource_id,
+                    metadata=event.metadata,
+                    previous_hash=event.previous_hash,
+                    event_type=event.event_type,
+                    approval_reference=event.approval_reference,
+                )
+                last_computed = computed_current
+                if computed_current == event.current_hash:
+                    matched = True
+                    break
+
+                # Backward compatibility: legacy v1 canonical formula (prior to on-chain event_type)
+                canonical_legacy = (
+                    f"{event.event_id}|{ts}|"
+                    f"{event.actor_id}|{event.actor_role.value if hasattr(event.actor_role, 'value') else str(event.actor_role)}|{event.organization_id}|"
+                    f"{event.action}|{event.resource_type}|{event.resource_id}|"
+                    f"{json.dumps(event.metadata, sort_keys=True)}|{event.previous_hash}"
+                )
+                legacy_computed = hashlib.sha256(canonical_legacy.encode("utf-8")).hexdigest()
+                if legacy_computed == event.current_hash:
+                    matched = True
+                    break
+
+            if not matched:
                 return AuditIntegrityReport(
                     is_valid=False,
                     total_events_checked=idx,
                     tampered_index=idx,
                     tampered_event_id=event.event_id,
-                    expected_hash=computed_current,
+                    expected_hash=last_computed,
                     actual_hash=event.current_hash,
                     status_summary=f"Data tampering detected at record #{idx}: content hash recomputation failed.",
                 )

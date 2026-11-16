@@ -150,15 +150,29 @@ class BlockchainLedgerAnchor:
 
     def get_ledger_status(self) -> Dict[str, Any]:
         """Returns operational summary of the blockchain / smart contract anchor."""
+        rpc_set = bool(settings.BLOCKCHAIN_RPC_URL)
+        key_set = bool(settings.BLOCKCHAIN_PRIVATE_KEY)
+        has_real_contract = bool(
+            settings.BLOCKCHAIN_CONTRACT_ADDRESS and
+            settings.BLOCKCHAIN_CONTRACT_ADDRESS != "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
+        )
+        live_ready = rpc_set and key_set and has_real_contract
+
         status_info = {
-            "network_id": self.network_id,
+            "network_id": settings.BLOCKCHAIN_NETWORK_NAME,
             "smart_contract_name": "SafeContainAuditLedger",
             "smart_contract_standard": "Solidity 0.8.20 / EVM Compatible",
             "contract_address": settings.BLOCKCHAIN_CONTRACT_ADDRESS,
-            "rpc_configured": bool(settings.BLOCKCHAIN_RPC_URL),
+            "rpc_configured": rpc_set,
+            "private_key_configured": key_set,
+            "mode": "LIVE_TESTNET" if live_ready else "LOCAL_PERMISSIONED_ANCHOR",
+            "status": "ONLINE",
+            "live_testnet_status": (
+                "READY" if live_ready
+                else "EXTERNALLY_BLOCKED (Requires BLOCKCHAIN_RPC_URL and funded BLOCKCHAIN_PRIVATE_KEY with testnet ETH)"
+            ),
             "total_anchored_records": len(self._on_chain_store),
             "current_block_height": self._current_block,
-            "status": "ONLINE",
             "design_principles": {
                 "on_chain_fields": ["record_id", "cryptographic_hash", "timestamp", "event_type", "approval_reference"],
                 "off_chain_storage": "Detailed telemetry, payload metadata, graph snapshots",
@@ -168,7 +182,7 @@ class BlockchainLedgerAnchor:
         }
 
         # If live RPC is configured, query latest block from node
-        if settings.BLOCKCHAIN_RPC_URL:
+        if rpc_set:
             try:
                 import urllib.request
                 req_data = json.dumps({"jsonrpc": "2.0", "method": "eth_blockNumber", "params": [], "id": 1}).encode("utf-8")

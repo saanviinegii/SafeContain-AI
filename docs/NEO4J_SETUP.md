@@ -26,20 +26,23 @@ In your project root `.env` file (or Render Cloud Environment Variables dashboar
 
 ```bash
 # Graph Engine Mode: 'neo4j' | 'dual' | 'in_memory'
-GRAPH_BACKEND=neo4j
+GRAPH_BACKEND=dual
 
 # Neo4j Aura Connection URI (Use neo4j+s for AuraDB TLS encryption)
 NEO4J_URI=neo4j+s://your-instance-id.databases.neo4j.io
 
-# Authentication Credentials
+# Authentication Credentials (Both NEO4J_USER and NEO4J_USERNAME are supported)
 NEO4J_USER=neo4j
+# or: NEO4J_USERNAME=neo4j
 NEO4J_PASSWORD=YourSecureAuraPassword123!
-NEO4J_DATABASE=neo4j
+
+# Database Name: Set to your Aura database name (e.g. your instance ID) or leave empty for auto-discovery
+NEO4J_DATABASE=e5193897
 
 # Connection Lifecycle & Pool Management
 NEO4J_MAX_CONNECTION_LIFETIME=3600
 NEO4J_MAX_CONNECTION_POOL_SIZE=50
-NEO4J_CONNECTION_TIMEOUT=5.0
+NEO4J_CONNECTION_TIMEOUT=8.0
 ```
 
 ---

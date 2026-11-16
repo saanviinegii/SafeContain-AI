@@ -81,19 +81,23 @@ def test_real_neo4j_aura_lifecycle():
         )
         assert engine.create_or_update_edge_in_neo4j(edge) is True
 
-        # 3. Read node and relationship back from live database
-        retrieved_node1 = engine.get_node_from_neo4j(node1_id)
-        assert retrieved_node1 is not None
-        assert retrieved_node1.id == node1_id
-        assert retrieved_node1.criticality == 0.85
-        assert retrieved_node1.is_compromised is True
+        # 3. Read node and relationship back from live database in a NEW separate database session
+        # This proves persistence across independent sessions on Neo4j Aura (Part 4 / Section 1.9)
+        with engine._get_neo4j_session() as session2:
+            res_node = session2.run("MATCH (n:Server {id: $id}) RETURN n.id as id, n.criticality as criticality, n.is_compromised as is_compromised", id=node1_id)
+            rec_node = res_node.single()
+            assert rec_node is not None
+            assert rec_node["id"] == node1_id
+            assert float(rec_node["criticality"]) == 0.85
+            assert rec_node["is_compromised"] is True
 
-        retrieved_edge = engine.get_edge_from_neo4j(edge_id)
-        assert retrieved_edge is not None
-        assert retrieved_edge.id == edge_id
-        assert retrieved_edge.source == node1_id
-        assert retrieved_edge.target == node2_id
-        assert retrieved_edge.confidence == 0.96
+            res_edge = session2.run("MATCH (s)-[r:CONNECTED_TO {id: $id}]->(t) RETURN r.id as id, s.id as source, t.id as target, r.confidence as confidence", id=edge_id)
+            rec_edge = res_edge.single()
+            assert rec_edge is not None
+            assert rec_edge["id"] == edge_id
+            assert rec_edge["source"] == node1_id
+            assert rec_edge["target"] == node2_id
+            assert float(rec_edge["confidence"]) == 0.96
 
         # 4. Confirm persistence via database statistics
         stats = engine.get_database_statistics()
@@ -113,4 +117,35 @@ def test_real_neo4j_aura_lifecycle():
         assert engine.get_edge_from_neo4j(edge_id) is None
 
         # 7. Close driver safely
+        engine.close()
+
+
+def test_real_neo4j_aura_connectivity_and_verification_query():
+    """Validates driver verification, RETURN 1 Cypher execution, and dynamic database discovery."""
+    engine = GraphEngine(mode="neo4j")
+
+    if not engine.is_neo4j_live:
+        pytest.skip("Real Neo4j Aura integration test skipped: Live instance not reachable.")
+
+    try:
+        # Verify driver connectivity
+        assert engine._neo4j_driver is not None
+
+        # Execute real Cypher verification query (RETURN 1)
+        with engine._get_neo4j_session() as session:
+            result = session.run("RETURN 1 as probe").single()
+            assert result is not None
+            assert result["probe"] == 1
+
+        # Verify active database is discovered and non-empty
+        assert engine.active_database is not None
+        assert len(engine.active_database) > 0
+
+        # Verify status endpoint returns real connected diagnostic
+        status = engine.get_neo4j_status()
+        assert status["connected"] is True
+        assert status["status"] == "CONNECTED"
+        assert status["active_engine"] == "live_neo4j"
+        assert "neo4j_node_count" in status
+    finally:
         engine.close()

@@ -23,6 +23,22 @@ services:
         value: production
       - key: GRAPH_BACKEND
         value: dual
+      # Neo4j AuraDB Configuration (Configure in Render Dashboard for Live Graph)
+      - key: NEO4J_URI
+        sync: false
+      - key: NEO4J_USER
+        sync: false
+      - key: NEO4J_PASSWORD
+        sync: false
+      - key: NEO4J_DATABASE
+        sync: false
+      # EVM Blockchain Testnet Configuration (Optional)
+      - key: BLOCKCHAIN_RPC_URL
+        sync: false
+      - key: BLOCKCHAIN_PRIVATE_KEY
+        sync: false
+      - key: BLOCKCHAIN_CONTRACT_ADDRESS
+        value: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
       - key: USE_SQLITE_FALLBACK
         value: "true"
       - key: AUDIT_LEDGER_STORAGE_PATH

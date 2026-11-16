@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from backend.app.core.config import settings
 from backend.app.audit.ledger import AuditIntegrityReport, ChainedAuditLedger
 from backend.app.business.twin import BusinessContinuityTwin
 from backend.app.evidence.engine import EvidenceEngine, SensitivityScenarioResult
@@ -75,13 +76,55 @@ platform_ctx = PlatformContext()
 
 @api_router.get("/health", tags=["System"])
 def health_check() -> Dict[str, Any]:
-    """Liveness & readiness probe."""
+    """Liveness & readiness probe with explicit graph backend diagnostic."""
+    engine = platform_ctx.engine
+    is_live = engine.is_neo4j_live
+    configured_mode = engine.mode
+    is_degraded = (configured_mode == "neo4j" and not is_live)
+
+    # Safe redacted URI: scheme://host (no user, no password)
+    uri = settings.NEO4J_URI or ""
+    redacted_uri = uri.split("@")[-1] if "@" in uri else uri
+
     return {
-        "status": "HEALTHY",
+        "status": "DEGRADED" if is_degraded else "HEALTHY",
         "service": "SafeContain AI Enterprise Backend",
         "version": "1.0.0",
-        "graph_backend": "live_neo4j" if platform_ctx.engine.is_neo4j_live else "in_memory_networkx",
+        "graph_backend": "live_neo4j" if is_live else "in_memory_networkx",
+        "configured_graph_backend": configured_mode,
+        "neo4j_connected": is_live,
+        "neo4j_status": "CONNECTED" if is_live else ("DEGRADED" if configured_mode == "neo4j" else "OFFLINE_FALLBACK"),
+        "neo4j_database": engine.active_database or (settings.NEO4J_DATABASE if is_live else None),
+        "neo4j_uri": redacted_uri,
+        "neo4j_last_error": engine.last_connection_error,
         "audit_chain_length": len(platform_ctx.ledger._events),
+        "diagnostics": {
+            "active_engine": "live_neo4j" if is_live else "in_memory_networkx",
+            "in_memory_nodes": len(engine._node_store),
+            "in_memory_edges": len(engine._edge_store),
+            "is_persistent": is_live,
+        },
+    }
+
+
+@api_router.get("/graph/diagnostic", tags=["Graph Intelligence"])
+def get_graph_diagnostic() -> Dict[str, Any]:
+    """Provides deep diagnostic of active graph engine, connection state, and statistics."""
+    neo4j_stat = platform_ctx.engine.get_neo4j_status()
+    db_stats = platform_ctx.engine.get_database_statistics()
+    return {
+        "configured_backend": platform_ctx.engine.mode,
+        "active_engine": "live_neo4j" if platform_ctx.engine.is_neo4j_live else "in_memory_networkx",
+        "neo4j_connected": platform_ctx.engine.is_neo4j_live,
+        "neo4j_uri": settings.NEO4J_URI,
+        "neo4j_database": settings.NEO4J_DATABASE,
+        "neo4j_status": neo4j_stat.get("status"),
+        "last_connection_error": platform_ctx.engine.last_connection_error,
+        "topology_in_memory": {
+            "nodes": len(platform_ctx.engine._node_store),
+            "edges": len(platform_ctx.engine._edge_store),
+        },
+        "database_statistics": db_stats,
     }
 
 

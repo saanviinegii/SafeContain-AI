@@ -3,9 +3,9 @@
 ## 1. Value Proposition (30 Seconds Pitch)
 
 > *"In enterprise cybersecurity, containment is a high-stakes balancing act. Over-containment shuts down revenue and citizen services, while under-containment leads to catastrophic ransomware extortion.*
-> 
+>
 > *SafeContain AI introduces **Uncertainty-Aware Cyber Threat Containment with Business Continuity and Tamper-Evident Dual Audit**.*
-> 
+>
 > *Unlike naive SOAR bots that blindly pull network cables, SafeContain AI models lateral attack paths, factors in forensic uncertainty, protects mission-critical business workflows via Google OR-Tools CP-SAT, simulates outcomes in an isolated digital twin, anchors all decisions to an immutable blockchain ledger, and strictly requires human authorization before execution."*
 
 ---

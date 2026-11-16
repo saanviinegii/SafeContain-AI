@@ -72,6 +72,7 @@ export const App: React.FC = () => {
   const [simulationStrategy, setSimulationStrategy] = useState<string>('CONSTRAINT_CPSAT');
   const [blockchainStatus, setBlockchainStatus] = useState<any>(null);
   const [neo4jStats, setNeo4jStats] = useState<any>(null);
+  const [neo4jStatus, setNeo4jStatus] = useState<any>(null);
 
   const showNotification = (msg: string) => {
     setNotification(msg);
@@ -94,7 +95,7 @@ export const App: React.FC = () => {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [topo, paths, risk, wfs, cands, comp, sim, exp, ledger, intReport, sens, mets, bStatus, nStats] = await Promise.all([
+      const [topo, paths, risk, wfs, cands, comp, sim, exp, ledger, intReport, sens, mets, bStatus, nStats, nStatus] = await Promise.all([
         api.getTopology(),
         api.getAttackPaths(),
         api.getDecomposedRisk(),
@@ -109,6 +110,7 @@ export const App: React.FC = () => {
         api.getMetrics(),
         api.getBlockchainStatus().catch(() => null),
         api.getNeo4jStatistics().catch(() => null),
+        api.getNeo4jStatus().catch(() => null),
       ]);
 
       setTopology(topo);
@@ -128,6 +130,7 @@ export const App: React.FC = () => {
       setMetrics(mets);
       setBlockchainStatus(bStatus);
       setNeo4jStats(nStats);
+      setNeo4jStatus(nStatus);
     } catch (err: any) {
       console.error('Failed loading data:', err);
       showNotification(`Error: ${err.message}`);
@@ -447,10 +450,31 @@ export const App: React.FC = () => {
                 {notification}
               </span>
             )}
-            <div className="status-badge healthy">
-              <span className="status-dot"></span>
-              {topology.backend === 'neo4j_live' ? 'Neo4j Live' : 'NetworkX In-Memory (Active)'}
-            </div>
+            {(() => {
+              const status = neo4jStatus?.status || (topology.backend === 'neo4j_live' ? 'CONNECTED' : 'OFFLINE');
+              if (status === 'CONNECTED' || neo4jStatus?.connected) {
+                return (
+                  <div className="status-badge connected" title={`Neo4j AuraDB Connected (${neo4jStatus?.neo4j_node_count ?? topology.nodes.length} nodes)`}>
+                    <span className="status-dot"></span>
+                    Neo4j AuraDB Active
+                  </div>
+                );
+              }
+              if (status === 'DEGRADED') {
+                return (
+                  <div className="status-badge degraded" title={neo4jStatus?.message || 'Neo4j connection degraded'}>
+                    <span className="status-dot"></span>
+                    Neo4j AuraDB Degraded
+                  </div>
+                );
+              }
+              return (
+                <div className="status-badge offline" title="In-Memory NetworkX Engine">
+                  <span className="status-dot"></span>
+                  NetworkX In-Memory (Active)
+                </div>
+              );
+            })()}
             <button className="btn-secondary" onClick={handleReloadSynthetic} title="Reload Scenario">
               <RefreshCw size={14} /> Reset Scenario
             </button>

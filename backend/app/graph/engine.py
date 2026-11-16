@@ -33,34 +33,145 @@ class GraphEngine:
         self._edge_store: Dict[str, GraphEdge] = {}
         self._neo4j_driver = None
         self._neo4j_available = False
+        self._last_connection_error: Optional[str] = None
+        self._active_database: Optional[str] = None
 
         if self.mode in ("dual", "neo4j"):
             self._init_neo4j_connection()
 
     def _init_neo4j_connection(self) -> None:
         """Attempts connection to live Neo4j instance if configured and reachable."""
+        redacted_uri = settings.NEO4J_URI.split("@")[-1] if "@" in settings.NEO4J_URI else settings.NEO4J_URI
+        print(f"[SAFECONTAIN NEO4J] Initializing driver: mode={self.mode}, uri={redacted_uri}, user={settings.NEO4J_USER}")
         try:
             from neo4j import GraphDatabase
-            driver = GraphDatabase.driver(
-                settings.NEO4J_URI,
-                auth=(settings.NEO4J_USER, settings.NEO4J_PASSWORD),
-                connection_timeout=settings.NEO4J_CONNECTION_TIMEOUT,
-                max_connection_pool_size=settings.NEO4J_MAX_CONNECTION_POOL_SIZE,
-            )
-            # Verify connectivity
-            driver.verify_connectivity()
+            driver = None
+            last_err = None
+
+            # Attempt 1: Standard direct URI (e.g. neo4j+s:// on Linux/Render)
+            try:
+                cand = GraphDatabase.driver(
+                    settings.NEO4J_URI,
+                    auth=(settings.NEO4J_USER, settings.NEO4J_PASSWORD),
+                    connection_timeout=settings.NEO4J_CONNECTION_TIMEOUT,
+                    max_connection_pool_size=settings.NEO4J_MAX_CONNECTION_POOL_SIZE,
+                )
+                cand.verify_connectivity()
+                driver = cand
+            except Exception as e1:
+                last_err = e1
+                # Attempt 2: If Aura/TLS routing failed (common on Windows without system cert bundle),
+                # retry with TrustCustomCAs(certifi.where()) or neo4j+ssc
+                if "databases.neo4j.io" in settings.NEO4J_URI or settings.NEO4J_URI.startswith("neo4j+s://"):
+                    try:
+                        import certifi
+                        from neo4j import TrustCustomCAs
+                        host = settings.NEO4J_URI.split("://")[-1]
+                        cand = GraphDatabase.driver(
+                            f"neo4j://{host}",
+                            auth=(settings.NEO4J_USER, settings.NEO4J_PASSWORD),
+                            encrypted=True,
+                            trusted_certificates=TrustCustomCAs(certifi.where()),
+                            connection_timeout=settings.NEO4J_CONNECTION_TIMEOUT,
+                            max_connection_pool_size=settings.NEO4J_MAX_CONNECTION_POOL_SIZE,
+                        )
+                        cand.verify_connectivity()
+                        driver = cand
+                    except Exception:
+                        try:
+                            ssc_uri = settings.NEO4J_URI.replace("neo4j+s://", "neo4j+ssc://")
+                            cand = GraphDatabase.driver(
+                                ssc_uri,
+                                auth=(settings.NEO4J_USER, settings.NEO4J_PASSWORD),
+                                connection_timeout=settings.NEO4J_CONNECTION_TIMEOUT,
+                                max_connection_pool_size=settings.NEO4J_MAX_CONNECTION_POOL_SIZE,
+                            )
+                            cand.verify_connectivity()
+                            driver = cand
+                        except Exception as e3:
+                            last_err = e3
+
+            if not driver:
+                raise last_err or RuntimeError("Failed to establish Neo4j driver connection")
+
+            # Execute real Cypher verification query (RETURN 1)
+            with driver.session() as probe_session:
+                probe_res = probe_session.run("RETURN 1 as probe").single()
+                if not probe_res or probe_res["probe"] != 1:
+                    raise RuntimeError("Verification Cypher query 'RETURN 1' failed to execute")
+
             self._neo4j_driver = driver
             self._neo4j_available = True
+            self._last_connection_error = None
             logger.info("Connected to live Neo4j instance at %s", settings.NEO4J_URI)
+
+            # Discover active database name dynamically without assuming instance ID
+            self._active_database = None
+            db_candidates = [settings.NEO4J_DATABASE] if settings.NEO4J_DATABASE and settings.NEO4J_DATABASE.lower() != "neo4j" else []
+            for db in db_candidates:
+                try:
+                    with self._neo4j_driver.session(database=db) as s:
+                        r = s.run("RETURN 1 as probe").single()
+                        if r and r["probe"] == 1:
+                            self._active_database = db
+                            break
+                except Exception:
+                    pass
+
+            if not self._active_database:
+                try:
+                    with self._neo4j_driver.session() as s:
+                        try:
+                            db_info = s.run("CALL db.info() YIELD name RETURN name").single()
+                            if db_info and db_info["name"]:
+                                self._active_database = str(db_info["name"])
+                        except Exception:
+                            pass
+                        if not self._active_database:
+                            self._active_database = settings.NEO4J_DATABASE or "neo4j"
+                except Exception as probe_err:
+                    raise probe_err
+
+            print(f"[SAFECONTAIN NEO4J] SUCCESS: Driver connected and verified to {redacted_uri} (active database: '{self._active_database}')")
             self.init_neo4j_schema()
         except Exception as e:
-            logger.info("Live Neo4j not reachable (%s). Operating in high-performance in-memory graph mode.", str(e))
             self._neo4j_available = False
+            self._last_connection_error = str(e)
+            print(f"[SAFECONTAIN NEO4J] ERROR: Failed to connect to Neo4j Aura at {redacted_uri}: {str(e)}")
+            if self.mode == "neo4j":
+                print(f"[SAFECONTAIN NEO4J] CRITICAL: GRAPH_BACKEND='neo4j' requires live Neo4j. System marked DEGRADED.")
+                logger.error(
+                    "Configured GRAPH_BACKEND is 'neo4j', but Neo4j is unreachable at %s: %s. Status marked as DEGRADED.",
+                    settings.NEO4J_URI, str(e)
+                )
+            else:
+                print(f"[SAFECONTAIN NEO4J] Operating in resilient DUAL fallback mode (NetworkX in-memory active).")
+                logger.info(
+                    "Live Neo4j not reachable (%s). Operating in high-performance in-memory graph mode.", str(e)
+                )
+
+    def _get_neo4j_session(self):
+        """Returns a session targeting the verified database, or default database if none specified."""
+        if not self._neo4j_driver:
+            raise RuntimeError("Neo4j driver is not initialized")
+        if self._active_database:
+            return self._neo4j_driver.session(database=self._active_database)
+        return self._neo4j_driver.session()
+
+    @property
+    def active_database(self) -> Optional[str]:
+        """Returns the verified active database name in Neo4j."""
+        return self._active_database
 
     @property
     def is_neo4j_live(self) -> bool:
         """Returns True if connected to live Neo4j database."""
         return self._neo4j_available
+
+    @property
+    def last_connection_error(self) -> Optional[str]:
+        """Returns the most recent connection failure error message, if any."""
+        return self._last_connection_error
 
     def clear(self) -> None:
         """Clears all in-memory graph structures."""
@@ -181,7 +292,7 @@ class GraphEngine:
             "CREATE INDEX idx_db_crown_jewel IF NOT EXISTS FOR (d:Database) ON (d.is_crown_jewel)",
         ]
         try:
-            with self._neo4j_driver.session(database=settings.NEO4J_DATABASE) as session:
+            with self._get_neo4j_session() as session:
                 for statement in constraints + indexes:
                     try:
                         session.run(statement)
@@ -203,7 +314,7 @@ class GraphEngine:
         synced_nodes = 0
         synced_edges = 0
         try:
-            with self._neo4j_driver.session(database=settings.NEO4J_DATABASE) as session:
+            with self._get_neo4j_session() as session:
                 for node in self.get_all_nodes():
                     label = node.type.value if hasattr(node.type, "value") else str(node.type)
                     clean_label = "".join(c for c in label if c.isalnum() or c == "_") or "Node"
@@ -276,21 +387,33 @@ class GraphEngine:
         if not self.is_neo4j_live or not self._neo4j_driver:
             return {
                 "connected": False,
+                "configured_backend": self.mode,
+                "active_engine": "in_memory_networkx",
+                "status": "DEGRADED" if self.mode == "neo4j" else "OFFLINE_FALLBACK",
                 "uri": settings.NEO4J_URI,
-                "backend": "in_memory_networkx",
-                "message": "Neo4j is currently unreachable or unconfigured. Operating in fallback in-memory mode."
+                "database": settings.NEO4J_DATABASE,
+                "last_error": self.last_connection_error,
+                "message": (
+                    "CRITICAL: Neo4j is required by GRAPH_BACKEND=neo4j but live connection failed. Running in degraded state."
+                    if self.mode == "neo4j"
+                    else "Neo4j Aura is currently unreachable or unconfigured. Operating in resilient dual fallback in-memory mode."
+                ),
+                "in_memory_nodes": len(self._node_store),
+                "in_memory_edges": len(self._edge_store),
             }
         try:
-            with self._neo4j_driver.session(database=settings.NEO4J_DATABASE) as session:
+            with self._get_neo4j_session() as session:
                 node_res = session.run("MATCH (n) RETURN count(n) as node_count")
                 node_count = node_res.single()["node_count"]
                 edge_res = session.run("MATCH ()-[r]->() RETURN count(r) as edge_count")
                 edge_count = edge_res.single()["edge_count"]
                 return {
                     "connected": True,
+                    "configured_backend": self.mode,
+                    "active_engine": "live_neo4j",
+                    "status": "CONNECTED",
                     "uri": settings.NEO4J_URI,
-                    "database": settings.NEO4J_DATABASE,
-                    "backend": "live_neo4j",
+                    "database": self._active_database or settings.NEO4J_DATABASE,
                     "neo4j_node_count": node_count,
                     "neo4j_edge_count": edge_count,
                     "in_memory_nodes": len(self._node_store),
@@ -299,9 +422,13 @@ class GraphEngine:
         except Exception as e:
             return {
                 "connected": False,
+                "configured_backend": self.mode,
+                "active_engine": "in_memory_networkx",
+                "status": "DEGRADED",
                 "uri": settings.NEO4J_URI,
-                "backend": "in_memory_networkx",
-                "error": str(e),
+                "database": settings.NEO4J_DATABASE,
+                "last_error": str(e),
+                "message": f"Connection lost during status query: {str(e)}",
             }
 
     def load_from_neo4j(self) -> Dict[str, Any]:
@@ -311,7 +438,7 @@ class GraphEngine:
         try:
             loaded_nodes = 0
             loaded_edges = 0
-            with self._neo4j_driver.session(database=settings.NEO4J_DATABASE) as session:
+            with self._get_neo4j_session() as session:
                 self.clear()
                 nodes_res = session.run(
                     "MATCH (n) RETURN n.id as id, n.name as name, n.type as type, "
@@ -410,7 +537,7 @@ class GraphEngine:
             n.provenance = $provenance
         """
         try:
-            with self._neo4j_driver.session(database=settings.NEO4J_DATABASE) as session:
+            with self._get_neo4j_session() as session:
                 session.run(
                     cypher,
                     id=node.id,
@@ -432,7 +559,7 @@ class GraphEngine:
             return None
         cypher = "MATCH (n {id: $id}) RETURN n.id as id, n.name as name, n.type as type, n.criticality as criticality, n.is_compromised as is_compromised, n.is_crown_jewel as is_crown_jewel, n.provenance as provenance, labels(n) as labels"
         try:
-            with self._neo4j_driver.session(database=settings.NEO4J_DATABASE) as session:
+            with self._get_neo4j_session() as session:
                 result = session.run(cypher, id=node_id)
                 rec = result.single()
                 if not rec:
@@ -466,7 +593,7 @@ class GraphEngine:
             return False
         cypher = "MATCH (n {id: $id}) DETACH DELETE n"
         try:
-            with self._neo4j_driver.session(database=settings.NEO4J_DATABASE) as session:
+            with self._get_neo4j_session() as session:
                 session.run(cypher, id=node_id)
             return True
         except Exception as e:
@@ -490,7 +617,7 @@ class GraphEngine:
             r.provenance = $provenance
         """
         try:
-            with self._neo4j_driver.session(database=settings.NEO4J_DATABASE) as session:
+            with self._get_neo4j_session() as session:
                 session.run(
                     cypher,
                     source=edge.source,
@@ -514,7 +641,7 @@ class GraphEngine:
             return None
         cypher = "MATCH (s)-[r {id: $id}]->(t) RETURN r.id as id, s.id as source, t.id as target, type(r) as rel_type, r.evidence_status as evidence_status, r.confidence as confidence, r.weight as weight, r.is_active as is_active, r.provenance as provenance"
         try:
-            with self._neo4j_driver.session(database=settings.NEO4J_DATABASE) as session:
+            with self._get_neo4j_session() as session:
                 result = session.run(cypher, id=edge_id)
                 rec = result.single()
                 if not rec:
@@ -555,7 +682,7 @@ class GraphEngine:
             return False
         cypher = "MATCH ()-[r {id: $id}]->() DELETE r"
         try:
-            with self._neo4j_driver.session(database=settings.NEO4J_DATABASE) as session:
+            with self._get_neo4j_session() as session:
                 session.run(cypher, id=edge_id)
             return True
         except Exception as e:
@@ -587,7 +714,7 @@ class GraphEngine:
                 "edges_by_evidence_status": ev_stats,
             }
         try:
-            with self._neo4j_driver.session(database=settings.NEO4J_DATABASE) as session:
+            with self._get_neo4j_session() as session:
                 node_res = session.run("MATCH (n) RETURN labels(n)[0] as label, count(n) as count")
                 nodes_by_label = {rec["label"] or "Unlabeled": rec["count"] for rec in node_res}
                 edge_res = session.run("MATCH ()-[r]->() RETURN type(r) as rel_type, count(r) as count")
@@ -598,7 +725,7 @@ class GraphEngine:
                     "backend": "live_neo4j",
                     "connected": True,
                     "uri": settings.NEO4J_URI,
-                    "database": settings.NEO4J_DATABASE,
+                    "database": self._active_database or settings.NEO4J_DATABASE,
                     "total_nodes": sum(nodes_by_label.values()),
                     "total_edges": sum(edges_by_type.values()),
                     "nodes_by_label": nodes_by_label,

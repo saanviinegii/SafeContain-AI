@@ -5,7 +5,7 @@ risk thresholds, solver parameters, security policies, and audit retention.
 """
 
 from typing import Any, List, Optional, Union
-from pydantic import Field, field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -25,13 +25,27 @@ class Settings(BaseSettings):
         default="dual",
         description="dual | neo4j | in_memory. Dual tries Neo4j then seamlessly falls back to In-Memory NetworkX engine."
     )
-    NEO4J_URI: str = "bolt://localhost:7687"
-    NEO4J_USER: str = "neo4j"
-    NEO4J_PASSWORD: str = "password"
-    NEO4J_DATABASE: str = "neo4j"
+    NEO4J_URI: str = Field(
+        default="bolt://localhost:7687",
+        validation_alias=AliasChoices("NEO4J_URI", "NEO4J_URL")
+    )
+    NEO4J_USER: str = Field(
+        default="neo4j",
+        validation_alias=AliasChoices("NEO4J_USER", "NEO4J_USERNAME")
+    )
+    NEO4J_PASSWORD: str = Field(
+        default="password",
+        validation_alias=AliasChoices("NEO4J_PASSWORD", "NEO4J_PASS")
+    )
+    NEO4J_DATABASE: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("NEO4J_DATABASE", "NEO4J_DB")
+    )
+    AURA_INSTANCEID: Optional[str] = None
+    AURA_INSTANCENAME: Optional[str] = None
     NEO4J_MAX_CONNECTION_LIFETIME: int = 3600
     NEO4J_MAX_CONNECTION_POOL_SIZE: int = 50
-    NEO4J_CONNECTION_TIMEOUT: float = 3.0  # Seconds before fallback in dual mode
+    NEO4J_CONNECTION_TIMEOUT: float = 8.0  # Seconds before fallback in dual mode
     
     # Relational Database / PostgreSQL
     DATABASE_URL: Optional[str] = "postgresql://postgres:postgres@localhost:5432/safecontain"
@@ -45,7 +59,9 @@ class Settings(BaseSettings):
     AUDIT_LEDGER_STORAGE_PATH: str = "audit_ledger.jsonl"
     VERIFY_AUDIT_INTEGRITY_ON_STARTUP: bool = True
     BLOCKCHAIN_RPC_URL: Optional[str] = None
+    BLOCKCHAIN_PRIVATE_KEY: Optional[str] = None
     BLOCKCHAIN_CONTRACT_ADDRESS: Optional[str] = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
+    BLOCKCHAIN_NETWORK_NAME: str = "Ethereum Sepolia Testnet"
     
     # Optimization & Solvers
     OPTIMIZATION_DEFAULT_STRATEGY: str = "constraint_cpsat"

@@ -89,10 +89,13 @@ services:
       - key: NEO4J_PASSWORD
         sync: false
       - key: NEO4J_DATABASE
-        value: neo4j
+        sync: false
       - key: SECRET_KEY
         generateValue: true
 ```
+
+> **Note on Neo4j Aura Database Name:**
+> In Neo4j Aura, standard/free instances route to your tenant home database. The application dynamically auto-discovers your database via `CALL db.info()`. Set `NEO4J_DATABASE` to your Aura database name (e.g. `e5193897`) or leave it blank to use automatic home database discovery. Avoid setting it to `neo4j` unless your Aura database is explicitly named `neo4j`.
 
 ---
 
