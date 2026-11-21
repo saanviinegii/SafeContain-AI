@@ -22,7 +22,7 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: GRAPH_BACKEND
-        value: neo4j
+        value: dual
       # Neo4j AuraDB Configuration (Configure in Render Dashboard for Live Graph)
       - key: NEO4J_URI
         sync: false

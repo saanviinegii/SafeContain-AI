@@ -1,77 +1,56 @@
-# SAFECONTAIN AI — HACKATHON FINAL BUILD PLAN
-**Decision Intelligence & Business-Aware Cyber Containment Platform**  
-*Target: IIIT Delhi Hackathon Grand Finale | Sprint Window: Final 24-Hour Runway*
+# STEP ZERO: PRODUCT AUDIT AND FINALE BUILD PLAN
+**SafeContain AI — AI Cyber Defense Decision Intelligence & Business-Aware Containment**  
+*Evaluation Yardstick: Scored Rounds 1 & 2 | Due: 4 PM on 21 November | Target Finale Delivery: 12 PM on 22 November | Codebase: 50,937 LOC (269/272 Tests Passing)*
 
 ---
 
-## 1. WHERE WE ARE (CURRENT PROTOTYPE AUDIT)
+### 1. WHERE YOU ARE: What Works in Prototype Today vs. Mocked, Hardcoded or Missing
 
-SafeContain AI is an operational decision-intelligence platform (50,937 total LOC: 38,545 Python, 12,392 TypeScript/TSX) running live on `http://127.0.0.1:5173` (Vite) and `http://127.0.0.1:8000` (FastAPI).
-
-| Category | Completed & Verified Working | Synthetic vs. Mocked | Gaps / Unverified |
+| Core Subsystem | What Works in Prototype Today (Verified) | What is Synthetic vs. Mocked | What is Missing / Limitations |
 | :--- | :--- | :--- | :--- |
-| **Graph Intelligence** | • Dijkstra lateral attack path synthesis<br>• NetworkX dual-mode in-memory engine<br>• Interactive Cytoscape graph canvas with IP tooltips | • 120-node enterprise topology loaded from synthetic CSV (real IPs, hostnames, crown jewels) | • Neo4j Aura cloud connection active, but falls back to NetworkX under TLS proxy interception |
-| **AI/ML & Explainability** | • Balanced Logistic Regression (`best_model.joblib`)<br>• Leakage-free feature pipeline (13 topology/CVSS features)<br>• Closed-form SHAP LinearExplainer ($E[z]$ attributions)<br>• Cost-sensitive Platt threshold calibration ($\theta^* = 0.58$) | • Telemetry event sequences generated via deterministic scenario generator | • Retraining pipeline tested on local holdout; continuous online streaming retraining not in scope |
-| **Containment Optimization** | • Google OR-Tools CP-SAT discrete solver (0-1 ILP)<br>• Exact integer-cent budget constraints<br>• Zero-outage hard SLA constraints for critical citizen workflows | • None (mathematical solver evaluates real candidate actions and real SLA models) | • Physical OS-level enforcement (eBPF/iptables kernel driver) not deployed; decision advisory model |
-| **Early Warning & Forecasting** | • CUSUM change-point statistical detection<br>• Markov state escalation probability engine<br>• 24-hour predictive trajectory forecasting | • Multi-source IOC feeds simulated via `ConfigurableExternalFeedAdapter` when offline | • Live external threat feeds require active API keys; runs in offline cached mode by default |
-| **Trust & Audit Ledger** | • SHA-256 JSONL append-only hash-chained ledger<br>• Merkle tree root computation and tamper-demo<br>• Pure-Python EVM client (`crypto_utils.py`)<br>• Solidity contract `SafeContainAuditLedger.sol` | • None (local cryptographic hash chaining and Merkle verification are 100% genuine) | • EVM Sepolia testnet anchoring defaults to local verification unless live RPC URL/key is configured |
-| **UI/UX & Platform** | • Enterprise Light Workspace (`#F4F7FB` / `#FFFFFF`)<br>• Deep Navy Sidebar (`#10233F`) with 6-pillar navigation<br>• Monospace IP address display with 1-click clipboard copy<br>• 3-tier RBAC (`ADMIN`, `ANALYST`, `VIEWER`) via PyJWT/bcrypt | • None (all 27 dashboard views bind to live REST responses) | • Monolithic single-file frontend (`App.tsx`, 10k LOC); requires component modularization post-hackathon |
-
-*Test Evidence:* **272 automated tests** across unit, security, and performance suites (**269 passed**, 3 minor test-configuration assertions identified).
+| **Graph Intelligence** | • Dijkstra attack path traversal<br>• NetworkX dual-engine in-memory<br>• Cytoscape interactive graph with real IP hover copy | • 120-node enterprise topology loaded from synthetic CSV (real IPs, hostnames, crown jewels) | • AuraDB active; falls back to NetworkX under corporate TLS proxy interception |
+| **AI/ML Risk Intelligence** | • Balanced Logistic Regression (`best_model.joblib`)<br>• 13 leak-free features<br>• Closed-form LinearExplainer SHAP<br>• Platt calibration ($\theta^*=0.58$) | • Telemetry event sequences generated via deterministic enterprise scenario loader | • Retraining tested on holdout; live continuous streaming online retraining out-of-scope |
+| **Containment Solver** | • Google OR-Tools 0-1 ILP CP-SAT solver<br>• Exact integer-cent budget<br>• Hard zero-outage SLA constraints on critical workflows | • None (mathematical solver optimizes real candidate actions and real SLA models) | • Host OS kernel drivers (`iptables`/`eBPF`) not deployed; operates as decision advisory platform |
+| **Trust & Audit Ledger** | • SHA-256 JSONL append-only hash chain<br>• Merkle tree root validation<br>• Pure-Python EVM client<br>• Solidity smart contract | • None (local cryptographic chaining and Merkle verification are 100% genuine) | • Sepolia EVM testnet anchoring defaults to local verification if RPC is unconfigured |
+| **UI/UX & Security** | • Light Workspace (`#F4F7FB`/`#FFFFFF`)<br>• Deep Navy Sidebar (`#10233F`)<br>• 27 views<br>• 3-tier RBAC (`Admin`, `Analyst`, `Viewer`) | • None (all 27 views actively bind to live REST backend responses) | • Monolithic `App.tsx` (10k LOC) requires post-hackathon component modularization |
 
 ---
 
-## 2. WHERE WE WILL BE BY FINAL DEADLINE
+### 2. WHERE YOU WILL BE: Exact Features, Flows & Integrations Working by 12 PM on 22 November
 
-Our remaining runway focuses strictly on **stabilization, polish, zero-fail demo flow, and judge presentation readiness**.
-
-1. **Enterprise UI/UX Final Polish:** Lock the high-contrast light theme, responsive 8-KPI metric grid, and prominent monospace IP tooltips on Cytoscape canvas across all 5 primary demo screens.
-2. **Defensive Zero-Fail Integration:** Ensure all 27 views load instantaneously using dual-mode caching so network dropouts or database disconnects never stall the live pitch.
-3. **End-to-End Golden Demonstration Flow:** Pre-stage a single, high-stakes cyberattack scenario (*Operation Sovereign Gateway: Payment Gateway Lateral Breach*) showing immediate progression from alert $\to$ graph traversal $\to$ SHAP explanation $\to$ CP-SAT optimal containment $\to$ Merkle proof verification.
-4. **Judge Hardening:** Prepare rock-solid technical answers for the 3 hardest technical audit questions (class imbalance, solver feasibility under conflicting SLAs, and tamper detection).
-
----
-
-## 3. OUR TARGET USER SEGMENTS
-
-| User Segment | Critical Operational Pain Point | SafeContain AI Solution & Value Metric |
+| Delivery Pillar | Exact Working Deliverable by 12 PM on 22 November | Demonstration & Judge Verification Proof |
 | :--- | :--- | :--- |
-| **Primary: SOC Analysts & Incident Responders** | Alert fatigue and analysis paralysis: fear of severing critical servers during lateral attacks causes delayed containment. | **Graph Path Traversal & SHAP Attribution:** Visualizes attack vector and gives instant mathematical rationale for which specific network edge to isolate in $< 2$ minutes. |
-| **Secondary 1: IT & Infrastructure SecOps Teams** | Disconnected tools: standard EDR tools isolate hosts blindly, collapsing mission-critical services and violating SLAs. | **OR-Tools CP-SAT SLA Engine:** Guarantees zero outage for mission-critical workflows (e.g., Keycloak SSO, Payment DB) under strict financial budgets. |
-| **Secondary 2: CISOs & Enterprise Risk Leadership** | Lack of quantifiable business impact: cannot justify containment disruption costs or prove evidence integrity to regulators. | **Business Continuity Twin & Cryptographic Ledger:** Translates risk into dollars saved, disruption scores, and immutable SHA-256 / Merkle audit evidence. |
+| **Unified Golden Flow** | End-to-end cyber containment: Alert $\to$ Graph traversal $\to$ SHAP attribution $\to$ CP-SAT solver $\to$ Merkle audit check. | Complete walkthrough of *"Operation Sovereign Gateway"* lateral breach scenario in $< 3$ mins. |
+| **Zero-Fail Resilience** | Dual-engine graph synchronization: live Neo4j AuraDB with seamless in-memory NetworkX failover. | Zero demo crashes even if conference Wi-Fi disconnects or TLS proxy blocks Bolt port. |
+| **Enterprise UI/UX** | Light SecOps workspace (`#F4F7FB`) with deep navy sidebar (`#10233F`) and interactive Cytoscape canvas. | Live node hover tooltip displaying prominent monospace IP address with 1-click clipboard copy. |
+| **Evidence Anchoring** | Deterministic SHA-256 ledger chaining with real-time Merkle proof verification and tamper detection. | Interactive tamper demo showing hash invalidation upon unauthorized data modification. |
 
 ---
 
-## 4. OUR TECHNOLOGY CHOICE: DEEPENING NEO4J
+### 3. YOUR USER SEGMENTS: Primary Segment Plus Two Additional Segments
 
-### Technology Focus: **Neo4j AuraDB & Graph Intelligence**
-*Cybersecurity threats are intrinsically relational graphs*—adversaries move through sequences of compromised credentials, vulnerable services, lateral network hops, and identity permissions. Tabular databases fail to represent multi-hop transitive reachability efficiently.
-
-- **Why Deepen Neo4j:** We utilize Neo4j to store and query asset topologies, enterprise Active Directory relationships, and live attack paths via Cypher.
-- **Specific Integration Deliverable:** Validate the dual-engine synchronization pipeline—live AuraDB connectivity for deep Cypher querying, backed by automatic in-memory NetworkX failover to guarantee 100% demo uptime under restricted conference Wi-Fi.
-- **Why We Reject Arduino:** SafeContain AI is a pure cloud/enterprise software decision platform. Adding physical microcontrollers would be an artificial gimmick that introduces physical failure points without solving an enterprise cybersecurity problem.
-- **Why We Reject Sarvam AI:** Our core value proposition is discrete mathematical optimization (ILP) and leak-free risk classification, not natural language translation. Forcing Indic NLP would distract from our core decision-intelligence differentiator.
+| User Segment | Critical Operational Pain Point | SafeContain AI Value Metric & Solution |
+| :--- | :--- | :--- |
+| **PRIMARY:<br/>SOC Analysts & Triage** | Alert fatigue & analysis paralysis: fear of taking down critical production servers during active lateral intrusions. | **Attack Graph & SHAP Attribution:** Visualizes lateral route and gives exact mathematical rationale for isolation in $< 2$ minutes. |
+| **SECONDARY 1:<br/>IT & Infrastructure SecOps** | Blunt EDR isolation breaks mission-critical dependencies, collapsing citizen services and violating strict SLAs. | **OR-Tools CP-SAT SLA Engine:** Guarantees zero outage for critical workflows (Payment Gateway, SSO) under hard budget caps. |
+| **SECONDARY 2:<br/>CISOs & Enterprise Risk** | Inability to quantify financial risk reduction, justify response disruption costs, or prove regulatory audit compliance. | **Business Twin & Cryptographic Ledger:** Translates risk into dollars saved, disruption scores, and immutable SHA-256 / Merkle proofs. |
 
 ---
 
-## 5. DEFINITION OF DONE
+### 4. YOUR PARTNER TECH CHOICE: Deepening Neo4j & Product Need Solved (vs. Exclusions)
+
+- **Primary Partner Choice: Deepening Neo4j (Neo4j AuraDB & Graph Intelligence).**  
+  **Product Need Solved:** Cyber attacks are inherently relational graphs of compromised identities, credential reuse, and network hops. Tabular SQL databases cannot efficiently evaluate multi-hop transitive lateral movement. Neo4j powers our asset relationship mapping, Cypher graph traversals, and critical attack path synthesis, synchronized with an in-memory NetworkX engine for zero-fail resilience.
+- **Why We Do NOT Add Arduino:** SafeContain AI is a pure cloud/enterprise software decision platform. Introducing physical microcontrollers would be an artificial hackathon gimmick that adds hardware failure points without solving an enterprise cybersecurity problem.
+- **Why We Do NOT Add Sarvam AI:** Our core innovation is discrete mathematical optimization (0-1 ILP) and leak-free ML risk classification. Forcing Indic natural language translation would distract from our core decision-intelligence value proposition.
+
+---
+
+### 5. YOUR DEFINITION OF DONE (One Powerful Sentence)
 
 > **"SafeContain AI is complete for the hackathon when an evaluator can follow an active lateral threat from initial graph detection through calibrated ML risk explanation and early-warning forecasting, receive a mathematically optimal, SLA-preserving containment recommendation via Google OR-Tools CP-SAT, simulate the residual risk delta, and cryptographically verify the integrity of the decision ledger through a stable, presentation-ready enterprise dashboard."**
 
 ---
 
-## 6. FINAL SPRINT TIMELINE (REMAINING RUNWAY)
-
-```
-[Sprint 1: Freeze & Triage]  ──▶  [Sprint 2: UI/UX Polish]  ──▶  [Sprint 3: Demo Golden Flow]  ──▶  [Sprint 4: Pitch & Q&A Defense]
-      Hours 00 - 04                     Hours 04 - 10                    Hours 10 - 18                     Hours 18 - 24
-• Freeze core backend code        • Validate Light Theme (#F4F7FB) • Lock "Sovereign Gateway" flow   • Rehearse 4-minute live pitch
-• Run full 272-test suite        • Verify IP tooltips & copy      • Pre-seed cache for offline demo • Prepare Judge Q&A answers
-• Verify NetworkX fallback        • Polish CP-SAT comparison view  • Generate PDF Incident Dossiers  • Final submission bundle locked
-```
-
-### What We Will NOT Do:
-- ❌ Rebuild or refactor backend architecture
-- ❌ Add external IoT or NLP technology checkboxes
-- ❌ Present fabricated 99.9% accuracy claims (maintain honest ~69% CV balanced accuracy on leak-free features)
-- ❌ Claim live testnet blockchain anchoring without an active RPC connection (clearly demonstrate local SHA-256 / Merkle proof verification)
+**Execution Strategy:** Integrate $\to$ Validate $\to$ Polish $\to$ Demonstrate $\to$ Win.  
+**Strict Scope Discipline:** No architecture rewrites; no fake 99.9% accuracy claims; no unverified live blockchain claims. Stability and verified proof over speculation.
