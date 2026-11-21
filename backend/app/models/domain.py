@@ -30,6 +30,7 @@ class DataProvenance(str, Enum):
     SYNTHETIC = "SYNTHETIC"
     REPLAY = "REPLAY"
     IMPORTED_BASELINE = "IMPORTED_BASELINE"
+    CSV = "CSV"
 
 
 class NodeType(str, Enum):
@@ -263,6 +264,13 @@ class ContainmentAction(BaseModel):
     mitigated_path_ids: List[str] = Field(default_factory=list)
     supporting_evidence_ids: List[str] = Field(default_factory=list)
     rationale: str
+    ml_probability: Optional[float] = Field(default=None, description="Calibrated ML threat probability")
+    decision_threshold: Optional[float] = Field(default=None, description="Calibrated operating decision threshold")
+    predicted_threat_class: Optional[str] = Field(default=None, description="Model predicted threat class")
+    threshold_crossed: Optional[bool] = Field(default=None, description="Whether ML probability crossed decision threshold")
+    optimization_rationale: Optional[str] = Field(default=None, description="Explainable optimization selection rationale")
+    predictive_future_probability: Optional[float] = Field(default=None, description="Temporal forecast future risk probability")
+    forecast_horizon: Optional[str] = Field(default=None, description="Forecast horizon used for predictive weighting")
 
 
 class OptimizationStrategy(str, Enum):

@@ -1,0 +1,197 @@
+{
+  "audit_timestamp": "2026-11-21T02:38:47.893042+00:00",
+  "gate_evidence": {
+    "GATE_1": {
+      "status": "PASS",
+      "sample_size": 240,
+      "engine_ece": 0.1316,
+      "recalculated_ece": 0.1316,
+      "engine_brier": 0.191,
+      "recalculated_brier": 0.191,
+      "toy_verification": {
+        "expected_ece": 0.135,
+        "actual_ece": 0.135,
+        "expected_brier": 0.12625,
+        "actual_brier": 0.12625000000000003
+      },
+      "bins_data": [
+        {
+          "bin": 0,
+          "range": "[0.00, 0.20]",
+          "count": 178,
+          "mean_pred": 0.064,
+          "mean_true": 0.2191,
+          "err": 0.1551
+        },
+        {
+          "bin": 1,
+          "range": "[0.20, 0.40]",
+          "count": 17,
+          "mean_pred": 0.2617,
+          "mean_true": 0.3529,
+          "err": 0.0913
+        },
+        {
+          "bin": 2,
+          "range": "[0.40, 0.60]",
+          "count": 10,
+          "mean_pred": 0.5075,
+          "mean_true": 0.6,
+          "err": 0.0925
+        },
+        {
+          "bin": 3,
+          "range": "[0.60, 0.80]",
+          "count": 24,
+          "mean_pred": 0.6986,
+          "mean_true": 0.75,
+          "err": 0.0514
+        },
+        {
+          "bin": 4,
+          "range": "[0.80, 1.00]",
+          "count": 11,
+          "mean_pred": 0.842,
+          "mean_true": 0.8182,
+          "err": 0.0239
+        }
+      ],
+      "matches": true
+    },
+    "GATE_2": {
+      "N=0": {
+        "sample_size": 0,
+        "calibration_status": "INSUFFICIENT_DATA",
+        "ece_suppressed": true,
+        "optimization_status": "INSUFFICIENT_DATA",
+        "threshold_preserved": true,
+        "safe_boundary_enforced": true
+      },
+      "N=1": {
+        "sample_size": 1,
+        "calibration_status": "INSUFFICIENT_DATA",
+        "ece_suppressed": true,
+        "optimization_status": "INSUFFICIENT_DATA",
+        "threshold_preserved": true,
+        "safe_boundary_enforced": true
+      },
+      "N=9": {
+        "sample_size": 9,
+        "calibration_status": "INSUFFICIENT_DATA",
+        "ece_suppressed": true,
+        "optimization_status": "INSUFFICIENT_DATA",
+        "threshold_preserved": true,
+        "safe_boundary_enforced": true
+      },
+      "N=10": {
+        "sample_size": 10,
+        "calibration_status": "SEVERELY_MISCALIBRATED",
+        "ece_suppressed": false,
+        "optimization_status": "CANDIDATE_GENERATED",
+        "threshold_preserved": false,
+        "safe_boundary_enforced": true
+      },
+      "N=240": {
+        "sample_size": 240,
+        "calibration_status": "SLIGHTLY_MISCALIBRATED",
+        "ece_suppressed": false,
+        "optimization_status": "CANDIDATE_GENERATED",
+        "threshold_preserved": false,
+        "safe_boundary_enforced": true
+      }
+    },
+    "GATE_3": {
+      "status": "PASS",
+      "weight_fn": 10.0,
+      "weight_fp": 1.0,
+      "weight_crit": 25.0,
+      "critical_to_fp_cost_ratio": 35.0,
+      "baseline": {
+        "theta": 0.32,
+        "fn": 45,
+        "fp": 13,
+        "crit_missed": 4,
+        "cost": 563.0
+      },
+      "candidate": {
+        "theta": 0.15,
+        "fn": 33,
+        "fp": 27,
+        "crit_missed": 2,
+        "cost": 407.0
+      },
+      "cost_reduction_percent": 27.71
+    },
+    "GATE_4": {
+      "status": "PASS",
+      "standard_candidate_threshold": 0.15,
+      "standard_critical_weakened": false,
+      "adversarial_clamped_threshold": 0.15,
+      "adversarial_critical_weakened": false,
+      "invariant_enforced": true
+    },
+    "GATE_5": {
+      "status": "PASS",
+      "pre_active_config_id": "cfg-v1.0.0-baseline",
+      "post_active_config_id": "cfg-v1.0.0-baseline",
+      "configs_identical": true,
+      "tracker_records_identical": true,
+      "flips_simulated_in_memory": 22,
+      "zero_interference_verified": true
+    },
+    "GATE_6": {
+      "status": "PASS",
+      "empty_gini": 0.0,
+      "uniform_gini": 0.0,
+      "concentrated_gini": 0.8,
+      "live_alerts": 408,
+      "live_gini": 0.2369,
+      "live_afi": 38.38,
+      "fatigue_status": "MODERATE",
+      "top_noisy_asset": "Keycloak Federation SSO DB"
+    },
+    "GATE_7": {
+      "status": "PASS",
+      "stable_psi": 0.0,
+      "shifted_psi": 7.3646,
+      "stable_wasserstein": 0.0,
+      "shifted_wasserstein": 3.0,
+      "live_drift_detected": false,
+      "live_severity": "STABLE"
+    },
+    "GATE_8": {
+      "status": "PASS",
+      "recommendations_count": 1,
+      "sample_rec_id": "rec-opt-c6f17257",
+      "sample_rec_title": "Adjust Decision Threshold to theta=0.15 (Cost Reduction: 27.7%)",
+      "sample_rec_role": "ANALYST",
+      "supporting_evidence": {
+        "baseline_threshold": 0.32,
+        "candidate_threshold": 0.15,
+        "cost_reduction_percent": 27.71,
+        "alert_delta": 26,
+        "false_positives_delta": 14,
+        "false_negatives_delta": -12,
+        "candidate_config_id": "cfg-7417d047"
+      }
+    },
+    "GATE_9": {
+      "status": "PASS",
+      "staged_id": "cfg-audit-stage-1795228728",
+      "approved_status": "SUPERSEDED",
+      "activated_status": "SUPERSEDED",
+      "restored_baseline_id": "cfg-v1.0.0-baseline",
+      "restored_baseline_theta": 0.32
+    },
+    "GATE_10": {
+      "status": "PASS",
+      "rbac_viewer_blocked_403": true,
+      "rbac_analyst_blocked_403": true,
+      "rbac_admin_authorized_200": true,
+      "in_memory_sync_verified": true,
+      "neo4j_aura_live": false,
+      "neo4j_connection_error": "Failed to DNS resolve address e5193897.databases.neo4j.io:7687: [Errno 11001] getaddrinfo failed",
+      "neo4j_audit_record_verified": false
+    }
+  }
+}

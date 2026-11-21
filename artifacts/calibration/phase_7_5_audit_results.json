@@ -1,0 +1,234 @@
+{
+  "timestamp": "2026-11-21T02:24:29.053347+00:00",
+  "checklist": {
+    "GATE_1": {
+      "title": "Empirical Risk Score Calibration Engine",
+      "status": "PASS",
+      "details": {
+        "sample_size": 240,
+        "ece": 0.1316,
+        "brier_score": 0.191,
+        "quality_score": 86.84,
+        "status": "SLIGHTLY_MISCALIBRATED",
+        "overprediction_rate": 0.0,
+        "underprediction_rate": 0.2,
+        "bins_evaluated": 5,
+        "asset_categories_evaluated": [
+          "APPLICATION",
+          "CLOUD_RESOURCE",
+          "DATABASE",
+          "FIREWALL",
+          "LAPTOP",
+          "SERVER",
+          "SERVICE_ACCOUNT",
+          "STORAGE",
+          "USER",
+          "WORKSTATION"
+        ]
+      }
+    },
+    "GATE_2": {
+      "title": "Sample Size Safeguards (N < 10 Guard)",
+      "status": "PASS",
+      "details": {
+        "empty_case_status": "INSUFFICIENT_DATA",
+        "small_case_status": "INSUFFICIENT_DATA",
+        "ece_suppressed": true,
+        "safe_governance_limitations_emitted": true
+      }
+    },
+    "GATE_3": {
+      "title": "Cost-Sensitive Threshold Optimization",
+      "status": "PASS",
+      "details": {
+        "baseline_threshold": 0.32,
+        "candidate_threshold": 0.15,
+        "baseline_cost": 563.0,
+        "candidate_cost": 407.0,
+        "cost_reduction_percent": 27.71,
+        "baseline_recall": 0.4231,
+        "candidate_recall": 0.5769,
+        "candidate_fn": 33,
+        "candidate_fp": 27,
+        "candidate_critical_misses": 2
+      }
+    },
+    "GATE_4": {
+      "title": "Critical Threat Protection Invariant",
+      "status": "PASS",
+      "details": {
+        "candidate_operating_threshold": 0.15,
+        "baseline_operating_threshold": 0.32,
+        "candidate_critical_misses": 2,
+        "baseline_critical_misses": 4,
+        "critical_threat_weakened": false
+      }
+    },
+    "GATE_5": {
+      "title": "Zero-Interference Shadow Threshold Evaluation",
+      "status": "PASS",
+      "details": {
+        "baseline_threshold": 0.3,
+        "candidate_threshold": 0.25,
+        "alert_volume_delta": 5,
+        "alert_volume_percent_change": 10.2,
+        "false_positive_delta": 4,
+        "false_negative_delta": -1,
+        "classification_flips_count": 5,
+        "critical_threats_retained": true,
+        "live_configuration_untouched": true
+      }
+    },
+    "GATE_6": {
+      "title": "Alert Fatigue Analytics & Gini Concentration",
+      "status": "PASS",
+      "details": {
+        "total_alerts": 408,
+        "gini_alert_concentration": 0.2369,
+        "alert_fatigue_index": 38.38,
+        "fatigue_status": "MODERATE",
+        "false_alarm_ratio": 0.0319,
+        "top_noisy_asset": "Keycloak Federation SSO DB",
+        "top_noisy_asset_fps": 1
+      }
+    },
+    "GATE_7": {
+      "title": "Telemetry Drift & Risk Shift Diagnostics",
+      "status": "PASS",
+      "details": {
+        "drift_detected": false,
+        "overall_drift_severity": "STABLE",
+        "wasserstein_distance": 0.0,
+        "calibration_degradation_detected": false,
+        "features_evaluated": [
+          "alert_velocity",
+          "correlated_indicator_count",
+          "criticality",
+          "graph_compromise_proximity",
+          "in_degree",
+          "neighbor_threat_density_1hop",
+          "neighbor_threat_density_2hop",
+          "out_degree",
+          "pagerank",
+          "static_ml_probability"
+        ],
+        "max_psi": 0.0
+      }
+    },
+    "GATE_8": {
+      "title": "Adaptive Recommendation Engine",
+      "status": "PASS",
+      "details": {
+        "recommendations_generated": 1,
+        "categories": [
+          "THRESHOLD_OPTIMIZATION"
+        ],
+        "required_roles": [
+          "ANALYST"
+        ],
+        "sample_recommendation": {
+          "id": "rec-opt-0f3fc7bd",
+          "title": "Adjust Decision Threshold to theta=0.15 (Cost Reduction: 27.7%)",
+          "category": "THRESHOLD_OPTIMIZATION",
+          "required_role": "ANALYST"
+        }
+      }
+    },
+    "GATE_9": {
+      "title": "Configuration Versioning, Approval & Rollback",
+      "status": "PASS",
+      "details": {
+        "initial_version": "v1.0-dbg",
+        "staged_version": "v1.2.0-audit",
+        "approved_by": "analyst_auditor",
+        "activated_by": "admin_auditor",
+        "rollback_target": "cfg-test-debug",
+        "final_active_version": "v1.0-dbg"
+      }
+    },
+    "GATE_10": {
+      "title": "REST API, RBAC Matrix & Graph Persistence",
+      "status": "PASS",
+      "details": {
+        "total_endpoints_verified": 13,
+        "viewer_403_enforced_on_mutating_actions": true,
+        "analyst_403_enforced_on_admin_actions": true,
+        "admin_activation_and_rollback_verified": true,
+        "graph_engine_policy_sync_verified": true,
+        "frontend_client_parity_verified": true
+      }
+    }
+  },
+  "metrics_comparison": {
+    "baseline_threshold": 0.32,
+    "baseline_cost": 563.0,
+    "candidate_threshold": 0.15,
+    "candidate_cost": 407.0,
+    "cost_reduction_percent": 27.71
+  },
+  "api_matrix": {
+    "GET /overview": {
+      "status": 200,
+      "role": "viewer"
+    },
+    "GET /report": {
+      "status": 200,
+      "role": "viewer"
+    },
+    "POST /optimize": {
+      "status": 200,
+      "viewer_blocked_403": true,
+      "role": "analyst"
+    },
+    "POST /shadow-evaluate": {
+      "status": 200,
+      "role": "analyst"
+    },
+    "GET /alert-fatigue": {
+      "status": 200,
+      "role": "viewer"
+    },
+    "GET /drift": {
+      "status": 200,
+      "role": "viewer"
+    },
+    "GET /recommendations": {
+      "status": 200,
+      "role": "viewer"
+    },
+    "GET /configurations": {
+      "status": 200,
+      "role": "viewer"
+    },
+    "GET /configurations/active": {
+      "status": 200,
+      "role": "viewer"
+    },
+    "POST /configurations/{id}/approve": {
+      "status": 200,
+      "role": "analyst"
+    },
+    "POST /configurations/{id}/activate": {
+      "status": 200,
+      "analyst_blocked_403": true,
+      "role": "admin"
+    },
+    "POST /configurations/rollback": {
+      "status": 200,
+      "analyst_blocked_403": true,
+      "role": "admin"
+    },
+    "POST /configurations/{id}/reject": {
+      "status": 200,
+      "role": "analyst"
+    }
+  },
+  "security_invariants": {
+    "critical_threshold_capped": true,
+    "critical_misses_count": 2,
+    "critical_threats_retained": true
+  },
+  "passed_gates": 10,
+  "total_gates": 10,
+  "verdict": "PASS"
+}

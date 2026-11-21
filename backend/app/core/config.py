@@ -53,15 +53,25 @@ class Settings(BaseSettings):
     SQLITE_DB_PATH: str = "safecontain_app.db"
     
     # Audit & Security
-    SECRET_KEY: str = "safecontain-enterprise-dev-secret-key-change-in-production-min32bytes"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 480  # 8 hours
-    ALGORITHM: str = "HS256"
+    SECRET_KEY: str = Field(
+        default="safecontain-enterprise-dev-secret-key-change-in-production-min32bytes",
+        validation_alias=AliasChoices("SECRET_KEY", "JWT_SECRET_KEY")
+    )
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 480  # 8 hours default, configurable
+    ALGORITHM: str = Field(default="HS256", validation_alias=AliasChoices("ALGORITHM", "JWT_ALGORITHM"))
+    AUTH_ENABLED: bool = True
+    INITIAL_ADMIN_USERNAME: str = Field(default="admin", validation_alias=AliasChoices("INITIAL_ADMIN_USERNAME", "ADMIN_USER"))
+    INITIAL_ADMIN_PASSWORD: Optional[str] = Field(default=None, validation_alias=AliasChoices("INITIAL_ADMIN_PASSWORD", "ADMIN_PASSWORD"))
     AUDIT_LEDGER_STORAGE_PATH: str = "audit_ledger.jsonl"
     VERIFY_AUDIT_INTEGRITY_ON_STARTUP: bool = True
+    BLOCKCHAIN_ENABLED: bool = True
     BLOCKCHAIN_RPC_URL: Optional[str] = None
     BLOCKCHAIN_PRIVATE_KEY: Optional[str] = None
     BLOCKCHAIN_CONTRACT_ADDRESS: Optional[str] = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
-    BLOCKCHAIN_NETWORK_NAME: str = "Ethereum Sepolia Testnet"
+    BLOCKCHAIN_NETWORK_NAME: str = Field(default="Ethereum Sepolia Testnet", validation_alias=AliasChoices("BLOCKCHAIN_NETWORK_NAME", "BLOCKCHAIN_NETWORK"))
+    BLOCKCHAIN_CHAIN_ID: int = 11155111
+    BLOCKCHAIN_CONFIRMATIONS: int = 1
+    BLOCKCHAIN_TIMEOUT_SECONDS: float = 10.0
     
     # Optimization & Solvers
     OPTIMIZATION_DEFAULT_STRATEGY: str = "constraint_cpsat"

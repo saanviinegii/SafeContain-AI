@@ -1,4 +1,4 @@
-# SafeContain AI — 5-Minute Hackathon Demonstration Script & Guide
+# SafeContain AI — Hackathon Live Demonstration & Verification Guide
 
 ## 1. Value Proposition (30 Seconds Pitch)
 
@@ -10,70 +10,106 @@
 
 ---
 
-## 2. Live Demo Script (Step-by-Step across the 19 Views)
+## 2. Dedicated Hackathon Demonstration Scenario (Section 9 Compliance)
 
-### Minute 1: The Incident & Topology (Views 1, 2, 3)
-1. **Executive Overview (View 1)**:
-   - Highlight the banner: Threat Level **CRITICAL**, Inherent Risk **88/100**, and the dual monitored citizen workflows (`wf-national-identity-auth` and `wf-payment-clearing-switch`).
-2. **Topology Explorer (View 3)**:
-   - Point out the Cytoscape.js interactive graph showing servers, users, permissions, alerts, and the crown jewel database.
-   - Explain the color coding: Orange for compromised nodes, Purple for suspected lateral links, Blue for confirmed links.
+SafeContain AI features a dedicated 1-click **Hackathon Demonstration Scenario** explicitly designed to illustrate the difference between crude infrastructure isolation and uncertainty-aware business continuity optimization.
 
-### Minute 2: Attack Path Analysis & Evidence Uncertainty (Views 4, 5, 7)
-3. **Attack Paths (View 4)**:
-   - Show that there are **3 distinct attack routes** leading from the external gateway to the crown jewel database.
-   - Highlight that Path #1 exploits a suspected lateral link with an uncertainty penalty.
-4. **Evidence & Uncertainty (View 5)**:
-   - Explain how evidence confidence decays over time using our Bayesian temporal formula:
-     $$c(t) = c_0 \cdot e^{-\lambda t}$$
-5. **Risk Analysis (View 7)**:
-   - Demonstrate the transparent risk decomposition: Inherent Risk (88.0) vs Observed Risk (72.5) vs Potential Risk (95.0).
-
-### Minute 3: Business Continuity & Optimization (Views 8, 9, 10)
-6. **Business Continuity Twin (View 8)**:
-   - Show how the database supports both the National Identity Gateway and the Payment Clearing Switch.
-   - Crucial point: If we simply isolate the database, we cause \$150,000/hr in citizen service downtime.
-7. **Strategy Comparator (View 10)**:
-   - Compare the three strategies:
-     - **Severity Baseline**: High risk reduction but causes unacceptable Tier-1 business workflow outages.
-     - **Greedy Baseline**: Quick, but gets trapped in local optima and violates budget limits.
-     - **Google OR-Tools CP-SAT (SafeContain AI)**: Mathematically maximizes risk reduction while strictly guaranteeing **zero outage** for Tier-1 services and respecting budget limits.
-
-### Minute 4: Isolated Simulation & What-If Sandbox (Views 11, 12, 13)
-8. **Simulation Sandbox (View 11)**:
-   - Click **Run Isolated Simulation**.
-   - Show that the base graph topology in Neo4j is **unaltered** (immutable snapshot).
-   - Point out the Residual Risk dropping from 88 to under 15, with 0 residual attack paths.
-9. **Decision Explainer (View 13)**:
-   - Walk through the 7-part mathematical explanation:
-     - Justification for chosen actions.
-     - Counterfactual analysis: why isolating the database was rejected.
-     - Explicit model assumptions.
-     - Pre/post verification steps.
-     - Action rollback and contingency procedures.
-
-### Minute 5: Governance & Blockchain Audit Verification (Views 14, 15, 19)
-10. **Approval Center (View 14)**:
-    - Demonstrate our strict Human-in-the-Loop Governance:
-      - As `SOC_ANALYST`, click "Submit for Manager Review" ($\to$ `PENDING_APPROVAL`).
-      - Switch role to `SECURITY_MANAGER` in View 17, and click "Approve Containment Plan" ($\to$ `APPROVED`).
-      - Explain that lower roles cannot self-approve (enforced via HTTP 403 Forbidden).
-11. **Audit Explorer & Blockchain Verification (View 15)**:
-    - Show the audit ledger table featuring the SHA-256 hash chain.
-    - Highlight the **Smart Contract Anchor (`SafeContainAuditLedger.sol`)**.
-    - Click **Verify On-Chain**: show the instant check recomputing the off-chain record hash and confirming a 100% cryptographic match against the on-chain anchored hash.
-12. **Reports Export (View 19)**:
-    - Click "Export Complete JSON Dossier" or "Export Executive Text Briefing" to show the generated audit artifact.
+### Scenario Architecture:
+1. **Suspicious Compromised Identity**:
+   - `user-contractor-guest` (Compromised External Contractor account)
+   - `dev-contractor-laptop` (Compromised Workstation Terminal #CON-409)
+2. **Two Distinct Directed Attack Routes to Critical Database (`db-citizen-identity-vault`)**:
+   - **Route A**: `user-contractor-guest` $\to$ `jump-host-admin` $\to$ `db-citizen-identity-vault`
+   - **Route B**: `user-contractor-guest` $\to$ `api-gateway-internal` $\to$ `app-service-auth` $\to$ `db-citizen-identity-vault`
+3. **Mission-Critical Business Workflows**:
+   - `wf-payment-processing` (Real-Time Payment & Treasury Clearing Switch): Directly supported by `api-gateway-internal` and `db-citizen-identity-vault` (\$300,000/hr downtime penalty, 0 allowable outage hours).
+   - `wf-citizen-identity-portal` (National Citizen Identity Verification Portal): Directly supported by `app-service-auth` and `db-citizen-identity-vault` (\$200,000/hr downtime penalty).
 
 ---
 
-## 3. High-Impact Answers to Panelist Questions
+## 3. Side-by-Side Candidate Action Comparison
 
-**Q1: How does SafeContain AI avoid hallucinated or fabricated containment actions?**
-> *"Every candidate action is generated deterministically by `ActionCatalog` from active graph choke points. Every optimization score is computed via Google OR-Tools CP-SAT constraint programming, and outcomes are mathematically verified in an isolated NetworkX digital twin. We use zero black-box LLM decision execution."*
+| Metric / Attribute | Option A: Disruptive Action (`act-firewall-api-gateway-internal`) | Option B: Targeted Alternative (`act-revoke-user-contractor-guest`) |
+| :--- | :--- | :--- |
+| **Target Entity** | `api-gateway-internal` (Core API Ingress) | `user-contractor-guest` (Compromised Contractor) |
+| **Intervention Type** | `APPLY_FIREWALL_RULE / ISOLATE` | `REVOKE_SESSION / DISABLE_ACCOUNT` |
+| **Disruption Score** | **20.0 (High Disruption)** | **10.0 (Minimal Disruption)** |
+| **Business Workflow Impact** | ❌ **Payment Clearing Outage (\$250,000 SLA Penalty)** | ✅ **0 Business Outages (\$0 Downtime, 100% SLA)** |
+| **SLA Violations** | **VIOLATED (Tier-1 Citizen Service)** | **SATISFIED (Zero Outage Guarantee)** |
+| **Residual Attack Paths** | ⚠️ **6 Residual Paths Remain OPEN via Route A (`jump-host-admin`)** | ✅ **0 Residual Paths (Both routes severed at root)** |
+| **Containment Status** | **Partially Contained / Breach Risk Persists** | **100% Fully Contained** |
+| **Recommended by SafeContain AI?** | ❌ **Rejected by CP-SAT Constraint Solver** | ✅ **Optimal Plan Selected by CP-SAT** |
 
-**Q2: What happens if an organization does not have a live Neo4j Aura or Ethereum blockchain setup?**
-> *"SafeContain AI is designed with an enterprise Dual Engine. It automatically connects to live Neo4j Aura and EVM testnets when credentials are provided, but provides full in-memory NetworkX graph processing and permissioned SHA-256 ledger verification when offline. Zero crash, zero downtime."*
+---
 
-**Q3: Why not execute the containment actions automatically via API?**
-> *"Automated destructive actions without human verification pose immense operational and legal risk (e.g., disconnecting hospital or payment switches). SafeContain AI adheres strictly to the CISA and CERT-In human-in-the-loop mandate: the system recommends and simulates, but an authorized human commander must review and sign off."*
+## 4. Live Hackathon Demonstration Walkthrough (5-Minute Script)
+
+### Step 1: Launch Hackathon Scenario (Top Operational Bar)
+- Click the blue **"Launch Hackathon Demo"** button on the top right.
+- The badge displays `Hackathon Demonstration Scenario`, initializing the compromised contractor account and both lateral attack routes.
+
+### Step 2: Visual Topology & Attack Paths (Views 3 & 4)
+- Navigate to **Topology Explorer (View 3)** or **Attack Paths (View 4)**.
+- Cytoscape.js directed graph displays:
+  - 👑 **Gold Diamonds**: Crown Jewel Database (`db-citizen-identity-vault`).
+  - ⚠️ **Crimson Circles**: Compromised Contractor (`user-contractor-guest`) and laptop (`dev-contractor-laptop`).
+  - 🖥️ **Blue Cylinders**: Intermediate Jump Host (`jump-host-admin`) and API Gateway (`api-gateway-internal`).
+  - 💼 **Purple Hexagons**: Protected Workflows (`wf-payment-processing`).
+- Click any attack path in the table to isolate and trace Route A vs Route B on the graph.
+
+### Step 3: Tri-Level Strategy Comparison (View 10)
+- Navigate to **Strategy Comparator (View 10)**.
+- Review the comparison matrix:
+  - **Strategy 1 (Baseline Severity)**: Isolates perimeter gateways, incurring massive disruption and failing the zero-outage SLA.
+  - **Strategy 2 (Greedy Risk-Cost)**: Cuts low-cost nodes but fails to optimize cross-path bottlenecks.
+  - **Strategy 3 (Google OR-Tools CP-SAT)**: Identifies the root identity choke point, strictly preserving business continuity.
+
+### Step 4: What-If Simulation Sandbox (View 11)
+- Navigate to **Simulation Sandbox (View 11)**.
+- Locate the **"Hackathon Demo: Disruptive vs Targeted Containment Comparison"** panel:
+  - Click **"Simulate Disruptive Action (API Gateway)"**:
+    - Observe residual paths remain at 6.
+    - Observe payment clearing workflow is disrupted (\$250,000 penalty).
+    - Notice on the Simulated Topology Map that Route A via `jump-host-admin` is still active!
+  - Click **"Simulate Targeted Action (Contractor Identity)"**:
+    - Observe residual paths drop to **0**.
+    - Observe disrupted workflows drop to **0**.
+    - Threat status switches to **THREAT CONTAINED**.
+    - Cryptographic SHA-256 simulation hash generated and anchored.
+
+### Step 5: Human-in-the-Loop Governance (View 14)
+- Navigate to **Human Approval Center (View 14)**:
+  - Current role: `SECURITY_MANAGER`.
+  - Click **"Submit For Manager Review"** ($\to$ `PENDING_APPROVAL`).
+  - Click **"Approve Containment Plan"** ($\to$ `APPROVED`).
+  - Note: Lower roles (such as `READ_ONLY_VIEWER` or `SOC_ANALYST`) are denied approval capability (HTTP 403 Forbidden).
+
+### Step 6: Tamper-Evident Audit & Blockchain Verification (View 15)
+- Navigate to **Cryptographic Audit Ledger (View 15)**:
+  - Inspect the recent events: `LOAD_SYNTHETIC_SCENARIO`, `RECOMMENDATION_ANCHOR`, `SIMULATION_SANDBOX_EVALUATION`, and `GOVERNANCE_STATE_TRANSITION`.
+  - Click **"Verify Cryptographic Integrity"**: full forward SHA-256 hash-chain verification confirms ledger is 100% intact.
+  - Review on-chain anchoring status (`SafeContainAuditLedger.sol` on Ethereum Sepolia Testnet / local permissioned anchor).
+
+### Step 7: Dossier Export (View 19)
+- Navigate to **Export Dossier (View 19)**:
+  - Download official incident dossier in JSON, CSV, or Executive Briefing Text format.
+
+---
+
+## 5. Live Production URLs & Local Run Commands
+
+- **Deployed Live Application (Render Cloud)**: [https://safecontain-ai.onrender.com](https://safecontain-ai.onrender.com)
+- **Live Health & Engine Diagnostics Probe**: [https://safecontain-ai.onrender.com/api/v1/health](https://safecontain-ai.onrender.com/api/v1/health)
+- **Interactive OpenAPI Documentation**: [https://safecontain-ai.onrender.com/docs](https://safecontain-ai.onrender.com/docs)
+
+### Local Launch (Windows PowerShell):
+```powershell
+# Run full test suite (36 tests)
+pytest tests/unit tests/performance tests/security tests/integration/test_e2e_workflow.py -v
+
+# Build frontend production bundle
+npm --prefix frontend run build
+
+# Start unified server on port 8000
+python run_app.py
+```

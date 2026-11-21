@@ -1,0 +1,31 @@
+user_id,node_id,username,role,department,privilege_level,account_type,mfa_enabled,account_status,risk_score,last_login,is_service_account
+usr-001,node-user-marcus,marcus.vance,Developer,Engineering,USER,EMPLOYEE,true,LOCKED,65.0,2026-11-15T07:00:00+00:00,false
+usr-002,node-user-sarah,sarah.chen,DevOps Admin,DevOps,ADMIN,EMPLOYEE,true,UNDER_INVESTIGATION,85.0,2026-11-14T02:00:00+00:00,false
+usr-003,node-user-alex,alex.rivera,SecOps Analyst,Security,ELEVATED,EMPLOYEE,true,ACTIVE,70.0,2026-11-13T16:00:00+00:00,false
+usr-004,node-user-elena,elena.rostova,Finance Director,Finance,USER,EMPLOYEE,true,ACTIVE,80.0,2026-11-13T19:00:00+00:00,false
+usr-005,node-user-david,david.kim,Frontend Engineer,Engineering,USER,EMPLOYEE,true,ACTIVE,40.0,2026-11-15T01:00:00+00:00,false
+usr-006,node-user-priya,priya.patel,Database Admin,Engineering,ADMIN,EMPLOYEE,true,ACTIVE,90.0,2026-11-15T03:00:00+00:00,false
+usr-007,node-user-james,james.wilson,IT Helpdesk,IT Support,ELEVATED,EMPLOYEE,true,ACTIVE,60.0,2026-11-13T21:00:00+00:00,false
+usr-008,node-user-rachel,rachel.adams,CISO,Executive,ADMIN,EMPLOYEE,true,ACTIVE,95.0,2026-11-14T18:00:00+00:00,false
+usr-009,node-user-liam,liam.oconnor,HR Specialist,HR,USER,EMPLOYEE,true,ACTIVE,50.0,2026-11-13T23:00:00+00:00,false
+usr-010,node-user-tom,tom.hardy,External QA Tester,Contractor,USER,CONTRACTOR,false,UNDER_INVESTIGATION,45.0,2026-11-14T15:00:00+00:00,false
+usr-011,node-user-svc-cicd,svc_cicd_pipeline,Service Account,DevOps,ADMIN,SERVICE_ACCOUNT,false,UNDER_INVESTIGATION,85.0,2026-11-14T23:00:00+00:00,true
+usr-012,node-user-svc-backup,svc_backup_daemon,Service Account,IT Operations,ELEVATED,SERVICE_ACCOUNT,false,ACTIVE,80.0,2026-11-14T09:00:00+00:00,true
+usr-013,node-user-svc-payment,svc_payment_broker,Service Account,Payments,ADMIN,SERVICE_ACCOUNT,false,UNDER_INVESTIGATION,95.0,2026-11-15T03:00:00+00:00,true
+usr-014,node-user-svc-siem,svc_splunk_forwarder,Service Account,Security,USER,SERVICE_ACCOUNT,false,ACTIVE,70.0,2026-11-14T16:00:00+00:00,true
+usr-015,node-user-svc-scan,svc_vuln_scanner,Service Account,Security,ELEVATED,SERVICE_ACCOUNT,false,ACTIVE,75.0,2026-11-14T08:00:00+00:00,true
+usr-016,node-user-claire,claire.dupont,Compliance Counsel,Legal,USER,EMPLOYEE,true,ACTIVE,65.0,2026-11-14T13:00:00+00:00,false
+usr-017,node-user-ahmed,ahmed.mansour,SecOps Architect,Engineering,ADMIN,EMPLOYEE,true,ACTIVE,85.0,2026-11-14T21:00:00+00:00,false
+usr-018,node-user-kevin,kevin.novak,SRE Lead,Operations,ADMIN,EMPLOYEE,true,ACTIVE,85.0,2026-11-14T03:00:00+00:00,false
+usr-019,node-user-chloe,chloe.martin,Brand Specialist,Marketing,USER,EMPLOYEE,true,ACTIVE,30.0,2026-11-13T21:00:00+00:00,false
+usr-020,node-user-zack,zack.taylor,Penetration Tester,Contractor,ADMIN,CONTRACTOR,true,UNDER_INVESTIGATION,75.0,2026-11-13T10:00:00+00:00,false
+usr-021,node-user-maya,maya.lin,Payment Architect,Engineering,ADMIN,EMPLOYEE,true,ACTIVE,90.0,2026-11-14T12:00:00+00:00,false
+usr-022,node-user-sam,samira.khan,Treasury Analyst,Finance,USER,EMPLOYEE,true,ACTIVE,70.0,2026-11-13T16:00:00+00:00,false
+usr-023,node-user-george,george.bailey,Network Engineer,Operations,ADMIN,EMPLOYEE,true,ACTIVE,80.0,2026-11-13T14:00:00+00:00,false
+usr-024,node-user-nina,nina.simone,Data Scientist,Data,USER,EMPLOYEE,true,ACTIVE,55.0,2026-11-13T22:00:00+00:00,false
+usr-025,node-user-breakglass,admin_breakglass_01,Breakglass Admin,Security,DOMAIN_ADMIN,EMERGENCY_BREAKGLASS,true,ACTIVE,100.0,2026-11-15T07:00:00+00:00,false
+usr-026,node-user-carlos,carlos.santana,Cloud Engineer,Engineering,ELEVATED,EMPLOYEE,true,ACTIVE,75.0,2026-11-13T13:00:00+00:00,false
+usr-027,node-user-emily,emily.watson,Payroll Specialist,HR,USER,EMPLOYEE,true,ACTIVE,70.0,2026-11-13T20:00:00+00:00,false
+usr-028,node-user-brian,brian.cox,Security Researcher,Engineering,ELEVATED,EMPLOYEE,true,ACTIVE,70.0,2026-11-14T12:00:00+00:00,false
+usr-029,node-user-hannah,hannah.abbott,Helpdesk Tier 1,IT Support,USER,EMPLOYEE,true,ACTIVE,40.0,2026-11-13T13:00:00+00:00,false
+usr-030,node-user-svc-monitoring,svc_datadog_agent,Service Account,Operations,USER,SERVICE_ACCOUNT,false,ACTIVE,60.0,2026-11-15T01:00:00+00:00,true

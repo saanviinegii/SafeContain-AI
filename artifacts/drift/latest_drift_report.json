@@ -1,0 +1,203 @@
+{
+  "report_id": "drift-run-20261121-135736",
+  "timestamp": "2026-11-21T13:57:36.215360+00:00",
+  "dataset_label": "API_TRIGGERED_AUDIT",
+  "model_version": "1.0.0",
+  "operating_threshold": 0.32,
+  "overall_severity": "NORMAL",
+  "overall_drift_score": 0.0,
+  "retraining_recommended": false,
+  "retraining_recommendation_reason": "Telemetry distributions are stable. Champion model operating within nominal parameters.",
+  "summary": {
+    "total_features_evaluated": 13,
+    "drifted_features_count": 0,
+    "prediction_drift_detected": false,
+    "data_quality_alert": false,
+    "curr_sample_count": 120,
+    "ref_sample_count": 120
+  },
+  "prediction_drift": {
+    "prediction_psi": 0.0,
+    "ref_mean_probability": 0.411,
+    "curr_mean_probability": 0.411,
+    "mean_probability_delta": 0.0,
+    "ref_threat_rate": 0.6583,
+    "curr_threat_rate": 0.6583,
+    "threat_rate_delta": 0.0,
+    "operating_threshold": 0.32,
+    "severity": "NORMAL",
+    "drift_detected": false
+  },
+  "data_quality": {
+    "evaluated_columns": 13,
+    "high_missing_columns": [],
+    "max_missing_rate": 0.0,
+    "severity": "NORMAL",
+    "quality_alert": false
+  },
+  "population_drift": {
+    "ref_asset_count": 120,
+    "curr_asset_count": 120,
+    "asset_count_delta": 0,
+    "delta_percentage": 0.0,
+    "severity": "NORMAL"
+  },
+  "features_drift": [
+    {
+      "feature": "node_type",
+      "type": "CATEGORICAL",
+      "method": "Categorical PSI",
+      "psi": 0.0,
+      "ks_statistic": null,
+      "p_value": null,
+      "severity": "NORMAL",
+      "drift_detected": false,
+      "ref_mean": null,
+      "curr_mean": null
+    },
+    {
+      "feature": "environment",
+      "type": "CATEGORICAL",
+      "method": "Categorical PSI",
+      "psi": 0.0,
+      "ks_statistic": null,
+      "p_value": null,
+      "severity": "NORMAL",
+      "drift_detected": false,
+      "ref_mean": null,
+      "curr_mean": null
+    },
+    {
+      "feature": "exposure",
+      "type": "CATEGORICAL",
+      "method": "Categorical PSI",
+      "psi": 0.0,
+      "ks_statistic": null,
+      "p_value": null,
+      "severity": "NORMAL",
+      "drift_detected": false,
+      "ref_mean": null,
+      "curr_mean": null
+    },
+    {
+      "feature": "criticality",
+      "type": "NUMERIC",
+      "method": "PSI + Kolmogorov-Smirnov",
+      "psi": 0.0,
+      "ks_statistic": 0.0,
+      "p_value": 1.0,
+      "severity": "NORMAL",
+      "drift_detected": false,
+      "ref_mean": 0.7459,
+      "curr_mean": 0.7459
+    },
+    {
+      "feature": "business_value",
+      "type": "NUMERIC",
+      "method": "PSI + Kolmogorov-Smirnov",
+      "psi": 0.0,
+      "ks_statistic": 0.0,
+      "p_value": 1.0,
+      "severity": "NORMAL",
+      "drift_detected": false,
+      "ref_mean": 300287.5,
+      "curr_mean": 300287.5
+    },
+    {
+      "feature": "in_degree",
+      "type": "NUMERIC",
+      "method": "PSI + Kolmogorov-Smirnov",
+      "psi": 0.0,
+      "ks_statistic": 0.0,
+      "p_value": 1.0,
+      "severity": "NORMAL",
+      "drift_detected": false,
+      "ref_mean": 2.2667,
+      "curr_mean": 2.2667
+    },
+    {
+      "feature": "out_degree",
+      "type": "NUMERIC",
+      "method": "PSI + Kolmogorov-Smirnov",
+      "psi": 0.0,
+      "ks_statistic": 0.0,
+      "p_value": 1.0,
+      "severity": "NORMAL",
+      "drift_detected": false,
+      "ref_mean": 2.2667,
+      "curr_mean": 2.2667
+    },
+    {
+      "feature": "total_degree",
+      "type": "NUMERIC",
+      "method": "PSI + Kolmogorov-Smirnov",
+      "psi": 0.0,
+      "ks_statistic": 0.0,
+      "p_value": 1.0,
+      "severity": "NORMAL",
+      "drift_detected": false,
+      "ref_mean": 4.5333,
+      "curr_mean": 4.5333
+    },
+    {
+      "feature": "in_out_degree_ratio",
+      "type": "NUMERIC",
+      "method": "PSI + Kolmogorov-Smirnov",
+      "psi": 0.0,
+      "ks_statistic": 0.0,
+      "p_value": 1.0,
+      "severity": "NORMAL",
+      "drift_detected": false,
+      "ref_mean": 1.0315,
+      "curr_mean": 1.0315
+    },
+    {
+      "feature": "pagerank",
+      "type": "NUMERIC",
+      "method": "PSI + Kolmogorov-Smirnov",
+      "psi": 0.0,
+      "ks_statistic": 0.0,
+      "p_value": 1.0,
+      "severity": "NORMAL",
+      "drift_detected": false,
+      "ref_mean": 0.0083,
+      "curr_mean": 0.0083
+    },
+    {
+      "feature": "is_high_privilege_connected",
+      "type": "NUMERIC",
+      "method": "PSI + Kolmogorov-Smirnov",
+      "psi": 0.0,
+      "ks_statistic": 0.0,
+      "p_value": 1.0,
+      "severity": "NORMAL",
+      "drift_detected": false,
+      "ref_mean": 0.225,
+      "curr_mean": 0.225
+    },
+    {
+      "feature": "admin_edge_count",
+      "type": "NUMERIC",
+      "method": "PSI + Kolmogorov-Smirnov",
+      "psi": 0.0,
+      "ks_statistic": 0.0,
+      "p_value": 1.0,
+      "severity": "NORMAL",
+      "drift_detected": false,
+      "ref_mean": 0.4,
+      "curr_mean": 0.4
+    },
+    {
+      "feature": "has_asset_profile",
+      "type": "NUMERIC",
+      "method": "PSI + Kolmogorov-Smirnov",
+      "psi": 0.0,
+      "ks_statistic": 0.0,
+      "p_value": 1.0,
+      "severity": "NORMAL",
+      "drift_detected": false,
+      "ref_mean": 0.2917,
+      "curr_mean": 0.2917
+    }
+  ]
+}

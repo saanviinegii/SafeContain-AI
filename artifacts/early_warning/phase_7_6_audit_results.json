@@ -1,0 +1,164 @@
+{
+  "audit_version": "v7.6.0",
+  "evaluated_at": "2026-11-21T05:26:55.595246+00:00",
+  "total_gates": 12,
+  "passed_gates": 12,
+  "failed_gates": 0,
+  "verdict": "PASS",
+  "results": [
+    {
+      "gate_id": "GATE_1",
+      "title": "Multi-Source Behavioral Signal Extraction & Deduplication",
+      "status": "PASS",
+      "timestamp": "2026-11-21T05:26:51.071610+00:00",
+      "evidence": {
+        "total_signals_extracted": 19,
+        "unique_signal_types": 3,
+        "signal_breakdown": {
+          "REPEATED_SUSPICIOUS_EVENTS": 9,
+          "SEVERITY_ESCALATION": 8,
+          "VULNERABILITY_EXPOSURE_SURGE": 2
+        },
+        "idempotent_deduplication_verified": true
+      }
+    },
+    {
+      "gate_id": "GATE_2",
+      "title": "Dynamic Risk Trajectory Modeling & Linear OLS Regression",
+      "status": "PASS",
+      "timestamp": "2026-11-21T05:26:51.071868+00:00",
+      "evidence": {
+        "verified_rising_slope": 10.0,
+        "verified_falling_slope": -15.0,
+        "bounded_clamping_verified": "[0.0, 100.0] enforced",
+        "projection_points_generated": 5
+      }
+    },
+    {
+      "gate_id": "GATE_3",
+      "title": "CUSUM Change-Point Structural Shift Detection",
+      "status": "PASS",
+      "timestamp": "2026-11-21T05:26:51.071990+00:00",
+      "evidence": {
+        "nominal_sequence_shift_detected": false,
+        "abrupt_jump_shift_detected": true,
+        "jump_acceleration": 12.8
+      }
+    },
+    {
+      "gate_id": "GATE_4",
+      "title": "Data-Sufficiency & Mathematical Robustness Safeguards",
+      "status": "PASS",
+      "timestamp": "2026-11-21T05:26:51.072065+00:00",
+      "evidence": {
+        "n0_sufficiency": "NO_DATA",
+        "n1_sufficiency": "INSUFFICIENT",
+        "n2_sufficiency": "SPARSE",
+        "nan_inf_sanitization_verified": true
+      }
+    },
+    {
+      "gate_id": "GATE_5",
+      "title": "5-Tier Threat Escalation Prediction Engine",
+      "status": "PASS",
+      "timestamp": "2026-11-21T05:26:51.072166+00:00",
+      "evidence": {
+        "stable_asset_predicted_state": "STABLE",
+        "critical_asset_predicted_state": "CRITICAL_ESCALATION_RISK",
+        "critical_escalation_risk_score": 78.3,
+        "probability_calibration": 0.8684
+      }
+    },
+    {
+      "gate_id": "GATE_6",
+      "title": "Critical Threat Protection Safety Invariant",
+      "status": "PASS",
+      "timestamp": "2026-11-21T05:26:51.072426+00:00",
+      "evidence": {
+        "is_critical_threat_protected": true,
+        "enforced_state": "CRITICAL_ESCALATION_RISK",
+        "clamped_priority_score": 86.0,
+        "downgrade_prevention_verified": true
+      }
+    },
+    {
+      "gate_id": "GATE_7",
+      "title": "Neo4j Graph Threat Signal Correlation & Clustering",
+      "status": "PASS",
+      "timestamp": "2026-11-21T05:26:51.072880+00:00",
+      "evidence": {
+        "clusters_formed": 1,
+        "primary_cluster_id": "clust-early-bda8a986ab",
+        "crown_jewels_in_blast_radius": [
+          "vault-db"
+        ],
+        "lateral_transmission_detected": true
+      }
+    },
+    {
+      "gate_id": "GATE_8",
+      "title": "Early-Warning Generation & Multi-Factor Prioritization",
+      "status": "PASS",
+      "timestamp": "2026-11-21T05:26:51.072972+00:00",
+      "evidence": {
+        "warnings_generated": 1,
+        "warning_id": "warn-rapi-0f4a76ef20",
+        "priority_score": 65.45,
+        "category": "Rapid Escalation Warning",
+        "severity": "HIGH"
+      }
+    },
+    {
+      "gate_id": "GATE_9",
+      "title": "Sliding-Window Deduplication & 12-Hour Alert Fatigue Cooldown",
+      "status": "PASS",
+      "timestamp": "2026-11-21T05:26:51.073072+00:00",
+      "evidence": {
+        "initial_warning_count": 1,
+        "cooldown_suppression_verified": true,
+        "acknowledgment_status": "ACKNOWLEDGED",
+        "cooldown_until": "2026-11-21T17:26:51.072988+00:00"
+      }
+    },
+    {
+      "gate_id": "GATE_10",
+      "title": "Forensic Investigation Context & Dossier Synthesis",
+      "status": "PASS",
+      "timestamp": "2026-11-21T05:26:51.073145+00:00",
+      "evidence": {
+        "investigation_id": "inv-bae243f868",
+        "asset_name": "Enterprise Identity Vault",
+        "dossier_sections_verified": 8,
+        "prescriptive_action_steps": 5
+      }
+    },
+    {
+      "gate_id": "GATE_11",
+      "title": "Advance Lead-Time & Zero Data-Leakage Predictive Validation",
+      "status": "PASS",
+      "timestamp": "2026-11-21T05:26:51.073196+00:00",
+      "evidence": {
+        "accuracy": "100.0%",
+        "precision": "100.0%",
+        "recall": "100.0%",
+        "brier_score": 0.0082,
+        "mean_lead_time_hours": 6.0,
+        "data_leakage_prevented": true
+      }
+    },
+    {
+      "gate_id": "GATE_12",
+      "title": "Shadow Mode Non-Interference, Graph Persistence & REST APIs",
+      "status": "PASS",
+      "timestamp": "2026-11-21T05:26:55.594397+00:00",
+      "evidence": {
+        "shadow_mode_non_interference": true,
+        "config_hash_identical": true,
+        "active_threshold_preserved": 0.32,
+        "graph_warnings_persisted": 94,
+        "graph_signals_persisted": 111,
+        "rbac_viewer_and_analyst_verified": true
+      }
+    }
+  ]
+}

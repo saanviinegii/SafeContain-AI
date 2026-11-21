@@ -1,0 +1,82 @@
+{
+  "calibration_timestamp": "2026-11-21T13:59:04.604781+00:00",
+  "duration_seconds": 0.66,
+  "feature_subset": "topology_only",
+  "operating_threshold": 0.32,
+  "default_threshold": 0.5,
+  "selection_strategy": "recall_constrained_cost_optimal",
+  "target_achieved": true,
+  "recall_target": 0.8,
+  "cost_assumptions": {
+    "cost_false_negative": 10.0,
+    "cost_false_positive": 1.0,
+    "cost_ratio": "10.0:1"
+  },
+  "selection_reason": "Selected threshold theta=0.32 satisfies the primary security constraint (Validation Recall 0.9444 >= 0.80) while minimizing operational containment disruption cost (Total Cost = 58.0 under 10:1 FN:FP penalty ratio, F1 = 0.4096).",
+  "youden_optimal": {
+    "threshold": 0.32,
+    "youden_j": 0.3291,
+    "recall": 0.9444,
+    "precision": 0.2615,
+    "balanced_accuracy": 0.6645
+  },
+  "validation_metrics": {
+    "threshold": 0.32,
+    "true_positives": 17.0,
+    "true_negatives": 30.0,
+    "false_positives": 48.0,
+    "false_negatives": 1.0,
+    "recall": 0.9444,
+    "precision": 0.2615,
+    "specificity": 0.3846,
+    "f1_score": 0.4096,
+    "balanced_accuracy": 0.6645,
+    "accuracy": 0.4896,
+    "false_positive_rate": 0.6154,
+    "false_negative_rate": 0.0556,
+    "youden_j": 0.3291,
+    "total_cost": 58.0
+  },
+  "holdout_comparison": {
+    "default_threshold_0_50": {
+      "threshold": 0.5,
+      "true_positives": 2,
+      "true_negatives": 14,
+      "false_positives": 5,
+      "false_negatives": 3,
+      "recall": 0.4,
+      "precision": 0.2857,
+      "specificity": 0.7368,
+      "f1_score": 0.3333,
+      "balanced_accuracy": 0.5684,
+      "accuracy": 0.6667,
+      "false_positive_rate": 0.2632,
+      "false_negative_rate": 0.6,
+      "youden_j": 0.1368,
+      "total_cost": 35.0
+    },
+    "calibrated_threshold": {
+      "threshold": 0.32,
+      "true_positives": 4,
+      "true_negatives": 6,
+      "false_positives": 13,
+      "false_negatives": 1,
+      "recall": 0.8,
+      "precision": 0.2353,
+      "specificity": 0.3158,
+      "f1_score": 0.3636,
+      "balanced_accuracy": 0.5579,
+      "accuracy": 0.4167,
+      "false_positive_rate": 0.6842,
+      "false_negative_rate": 0.2,
+      "youden_j": 0.1158,
+      "total_cost": 23.0
+    },
+    "recall_gain": 0.4,
+    "fnr_reduction": 0.4,
+    "threats_missed_default": 3,
+    "threats_missed_calibrated": 1,
+    "false_alerts_default": 5,
+    "false_alerts_calibrated": 13
+  }
+}

@@ -1,0 +1,304 @@
+{
+  "platform": "SafeContain AI Enterprise Risk Intelligence",
+  "dossier_id": "INC-20261120-105259",
+  "incident_title": "Active Cyber Incident Containment Briefing: Simulated Multi-Hop Lateral Movement Attack",
+  "generated_at": "2026-11-20T10:52:59.787303+00:00",
+  "analyst_name": "Saanvi (Lead Threat Analyst)",
+  "analyst_notes": "Phase 7.2D unit test dossier generation verification.",
+  "classification": "TOP SECRET // CISO INCIDENT DECISION SUPPORT",
+  "executive_summary": {
+    "total_monitored_nodes": 120,
+    "compromised_nodes_count": 79,
+    "healthy_nodes_count": 41,
+    "operating_threshold": 0.32,
+    "model_version": "1.0.0",
+    "crown_jewels_at_risk_count": 0,
+    "crown_jewels_at_risk": [],
+    "active_attack_routes_count": 0,
+    "recommended_containment_actions_count": 0,
+    "estimated_containment_cost": 0.0,
+    "disruption_score": 0.0,
+    "drift_severity": "NORMAL"
+  },
+  "at_risk_assets": [
+    {
+      "node_id": "node-srv-siem-splunk",
+      "is_at_risk": 1,
+      "risk_probability": 1.0,
+      "operating_threshold": 0.32,
+      "risk_tier": "CRITICAL",
+      "node_type": "SERVER",
+      "exposure": "INTERNAL",
+      "criticality": 0.85
+    },
+    {
+      "node_id": "node-srv-edr-console",
+      "is_at_risk": 1,
+      "risk_probability": 1.0,
+      "operating_threshold": 0.32,
+      "risk_tier": "CRITICAL",
+      "node_type": "SERVER",
+      "exposure": "INTERNAL",
+      "criticality": 0.8
+    },
+    {
+      "node_id": "node-srv-jumpbox01",
+      "is_at_risk": 1,
+      "risk_probability": 0.9241,
+      "operating_threshold": 0.32,
+      "risk_tier": "CRITICAL",
+      "node_type": "SERVER",
+      "exposure": "DMZ",
+      "criticality": 0.9
+    },
+    {
+      "node_id": "node-srv-jumpbox02",
+      "is_at_risk": 1,
+      "risk_probability": 0.8951,
+      "operating_threshold": 0.32,
+      "risk_tier": "CRITICAL",
+      "node_type": "SERVER",
+      "exposure": "DMZ",
+      "criticality": 0.85
+    },
+    {
+      "node_id": "node-srv-staging-api",
+      "is_at_risk": 1,
+      "risk_probability": 0.8562,
+      "operating_threshold": 0.32,
+      "risk_tier": "CRITICAL",
+      "node_type": "SERVER",
+      "exposure": "DMZ",
+      "criticality": 0.5
+    },
+    {
+      "node_id": "node-app-staging-mock",
+      "is_at_risk": 1,
+      "risk_probability": 0.8109,
+      "operating_threshold": 0.32,
+      "risk_tier": "CRITICAL",
+      "node_type": "APPLICATION",
+      "exposure": "DMZ",
+      "criticality": 0.4
+    },
+    {
+      "node_id": "node-srv-dc01",
+      "is_at_risk": 1,
+      "risk_probability": 0.7782,
+      "operating_threshold": 0.32,
+      "risk_tier": "CRITICAL",
+      "node_type": "SERVER",
+      "exposure": "INTERNAL",
+      "criticality": 0.95
+    },
+    {
+      "node_id": "node-user-svc-cicd",
+      "is_at_risk": 1,
+      "risk_probability": 0.7771,
+      "operating_threshold": 0.32,
+      "risk_tier": "CRITICAL",
+      "node_type": "SERVICE_ACCOUNT",
+      "exposure": "INTERNAL",
+      "criticality": 0.85
+    },
+    {
+      "node_id": "node-srv-gitlab",
+      "is_at_risk": 1,
+      "risk_probability": 0.7752,
+      "operating_threshold": 0.32,
+      "risk_tier": "CRITICAL",
+      "node_type": "SERVER",
+      "exposure": "INTERNAL",
+      "criticality": 0.85
+    },
+    {
+      "node_id": "node-srv-mail-relay",
+      "is_at_risk": 1,
+      "risk_probability": 0.772,
+      "operating_threshold": 0.32,
+      "risk_tier": "CRITICAL",
+      "node_type": "SERVER",
+      "exposure": "DMZ",
+      "criticality": 0.7
+    },
+    {
+      "node_id": "node-db-staging-test",
+      "is_at_risk": 1,
+      "risk_probability": 0.7455,
+      "operating_threshold": 0.32,
+      "risk_tier": "HIGH",
+      "node_type": "DATABASE",
+      "exposure": "DMZ",
+      "criticality": 0.4
+    },
+    {
+      "node_id": "node-user-sarah",
+      "is_at_risk": 1,
+      "risk_probability": 0.7395,
+      "operating_threshold": 0.32,
+      "risk_tier": "HIGH",
+      "node_type": "USER",
+      "exposure": "INTERNAL",
+      "criticality": 0.85
+    },
+    {
+      "node_id": "node-user-priya",
+      "is_at_risk": 1,
+      "risk_probability": 0.731,
+      "operating_threshold": 0.32,
+      "risk_tier": "HIGH",
+      "node_type": "USER",
+      "exposure": "INTERNAL",
+      "criticality": 0.9
+    },
+    {
+      "node_id": "node-cld-iam-role",
+      "is_at_risk": 1,
+      "risk_probability": 0.7218,
+      "operating_threshold": 0.32,
+      "risk_tier": "HIGH",
+      "node_type": "CLOUD_RESOURCE",
+      "exposure": "INTERNAL",
+      "criticality": 0.98
+    },
+    {
+      "node_id": "node-srv-backup-primary",
+      "is_at_risk": 1,
+      "risk_probability": 0.7181,
+      "operating_threshold": 0.32,
+      "risk_tier": "HIGH",
+      "node_type": "SERVER",
+      "exposure": "RESTRICTED_ISOLATED",
+      "criticality": 0.95
+    }
+  ],
+  "attack_paths": [],
+  "shap_risk_drivers": [
+    {
+      "node_id": "node-srv-siem-splunk",
+      "base_value": -0.0719,
+      "risk_probability": 1.0,
+      "top_risk_drivers": [
+        {
+          "feature": "pagerank",
+          "attribution": 16.4094
+        },
+        {
+          "feature": "in_degree",
+          "attribution": 0.6137
+        },
+        {
+          "feature": "node_type",
+          "attribution": 0.4179
+        }
+      ],
+      "top_protective_factors": [
+        {
+          "feature": "in_out_degree_ratio",
+          "attribution": -0.7311
+        },
+        {
+          "feature": "is_high_privilege_connected",
+          "attribution": -0.3392
+        }
+      ]
+    },
+    {
+      "node_id": "node-srv-edr-console",
+      "base_value": -0.0719,
+      "risk_probability": 1.0,
+      "top_risk_drivers": [
+        {
+          "feature": "pagerank",
+          "attribution": 16.4094
+        },
+        {
+          "feature": "in_degree",
+          "attribution": 0.6137
+        },
+        {
+          "feature": "node_type",
+          "attribution": 0.4179
+        }
+      ],
+      "top_protective_factors": [
+        {
+          "feature": "in_out_degree_ratio",
+          "attribution": -0.7311
+        },
+        {
+          "feature": "is_high_privilege_connected",
+          "attribution": -0.3392
+        }
+      ]
+    },
+    {
+      "node_id": "node-srv-jumpbox01",
+      "base_value": -0.0719,
+      "risk_probability": 0.9241,
+      "top_risk_drivers": [
+        {
+          "feature": "exposure",
+          "attribution": 1.4936
+        },
+        {
+          "feature": "is_high_privilege_connected",
+          "attribution": 1.074
+        },
+        {
+          "feature": "admin_edge_count",
+          "attribution": 0.5222
+        },
+        {
+          "feature": "node_type",
+          "attribution": 0.4179
+        }
+      ],
+      "top_protective_factors": [
+        {
+          "feature": "business_value",
+          "attribution": -0.3373
+        }
+      ]
+    },
+    {
+      "node_id": "node-srv-jumpbox02",
+      "base_value": -0.0719,
+      "risk_probability": 0.8951,
+      "top_risk_drivers": [
+        {
+          "feature": "exposure",
+          "attribution": 1.4936
+        },
+        {
+          "feature": "is_high_privilege_connected",
+          "attribution": 1.074
+        },
+        {
+          "feature": "node_type",
+          "attribution": 0.4179
+        }
+      ],
+      "top_protective_factors": [
+        {
+          "feature": "business_value",
+          "attribution": -0.2847
+        },
+        {
+          "feature": "pagerank",
+          "attribution": -0.2787
+        }
+      ]
+    }
+  ],
+  "containment_plan": {},
+  "drift_telemetry": {
+    "status": "NORMAL",
+    "drift_score": 0.0,
+    "retraining_recommended": false,
+    "recommendation_reason": "Telemetry distributions are stable. Champion model operating within nominal parameters.",
+    "drifted_features_count": 0
+  },
+  "audit_trail": [],
+  "cryptographic_audit_hash": "c643ad8dd82192d44256677c9a28c68f30cf060c8c2a0652b118e876c1b9ebf6"
+}

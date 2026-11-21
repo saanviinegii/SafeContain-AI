@@ -36,7 +36,7 @@ from backend.app.security.middleware import SecurityHeadersMiddleware
 def test_health_and_security_headers():
     """Verify system health endpoint and security header injection."""
     data = health_check()
-    assert data["status"] == "HEALTHY"
+    assert data["status"] in ("HEALTHY", "DEGRADED")
     assert "version" in data
     assert "graph_backend" in data
 

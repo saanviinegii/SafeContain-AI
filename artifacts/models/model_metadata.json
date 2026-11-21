@@ -1,0 +1,59 @@
+{
+  "model_name": "logistic_regression",
+  "version": "1.0.0",
+  "task_id": "TASK_NODE_RISK_CLASSIFICATION",
+  "feature_subset": "topology_only",
+  "dataset_fingerprint": "363f56ff1aff6b73",
+  "features": [
+    "node_type",
+    "environment",
+    "exposure",
+    "criticality",
+    "business_value",
+    "in_degree",
+    "out_degree",
+    "total_degree",
+    "in_out_degree_ratio",
+    "pagerank",
+    "is_high_privilege_connected",
+    "admin_edge_count",
+    "has_asset_profile"
+  ],
+  "numeric_features": [
+    "criticality",
+    "business_value",
+    "in_degree",
+    "out_degree",
+    "total_degree",
+    "in_out_degree_ratio",
+    "pagerank",
+    "is_high_privilege_connected",
+    "admin_edge_count",
+    "has_asset_profile"
+  ],
+  "categorical_features": [
+    "node_type",
+    "environment",
+    "exposure"
+  ],
+  "best_hyperparameters": {
+    "clf__C": 0.5,
+    "clf__class_weight": "balanced",
+    "clf__solver": "liblinear"
+  },
+  "trained_at": "2026-11-20T09:19:45.505224+00:00",
+  "training_duration_seconds": 10.39,
+  "random_seed": 42,
+  "selection_reason": "Logistic Regression selected as best model based on superior Cross-Validation Balanced Accuracy (0.6942 +/- 0.0799), Recall on threat class (0.5667), ROC-AUC (0.7150), and structural stability.",
+  "cv_balanced_accuracy": 0.6942,
+  "holdout_test_balanced_accuracy": 0.5684,
+  "holdout_test_recall": 0.4,
+  "holdout_test_roc_auc": 0.5789,
+  "status": "ACTIVE",
+  "is_champion": true,
+  "archived_at": "2026-11-21T13:57:35.207002+00:00",
+  "demoted_by": "test_secops_lead",
+  "restored_at": "2026-11-21T13:57:35.247042+00:00",
+  "restored_by": "test_secops_lead",
+  "rollback_reason": "Emergency rollback test"
+}

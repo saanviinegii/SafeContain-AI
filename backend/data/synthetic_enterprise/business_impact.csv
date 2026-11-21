@@ -1,0 +1,36 @@
+impact_id,asset_id,business_function,estimated_hourly_loss,downtime_tolerance,recovery_time_objective,recovery_point_objective,regulatory_impact,customer_impact,operational_impact,impact_score
+imp-001,ast-001,Instant Payments Processing (Jumpbox Bastion 01),120000.0,0 hours,15 minutes,0 seconds (Sync),PCI-DSS Non-Compliance,TRANSACTION_FAILURES,SEVERE,98.0
+imp-002,ast-002,Citizen Identity Verification (Jumpbox Bastion 02 (Secondary)),85000.0,0 hours,30 minutes,1 minute,GDPR Fine Risk,HIGH_VISIBILITY_OUTAGE,SEVERE,92.0
+imp-003,ast-003,Core Account Ledger Settlement (Primary Active Directory DC),95000.0,1 hour,1 hour,5 minutes,SOX Audit Exception,TRANSACTION_FAILURES,SEVERE,95.0
+imp-004,ast-004,Emergency Breakglass Access (Replica Active Directory DC),45000.0,0 hours,15 minutes,0 seconds (Sync),Regulatory Audit Notice,LOW_INTERNAL_ONLY,MODERATE,85.0
+imp-005,ast-005,Daily Automated Payroll Distribution (Okta Identity Sync Bridge),60000.0,4 hours,2 hours,1 hour,Labor Regulatory Fine,CUSTOMER_CHURN,SEVERE,88.0
+imp-006,ast-006,Citizen Healthcare Records Lookup (Public Citizen Web Portal Front),75000.0,0 hours,15 minutes,0 seconds (Sync),HIPAA Penalty,HIGH_VISIBILITY_OUTAGE,SEVERE,94.0
+imp-007,ast-007,Corporate Email & Communication (Enterprise API Gateway Core),15000.0,4 hours,4 hours,4 hours,Minor Compliance,LOW_INTERNAL_ONLY,MINOR,50.0
+imp-008,ast-008,Customer Facing Web Portal Frontend (Payment Processing Host 01),40000.0,1 hour,1 hour,15 minutes,Brand Damage,HIGH_VISIBILITY_OUTAGE,MODERATE,75.0
+imp-009,ast-009,Instant Payments Processing (Payment Processing Host 02),120000.0,0 hours,15 minutes,0 seconds (Sync),PCI-DSS Non-Compliance,TRANSACTION_FAILURES,SEVERE,98.0
+imp-010,ast-010,Citizen Identity Verification (HashiCorp Secret Vault Cluster),85000.0,0 hours,30 minutes,1 minute,GDPR Fine Risk,HIGH_VISIBILITY_OUTAGE,SEVERE,92.0
+imp-011,ast-011,Core Account Ledger Settlement (Splunk Enterprise SIEM Indexer),95000.0,1 hour,1 hour,5 minutes,SOX Audit Exception,TRANSACTION_FAILURES,SEVERE,95.0
+imp-012,ast-012,Emergency Breakglass Access (CrowdStrike Falcon Sensor Relay),45000.0,0 hours,15 minutes,0 seconds (Sync),Regulatory Audit Notice,LOW_INTERNAL_ONLY,MODERATE,85.0
+imp-013,ast-013,Daily Automated Payroll Distribution (GitLab Enterprise SCM Server),60000.0,4 hours,2 hours,1 hour,Labor Regulatory Fine,CUSTOMER_CHURN,SEVERE,88.0
+imp-014,ast-014,Citizen Healthcare Records Lookup (Kubernetes Master Node 01),75000.0,0 hours,15 minutes,0 seconds (Sync),HIPAA Penalty,HIGH_VISIBILITY_OUTAGE,SEVERE,94.0
+imp-015,ast-015,Corporate Email & Communication (Kubernetes Worker Node 01),15000.0,4 hours,4 hours,4 hours,Minor Compliance,LOW_INTERNAL_ONLY,MINOR,50.0
+imp-016,ast-016,Customer Facing Web Portal Frontend (Kubernetes Worker Node 02),40000.0,1 hour,1 hour,15 minutes,Brand Damage,HIGH_VISIBILITY_OUTAGE,MODERATE,75.0
+imp-017,ast-017,Instant Payments Processing (Veeam Backup Repository Host),120000.0,0 hours,15 minutes,0 seconds (Sync),PCI-DSS Non-Compliance,TRANSACTION_FAILURES,SEVERE,98.0
+imp-018,ast-018,Citizen Identity Verification (Corporate Exchange Mail Relay),85000.0,0 hours,30 minutes,1 minute,GDPR Fine Risk,HIGH_VISIBILITY_OUTAGE,SEVERE,92.0
+imp-019,ast-019,Core Account Ledger Settlement (Internal DNS Core Resolvers),95000.0,1 hour,1 hour,5 minutes,SOX Audit Exception,TRANSACTION_FAILURES,SEVERE,95.0
+imp-020,ast-020,Emergency Breakglass Access (Workday HR Integration Host),45000.0,0 hours,15 minutes,0 seconds (Sync),Regulatory Audit Notice,LOW_INTERNAL_ONLY,MODERATE,85.0
+imp-021,ast-021,Daily Automated Payroll Distribution (SAP S/4HANA Finance Host),60000.0,4 hours,2 hours,1 hour,Labor Regulatory Fine,CUSTOMER_CHURN,SEVERE,88.0
+imp-022,ast-022,Citizen Healthcare Records Lookup (GlobalProtect VPN Gateway),75000.0,0 hours,15 minutes,0 seconds (Sync),HIPAA Penalty,HIGH_VISIBILITY_OUTAGE,SEVERE,94.0
+imp-023,ast-023,Corporate Email & Communication (Corporate Offline Root CA),15000.0,4 hours,4 hours,4 hours,Minor Compliance,LOW_INTERNAL_ONLY,MINOR,50.0
+imp-024,ast-024,Customer Facing Web Portal Frontend (Elasticsearch Telemetry Cluster),40000.0,1 hour,1 hour,15 minutes,Brand Damage,HIGH_VISIBILITY_OUTAGE,MODERATE,75.0
+imp-025,ast-025,Instant Payments Processing (Staging Environment API Host),120000.0,0 hours,15 minutes,0 seconds (Sync),PCI-DSS Non-Compliance,TRANSACTION_FAILURES,SEVERE,98.0
+imp-026,ast-026,Citizen Identity Verification (Crown Jewel: Customer Core PII Database),85000.0,0 hours,30 minutes,1 minute,GDPR Fine Risk,HIGH_VISIBILITY_OUTAGE,SEVERE,92.0
+imp-027,ast-027,Core Account Ledger Settlement (Crown Jewel: Real-Time Payment Transaction Ledger),95000.0,1 hour,1 hour,5 minutes,SOX Audit Exception,TRANSACTION_FAILURES,SEVERE,95.0
+imp-028,ast-028,Emergency Breakglass Access (Crown Jewel: Sovereign Identity Auth Credential Store),45000.0,0 hours,15 minutes,0 seconds (Sync),Regulatory Audit Notice,LOW_INTERNAL_ONLY,MODERATE,85.0
+imp-029,ast-029,Daily Automated Payroll Distribution (Corporate General Finance Ledger),60000.0,4 hours,2 hours,1 hour,Labor Regulatory Fine,CUSTOMER_CHURN,SEVERE,88.0
+imp-030,ast-030,Citizen Healthcare Records Lookup (Confidential Employee HR Database),75000.0,0 hours,15 minutes,0 seconds (Sync),HIPAA Penalty,HIGH_VISIBILITY_OUTAGE,SEVERE,94.0
+imp-031,ast-031,Corporate Email & Communication (Chained Cryptographic Audit Ledger),15000.0,4 hours,4 hours,4 hours,Minor Compliance,LOW_INTERNAL_ONLY,MINOR,50.0
+imp-032,ast-032,Customer Facing Web Portal Frontend (Supply Chain Inventory Catalog),40000.0,1 hour,1 hour,15 minutes,Brand Damage,HIGH_VISIBILITY_OUTAGE,MODERATE,75.0
+imp-033,ast-033,Instant Payments Processing (Redis Real-Time Session Cache),120000.0,0 hours,15 minutes,0 seconds (Sync),PCI-DSS Non-Compliance,TRANSACTION_FAILURES,SEVERE,98.0
+imp-034,ast-034,Citizen Identity Verification (Snowflake Analytics Data Warehouse),85000.0,0 hours,30 minutes,1 minute,GDPR Fine Risk,HIGH_VISIBILITY_OUTAGE,SEVERE,92.0
+imp-035,ast-035,Core Account Ledger Settlement (Credit Card Tokenization Vault),95000.0,1 hour,1 hour,5 minutes,SOX Audit Exception,TRANSACTION_FAILURES,SEVERE,95.0

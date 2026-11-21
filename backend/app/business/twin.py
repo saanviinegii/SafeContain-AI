@@ -88,9 +88,13 @@ class BusinessContinuityTwin:
             # Check direct dependency
             is_directly_dependent = target_id in wf.dependent_asset_ids
 
-            # Check indirect dependency via connected servers / databases
+            # Check indirect dependency via connected servers / databases.
+            # Identity actions (revoke session / disable account) only disrupt if the identity itself is a direct dependency.
             is_indirectly_dependent = False
-            if not is_directly_dependent:
+            if not is_directly_dependent and action.action_type not in (
+                SecurityActionType.DISABLE_ACCOUNT,
+                SecurityActionType.REVOKE_SESSION,
+            ):
                 for asset_id in wf.dependent_asset_ids:
                     if engine._nx_graph.has_edge(target_id, asset_id) or engine._nx_graph.has_edge(asset_id, target_id):
                         is_indirectly_dependent = True

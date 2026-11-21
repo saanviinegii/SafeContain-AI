@@ -1,0 +1,173 @@
+[
+  {
+    "report_id": "drift-run-20261120-101419",
+    "timestamp": "2026-11-20T10:14:19.700951+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "LIVE_TELEMETRY_GRAPH"
+  },
+  {
+    "report_id": "drift-run-20261120-101430",
+    "timestamp": "2026-11-20T10:14:30.437189+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "LIVE_TELEMETRY_GRAPH"
+  },
+  {
+    "report_id": "drift-run-20261120-105223",
+    "timestamp": "2026-11-20T10:52:23.271637+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "TEST_VERIFICATION_BATCH"
+  },
+  {
+    "report_id": "drift-run-20261120-105257",
+    "timestamp": "2026-11-20T10:52:57.789790+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "TEST_VERIFICATION_BATCH"
+  },
+  {
+    "report_id": "drift-run-20261120-105300",
+    "timestamp": "2026-11-20T10:53:00.124229+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "API_TRIGGERED_AUDIT"
+  },
+  {
+    "report_id": "drift-run-20261120-105344",
+    "timestamp": "2026-11-20T10:53:44.444710+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "TEST_VERIFICATION_BATCH"
+  },
+  {
+    "report_id": "drift-run-20261120-105346",
+    "timestamp": "2026-11-20T10:53:46.831474+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "API_TRIGGERED_AUDIT"
+  },
+  {
+    "report_id": "drift-run-20261120-105421",
+    "timestamp": "2026-11-20T10:54:21.271153+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "TEST_VERIFICATION_BATCH"
+  },
+  {
+    "report_id": "drift-run-20261120-105423",
+    "timestamp": "2026-11-20T10:54:23.637669+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "API_TRIGGERED_AUDIT"
+  },
+  {
+    "report_id": "drift-run-20261121-024024",
+    "timestamp": "2026-11-21T02:40:24.236826+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "TEST_VERIFICATION_BATCH"
+  },
+  {
+    "report_id": "drift-run-20261121-024026",
+    "timestamp": "2026-11-21T02:40:26.935081+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "API_TRIGGERED_AUDIT"
+  },
+  {
+    "report_id": "drift-run-20261121-090038",
+    "timestamp": "2026-11-21T09:00:38.880628+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "TEST_VERIFICATION_BATCH"
+  },
+  {
+    "report_id": "drift-run-20261121-090041",
+    "timestamp": "2026-11-21T09:00:41.373823+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "API_TRIGGERED_AUDIT"
+  },
+  {
+    "report_id": "drift-run-20261121-093556",
+    "timestamp": "2026-11-21T09:35:56.141387+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "TEST_VERIFICATION_BATCH"
+  },
+  {
+    "report_id": "drift-run-20261121-093558",
+    "timestamp": "2026-11-21T09:35:58.004909+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "API_TRIGGERED_AUDIT"
+  },
+  {
+    "report_id": "drift-run-20261121-105321",
+    "timestamp": "2026-11-21T10:53:21.406083+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "TEST_VERIFICATION_BATCH"
+  },
+  {
+    "report_id": "drift-run-20261121-105323",
+    "timestamp": "2026-11-21T10:53:23.980733+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "API_TRIGGERED_AUDIT"
+  },
+  {
+    "report_id": "drift-run-20261121-135733",
+    "timestamp": "2026-11-21T13:57:33.764869+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "TEST_VERIFICATION_BATCH"
+  },
+  {
+    "report_id": "drift-run-20261121-135736",
+    "timestamp": "2026-11-21T13:57:36.215360+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "API_TRIGGERED_AUDIT"
+  }
+]

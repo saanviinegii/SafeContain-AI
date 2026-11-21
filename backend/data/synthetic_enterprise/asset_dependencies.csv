@@ -1,0 +1,61 @@
+dependency_id,source_asset_id,dependent_asset_id,dependency_type,dependency_strength,business_impact,availability_requirement,description
+dep-001,ast-001,ast-003,DATA_FEED,0.84,CRITICAL_OUTAGE,99.999%,Service dependency: Jumpbox Bastion 01 relies on Primary Active Directory DC for DATA_FEED
+dep-002,ast-002,ast-005,AUTHENTICATION,0.75,CRITICAL_OUTAGE,99.999%,Service dependency: Jumpbox Bastion 02 (Secondary) relies on Okta Identity Sync Bridge for AUTHENTICATION
+dep-003,ast-003,ast-007,API_CALL,0.61,CRITICAL_OUTAGE,99.999%,Service dependency: Primary Active Directory DC relies on Enterprise API Gateway Core for API_CALL
+dep-004,ast-004,ast-009,REPLICATION,0.93,CRITICAL_OUTAGE,99.999%,Service dependency: Replica Active Directory DC relies on Payment Processing Host 02 for REPLICATION
+dep-005,ast-005,ast-011,BACKUP,0.67,CRITICAL_OUTAGE,99.999%,Service dependency: Okta Identity Sync Bridge relies on Splunk Enterprise SIEM Indexer for BACKUP
+dep-006,ast-006,ast-013,TELEMETRY,0.68,CRITICAL_OUTAGE,99.999%,Service dependency: Public Citizen Web Portal Front relies on GitLab Enterprise SCM Server for TELEMETRY
+dep-007,ast-007,ast-015,DATA_FEED,0.91,CRITICAL_OUTAGE,99.999%,Service dependency: Enterprise API Gateway Core relies on Kubernetes Worker Node 01 for DATA_FEED
+dep-008,ast-008,ast-017,AUTHENTICATION,0.73,CRITICAL_OUTAGE,99.999%,Service dependency: Payment Processing Host 01 relies on Veeam Backup Repository Host for AUTHENTICATION
+dep-009,ast-009,ast-019,API_CALL,0.94,CRITICAL_OUTAGE,99.999%,Service dependency: Payment Processing Host 02 relies on Internal DNS Core Resolvers for API_CALL
+dep-010,ast-010,ast-021,REPLICATION,0.87,CRITICAL_OUTAGE,99.999%,Service dependency: HashiCorp Secret Vault Cluster relies on SAP S/4HANA Finance Host for REPLICATION
+dep-011,ast-011,ast-023,BACKUP,0.71,CRITICAL_OUTAGE,99.999%,Service dependency: Splunk Enterprise SIEM Indexer relies on Corporate Offline Root CA for BACKUP
+dep-012,ast-012,ast-025,TELEMETRY,0.6,CRITICAL_OUTAGE,99.999%,Service dependency: CrowdStrike Falcon Sensor Relay relies on Staging Environment API Host for TELEMETRY
+dep-013,ast-013,ast-027,DATA_FEED,0.97,CRITICAL_OUTAGE,99.999%,Service dependency: GitLab Enterprise SCM Server relies on Crown Jewel: Real-Time Payment Transaction Ledger for DATA_FEED
+dep-014,ast-014,ast-029,AUTHENTICATION,0.63,CRITICAL_OUTAGE,99.999%,Service dependency: Kubernetes Master Node 01 relies on Corporate General Finance Ledger for AUTHENTICATION
+dep-015,ast-015,ast-031,API_CALL,0.88,CRITICAL_OUTAGE,99.999%,Service dependency: Kubernetes Worker Node 01 relies on Chained Cryptographic Audit Ledger for API_CALL
+dep-016,ast-016,ast-033,REPLICATION,0.79,DEGRADED_PERFORMANCE,99.99%,Service dependency: Kubernetes Worker Node 02 relies on Redis Real-Time Session Cache for REPLICATION
+dep-017,ast-017,ast-035,BACKUP,0.9,DEGRADED_PERFORMANCE,99.99%,Service dependency: Veeam Backup Repository Host relies on Credit Card Tokenization Vault for BACKUP
+dep-018,ast-018,ast-002,TELEMETRY,0.87,DEGRADED_PERFORMANCE,99.99%,Service dependency: Corporate Exchange Mail Relay relies on Jumpbox Bastion 02 (Secondary) for TELEMETRY
+dep-019,ast-019,ast-004,DATA_FEED,0.85,DEGRADED_PERFORMANCE,99.99%,Service dependency: Internal DNS Core Resolvers relies on Replica Active Directory DC for DATA_FEED
+dep-020,ast-020,ast-006,AUTHENTICATION,0.79,DEGRADED_PERFORMANCE,99.99%,Service dependency: Workday HR Integration Host relies on Public Citizen Web Portal Front for AUTHENTICATION
+dep-021,ast-021,ast-008,API_CALL,0.91,DEGRADED_PERFORMANCE,99.99%,Service dependency: SAP S/4HANA Finance Host relies on Payment Processing Host 01 for API_CALL
+dep-022,ast-022,ast-010,REPLICATION,0.64,DEGRADED_PERFORMANCE,99.99%,Service dependency: GlobalProtect VPN Gateway relies on HashiCorp Secret Vault Cluster for REPLICATION
+dep-023,ast-023,ast-012,BACKUP,0.69,DEGRADED_PERFORMANCE,99.99%,Service dependency: Corporate Offline Root CA relies on CrowdStrike Falcon Sensor Relay for BACKUP
+dep-024,ast-024,ast-014,TELEMETRY,0.87,DEGRADED_PERFORMANCE,99.99%,Service dependency: Elasticsearch Telemetry Cluster relies on Kubernetes Master Node 01 for TELEMETRY
+dep-025,ast-025,ast-016,DATA_FEED,0.72,DEGRADED_PERFORMANCE,99.99%,Service dependency: Staging Environment API Host relies on Kubernetes Worker Node 02 for DATA_FEED
+dep-026,ast-026,ast-018,AUTHENTICATION,0.83,DEGRADED_PERFORMANCE,99.99%,Service dependency: Crown Jewel: Customer Core PII Database relies on Corporate Exchange Mail Relay for AUTHENTICATION
+dep-027,ast-027,ast-020,API_CALL,0.78,DEGRADED_PERFORMANCE,99.99%,Service dependency: Crown Jewel: Real-Time Payment Transaction Ledger relies on Workday HR Integration Host for API_CALL
+dep-028,ast-028,ast-022,REPLICATION,0.81,DEGRADED_PERFORMANCE,99.99%,Service dependency: Crown Jewel: Sovereign Identity Auth Credential Store relies on GlobalProtect VPN Gateway for REPLICATION
+dep-029,ast-029,ast-024,BACKUP,0.77,DEGRADED_PERFORMANCE,99.99%,Service dependency: Corporate General Finance Ledger relies on Elasticsearch Telemetry Cluster for BACKUP
+dep-030,ast-030,ast-026,TELEMETRY,0.89,DEGRADED_PERFORMANCE,99.99%,Service dependency: Confidential Employee HR Database relies on Crown Jewel: Customer Core PII Database for TELEMETRY
+dep-031,ast-031,ast-028,DATA_FEED,0.73,DEGRADED_PERFORMANCE,99.99%,Service dependency: Chained Cryptographic Audit Ledger relies on Crown Jewel: Sovereign Identity Auth Credential Store for DATA_FEED
+dep-032,ast-032,ast-030,AUTHENTICATION,0.87,DEGRADED_PERFORMANCE,99.99%,Service dependency: Supply Chain Inventory Catalog relies on Confidential Employee HR Database for AUTHENTICATION
+dep-033,ast-033,ast-032,API_CALL,0.71,DEGRADED_PERFORMANCE,99.99%,Service dependency: Redis Real-Time Session Cache relies on Supply Chain Inventory Catalog for API_CALL
+dep-034,ast-034,ast-035,REPLICATION,0.7,DEGRADED_PERFORMANCE,99.99%,Service dependency: Snowflake Analytics Data Warehouse relies on Credit Card Tokenization Vault for REPLICATION
+dep-035,ast-035,ast-001,BACKUP,0.65,DEGRADED_PERFORMANCE,99.99%,Service dependency: Credit Card Tokenization Vault relies on Jumpbox Bastion 01 for BACKUP
+dep-036,ast-001,ast-003,TELEMETRY,0.68,OPERATIONAL_SLOWNESS,99.99%,Service dependency: Jumpbox Bastion 01 relies on Primary Active Directory DC for TELEMETRY
+dep-037,ast-002,ast-005,DATA_FEED,0.65,OPERATIONAL_SLOWNESS,99.99%,Service dependency: Jumpbox Bastion 02 (Secondary) relies on Okta Identity Sync Bridge for DATA_FEED
+dep-038,ast-003,ast-007,AUTHENTICATION,0.81,OPERATIONAL_SLOWNESS,99.99%,Service dependency: Primary Active Directory DC relies on Enterprise API Gateway Core for AUTHENTICATION
+dep-039,ast-004,ast-009,API_CALL,0.9,OPERATIONAL_SLOWNESS,99.99%,Service dependency: Replica Active Directory DC relies on Payment Processing Host 02 for API_CALL
+dep-040,ast-005,ast-011,REPLICATION,0.67,OPERATIONAL_SLOWNESS,99.99%,Service dependency: Okta Identity Sync Bridge relies on Splunk Enterprise SIEM Indexer for REPLICATION
+dep-041,ast-006,ast-013,BACKUP,0.68,OPERATIONAL_SLOWNESS,99.0%,Service dependency: Public Citizen Web Portal Front relies on GitLab Enterprise SCM Server for BACKUP
+dep-042,ast-007,ast-015,TELEMETRY,0.79,OPERATIONAL_SLOWNESS,99.0%,Service dependency: Enterprise API Gateway Core relies on Kubernetes Worker Node 01 for TELEMETRY
+dep-043,ast-008,ast-017,DATA_FEED,0.88,OPERATIONAL_SLOWNESS,99.0%,Service dependency: Payment Processing Host 01 relies on Veeam Backup Repository Host for DATA_FEED
+dep-044,ast-009,ast-019,AUTHENTICATION,0.98,OPERATIONAL_SLOWNESS,99.0%,Service dependency: Payment Processing Host 02 relies on Internal DNS Core Resolvers for AUTHENTICATION
+dep-045,ast-010,ast-021,API_CALL,0.8,OPERATIONAL_SLOWNESS,99.0%,Service dependency: HashiCorp Secret Vault Cluster relies on SAP S/4HANA Finance Host for API_CALL
+dep-046,ast-011,ast-023,REPLICATION,0.71,OPERATIONAL_SLOWNESS,99.0%,Service dependency: Splunk Enterprise SIEM Indexer relies on Corporate Offline Root CA for REPLICATION
+dep-047,ast-012,ast-025,BACKUP,0.64,OPERATIONAL_SLOWNESS,99.0%,Service dependency: CrowdStrike Falcon Sensor Relay relies on Staging Environment API Host for BACKUP
+dep-048,ast-013,ast-027,TELEMETRY,0.68,OPERATIONAL_SLOWNESS,99.0%,Service dependency: GitLab Enterprise SCM Server relies on Crown Jewel: Real-Time Payment Transaction Ledger for TELEMETRY
+dep-049,ast-014,ast-029,DATA_FEED,0.69,OPERATIONAL_SLOWNESS,99.0%,Service dependency: Kubernetes Master Node 01 relies on Corporate General Finance Ledger for DATA_FEED
+dep-050,ast-015,ast-031,AUTHENTICATION,0.67,OPERATIONAL_SLOWNESS,99.0%,Service dependency: Kubernetes Worker Node 01 relies on Chained Cryptographic Audit Ledger for AUTHENTICATION
+dep-051,ast-016,ast-033,API_CALL,0.61,OPERATIONAL_SLOWNESS,99.0%,Service dependency: Kubernetes Worker Node 02 relies on Redis Real-Time Session Cache for API_CALL
+dep-052,ast-017,ast-035,REPLICATION,0.81,OPERATIONAL_SLOWNESS,99.0%,Service dependency: Veeam Backup Repository Host relies on Credit Card Tokenization Vault for REPLICATION
+dep-053,ast-018,ast-002,BACKUP,0.71,OPERATIONAL_SLOWNESS,99.0%,Service dependency: Corporate Exchange Mail Relay relies on Jumpbox Bastion 02 (Secondary) for BACKUP
+dep-054,ast-019,ast-004,TELEMETRY,0.98,OPERATIONAL_SLOWNESS,99.0%,Service dependency: Internal DNS Core Resolvers relies on Replica Active Directory DC for TELEMETRY
+dep-055,ast-020,ast-006,DATA_FEED,0.82,OPERATIONAL_SLOWNESS,99.0%,Service dependency: Workday HR Integration Host relies on Public Citizen Web Portal Front for DATA_FEED
+dep-056,ast-021,ast-008,AUTHENTICATION,0.87,OPERATIONAL_SLOWNESS,99.0%,Service dependency: SAP S/4HANA Finance Host relies on Payment Processing Host 01 for AUTHENTICATION
+dep-057,ast-022,ast-010,API_CALL,0.65,OPERATIONAL_SLOWNESS,99.0%,Service dependency: GlobalProtect VPN Gateway relies on HashiCorp Secret Vault Cluster for API_CALL
+dep-058,ast-023,ast-012,REPLICATION,0.94,OPERATIONAL_SLOWNESS,99.0%,Service dependency: Corporate Offline Root CA relies on CrowdStrike Falcon Sensor Relay for REPLICATION
+dep-059,ast-024,ast-014,BACKUP,0.79,OPERATIONAL_SLOWNESS,99.0%,Service dependency: Elasticsearch Telemetry Cluster relies on Kubernetes Master Node 01 for BACKUP
+dep-060,ast-025,ast-016,TELEMETRY,0.94,OPERATIONAL_SLOWNESS,99.0%,Service dependency: Staging Environment API Host relies on Kubernetes Worker Node 02 for TELEMETRY

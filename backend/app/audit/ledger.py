@@ -8,6 +8,7 @@ detecting unauthorized tampering or log manipulation.
 import hashlib
 import json
 import os
+import threading
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
@@ -35,6 +36,7 @@ class ChainedAuditLedger:
     GENESIS_HASH: str = "0000000000000000000000000000000000000000000000000000000000000000"
 
     def __init__(self, storage_path: Optional[str] = None):
+        self._lock = threading.Lock()
         self.storage_path = storage_path or settings.AUDIT_LEDGER_STORAGE_PATH
         self._events: List[AuditEvent] = []
         self.blockchain_anchor = BlockchainLedgerAnchor()
@@ -94,49 +96,50 @@ class ChainedAuditLedger:
         approval_reference: Optional[str] = None,
     ) -> AuditEvent:
         """Appends a new cryptographically chained audit event and anchors on blockchain ledger."""
-        now = datetime.now(timezone.utc)
-        event_id = f"aud-{len(self._events) + 1:06d}-{now.strftime('%Y%m%d%H%M%S')}"
-        meta = metadata or {}
+        with self._lock:
+            now = datetime.now(timezone.utc)
+            event_id = f"aud-{len(self._events) + 1:06d}-{now.strftime('%Y%m%d%H%M%S')}"
+            meta = metadata or {}
 
-        previous_hash = (
-            self._events[-1].current_hash if self._events else self.GENESIS_HASH
-        )
+            previous_hash = (
+                self._events[-1].current_hash if self._events else self.GENESIS_HASH
+            )
 
-        curr_hash = self.compute_record_hash(
-            event_id=event_id,
-            timestamp_str=now.isoformat(),
-            actor_id=actor_id,
-            actor_role=actor_role.value if hasattr(actor_role, "value") else str(actor_role),
-            organization_id=organization_id,
-            action=action,
-            resource_type=resource_type,
-            resource_id=resource_id,
-            metadata=meta,
-            previous_hash=previous_hash,
-            event_type=event_type,
-            approval_reference=approval_reference,
-        )
+            curr_hash = self.compute_record_hash(
+                event_id=event_id,
+                timestamp_str=now.isoformat(),
+                actor_id=actor_id,
+                actor_role=actor_role.value if hasattr(actor_role, "value") else str(actor_role),
+                organization_id=organization_id,
+                action=action,
+                resource_type=resource_type,
+                resource_id=resource_id,
+                metadata=meta,
+                previous_hash=previous_hash,
+                event_type=event_type,
+                approval_reference=approval_reference,
+            )
 
-        event = AuditEvent(
-            event_id=event_id,
-            timestamp=now,
-            event_type=event_type,
-            approval_reference=approval_reference,
-            actor_id=actor_id,
-            actor_role=actor_role,
-            organization_id=organization_id,
-            action=action,
-            resource_type=resource_type,
-            resource_id=resource_id,
-            metadata=meta,
-            previous_hash=previous_hash,
-            current_hash=curr_hash,
-        )
+            event = AuditEvent(
+                event_id=event_id,
+                timestamp=now,
+                event_type=event_type,
+                approval_reference=approval_reference,
+                actor_id=actor_id,
+                actor_role=actor_role,
+                organization_id=organization_id,
+                action=action,
+                resource_type=resource_type,
+                resource_id=resource_id,
+                metadata=meta,
+                previous_hash=previous_hash,
+                current_hash=curr_hash,
+            )
 
-        self._events.append(event)
-        self._persist_event(event)
-        self.blockchain_anchor.anchor_event(event)
-        return event
+            self._events.append(event)
+            self._persist_event(event)
+            self.blockchain_anchor.anchor_event(event)
+            return event
 
     def record_evidence_snapshot(
         self,

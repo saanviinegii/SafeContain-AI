@@ -5,6 +5,7 @@ CORS policies, and automatic scenario initialization.
 """
 
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 import os
 from pathlib import Path
 from fastapi import FastAPI, HTTPException
@@ -21,17 +22,43 @@ from backend.app.security.middleware import SecurityHeadersMiddleware
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan context: initializes baseline synthetic scenario on startup."""
-    # Pre-populate scenario if graph is currently uninitialized
+    # Step 1: If Neo4j is live and contains persistent data, hydrate in-memory cache directly from AuraDB
+    if platform_ctx.engine.is_neo4j_live:
+        try:
+            stats = platform_ctx.engine.get_database_statistics()
+            total_persisted_nodes = stats.get("total_nodes", 0)
+            if total_persisted_nodes > 0:
+                print(f"[SAFECONTAIN STARTUP] Hydrating engine cache from persistent Neo4j Aura ({total_persisted_nodes} nodes)...")
+                load_res = platform_ctx.engine.load_from_neo4j()
+                print(f"[SAFECONTAIN STARTUP] Hydration complete: {load_res}")
+                platform_ctx.twin.discover_dependencies_from_graph(platform_ctx.engine)
+                platform_ctx.active_scenario_name = "Enterprise Production Topology (Persistent AuraDB)"
+                platform_ctx.last_ingestion_timestamp = datetime.now(timezone.utc).isoformat()
+        except Exception as e:
+            print(f"[SAFECONTAIN STARTUP] Warning: Failed to hydrate from Neo4j Aura: {str(e)}")
+
+    # Step 2: Pre-populate scenario if graph is still uninitialized (e.g. fresh DB or offline mode)
     if len(platform_ctx.engine.get_all_nodes()) == 0:
-        result = SyntheticScenarioGenerator.generate_national_gateway_scenario()
-        for node in result.nodes:
-            platform_ctx.engine.add_node(node)
-        for edge in result.edges:
-            platform_ctx.engine.add_edge(edge)
-        platform_ctx.twin.discover_dependencies_from_graph(platform_ctx.engine)
-        platform_ctx.active_scenario_name = "Operation Sovereign Gateway (Startup Synthetic)"
-        if platform_ctx.engine.is_neo4j_live:
-            platform_ctx.engine.sync_to_neo4j()
+        try:
+            res = platform_ctx.enterprise_loader.load_scenario_into_platform(
+                platform_ctx.engine,
+                platform_ctx.twin,
+                scenario_id="SCEN-001"
+            )
+            platform_ctx.active_scenario_name = f"{res['scenario_name']} ({res['scenario_id']})"
+            platform_ctx.last_ingestion_timestamp = datetime.now(timezone.utc).isoformat()
+            if platform_ctx.engine.is_neo4j_live:
+                platform_ctx.engine.sync_to_neo4j()
+        except Exception:
+            result = SyntheticScenarioGenerator.generate_national_gateway_scenario()
+            for node in result.nodes:
+                platform_ctx.engine.add_node(node)
+            for edge in result.edges:
+                platform_ctx.engine.add_edge(edge)
+            platform_ctx.twin.discover_dependencies_from_graph(platform_ctx.engine)
+            platform_ctx.active_scenario_name = "Operation Sovereign Gateway (Startup Synthetic)"
+            if platform_ctx.engine.is_neo4j_live:
+                platform_ctx.engine.sync_to_neo4j()
     yield
     # Graceful connection lifecycle shutdown
     if hasattr(platform_ctx.engine, "close"):

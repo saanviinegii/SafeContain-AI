@@ -1,0 +1,74 @@
+{
+  "validation_status": "PASSED",
+  "dataset_directory": "C:\\Users\\saanv\\Desktop\\SafeContain AI\\backend\\data\\synthetic_enterprise",
+  "total_records_per_csv": {
+    "nodes.csv": 120,
+    "relationships.csv": 285,
+    "assets.csv": 35,
+    "users.csv": 30,
+    "vulnerabilities.csv": 45,
+    "security_alerts.csv": 60,
+    "evidence.csv": 75,
+    "attack_paths.csv": 32,
+    "interventions.csv": 45,
+    "asset_dependencies.csv": 60,
+    "business_impact.csv": 35,
+    "threat_scenarios.csv": 10
+  },
+  "summary_metrics": {
+    "node_count": 120,
+    "relationship_count": 285,
+    "connected_components": 18,
+    "orphan_nodes_count": 16,
+    "critical_assets_count": 18,
+    "identities_count": 30,
+    "vulnerabilities_count": 45,
+    "alerts_count": 60,
+    "evidence_records_count": 75,
+    "attack_paths_count": 32,
+    "candidate_interventions_count": 45,
+    "asset_dependencies_count": 60,
+    "business_impact_profiles_count": 35,
+    "threat_scenarios_count": 10
+  },
+  "distributions": {
+    "node_types": {
+      "USER": 24,
+      "SERVICE_ACCOUNT": 6,
+      "LAPTOP": 15,
+      "WORKSTATION": 10,
+      "SERVER": 25,
+      "DATABASE": 15,
+      "APPLICATION": 15,
+      "CLOUD_RESOURCE": 4,
+      "FIREWALL": 3,
+      "STORAGE": 3
+    },
+    "relationship_types": {
+      "USES_DEVICE": 25,
+      "AUTHENTICATES_TO": 32,
+      "CONNECTS_TO": 33,
+      "HAS_ACCESS": 40,
+      "ADMIN_ACCESS": 8,
+      "CAN_REACH": 3,
+      "HOSTS": 1,
+      "DEPENDS_ON": 4,
+      "OWNS": 1,
+      "BACKED_UP_BY": 4,
+      "RUNS_ON": 4,
+      "COMMUNICATES_WITH": 123,
+      "CONTROLLED_BY": 3,
+      "MANAGES": 2,
+      "MEMBER_OF": 2
+    }
+  },
+  "integrity_checks": {
+    "total_errors": 0,
+    "total_warnings": 0,
+    "errors": [],
+    "warnings": [],
+    "foreign_key_violations": 0,
+    "all_csv_files_present": true,
+    "import_readiness": true
+  }
+}

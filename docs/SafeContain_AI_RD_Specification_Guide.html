@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SafeContain AI — Research & Development (R&D) Technical Specification Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  @page {
+    size: A4;
+    margin: 16mm 14mm 16mm 14mm;
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #1e293b;
+    background: #ffffff;
+    line-height: 1.55;
+    font-size: 10.5pt;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Cover Banner */
+  .cover {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0c4a6e 100%);
+    color: #ffffff;
+    padding: 32px 28px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.3);
+  }
+
+  .cover h1 {
+    margin: 0 0 6px 0;
+    font-size: 23pt;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #38bdf8;
+  }
+
+  .cover .subtitle {
+    font-size: 13pt;
+    font-weight: 500;
+    color: #e2e8f0;
+    margin-bottom: 12px;
+  }
+
+  .cover .meta {
+    display: flex;
+    gap: 16px;
+    font-size: 9pt;
+    color: #94a3b8;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    padding-top: 10px;
+    margin-top: 10px;
+  }
+
+  .cover .badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 9999px;
+    font-size: 8pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: rgba(56, 189, 248, 0.2);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    margin-right: 6px;
+  }
+
+  /* Section Styling */
+  h2 {
+    font-size: 14pt;
+    font-weight: 700;
+    color: #0f172a;
+    border-bottom: 2px solid #0284c7;
+    padding-bottom: 4px;
+    margin-top: 24px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  h2 .num {
+    background: #0284c7;
+    color: white;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 9pt;
+  }
+
+  h3 {
+    font-size: 11.5pt;
+    font-weight: 700;
+    color: #0369a1;
+    margin-top: 16px;
+    margin-bottom: 6px;
+  }
+
+  p {
+    margin: 0 0 10px 0;
+  }
+
+  /* Cards for Options */
+  .option-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #0284c7;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    page-break-inside: avoid;
+  }
+
+  .option-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 6px;
+  }
+
+  .option-title {
+    font-size: 12pt;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .option-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8.5pt;
+    color: #475569;
+    background: #e2e8f0;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .field-row {
+    margin-bottom: 6px;
+    font-size: 9.5pt;
+  }
+
+  .field-label {
+    font-weight: 600;
+    color: #334155;
+    display: inline-block;
+    width: 145px;
+    flex-shrink: 0;
+  }
+
+  .pitch-box {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-top: 8px;
+    font-size: 9.5pt;
+    color: #1e40af;
+    font-style: italic;
+  }
+
+  .pitch-box strong {
+    font-style: normal;
+    color: #1d4ed8;
+    text-transform: uppercase;
+    font-size: 8pt;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .formula-box {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 6px 12px;
+    margin: 6px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9pt;
+    color: #0f172a;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 16px 0;
+    font-size: 9pt;
+    page-break-inside: avoid;
+  }
+
+  th {
+    background: #0f172a;
+    color: #ffffff;
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 10px;
+    border: 1px solid #1e293b;
+  }
+
+  td {
+    padding: 7px 10px;
+    border: 1px solid #cbd5e1;
+    vertical-align: top;
+  }
+
+  tr:nth-child(even) td {
+    background: #f8fafc;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 8pt;
+    font-weight: 600;
+  }
+  .tag-red { background: #fee2e2; color: #b91c1c; }
+  .tag-green { background: #dcfce7; color: #15803d; }
+  .tag-blue { background: #dbeafe; color: #1d4ed8; }
+  .tag-purple { background: #f3e8ff; color: #7e22ce; }
+  .tag-amber { background: #fef3c7; color: #b45309; }
+
+  .page-break {
+    page-break-before: always;
+  }
+
+  .footer-note {
+    font-size: 8pt;
+    color: #64748b;
+    text-align: center;
+    margin-top: 24px;
+    border-top: 1px solid #cbd5e1;
+    padding-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Cover / Header Banner -->
+<div class="cover">
+  <div>
+    <span class="badge">R&D Architectural Specification</span>
+    <span class="badge">Cybersecurity Decision Support</span>
+    <span class="badge">Hackathon Evaluation Guide</span>
+  </div>
+  <h1>SAFECONTAIN AI</h1>
+  <div class="subtitle">Uncertainty-Aware Cyber Threat Containment with Business Continuity and Tamper-Evident Dual Audit</div>
+  <div class="meta">
+    <div><strong>Project Lead:</strong> Saanvi Negi</div>
+    <div><strong>Repository:</strong> github.com/saanviinegii/SafeContain-AI</div>
+    <div><strong>Live Cloud Deployment:</strong> safecontain-ai.onrender.com</div>
+    <div><strong>Classification:</strong> Academic R&D & Defense Prototype</div>
+  </div>
+</div>
+
+<!-- Section 1: Executive R&D Abstract -->
+<h2><span class="num">1</span> Core Scientific Foundations & Research Contributions</h2>
+<p>
+  SafeContain AI bridges the critical operational gap between <strong>Network Attack Graphs (e.g., MulVAL, NetSPA)</strong>, 
+  <strong>Automated SOAR Playbooks</strong>, and <strong>Business Continuity Management</strong>. Traditional tools suffer from three foundational flaws:
+</p>
+<ul>
+  <li><strong>The Containment Blindspot:</strong> SOAR playbooks blindly sever perimeter gateways or isolate servers, causing massive unintended collateral damage to revenue and citizen services.</li>
+  <li><strong>The Uncertainty Fallacy:</strong> Classic attack graph algorithms assume 100% forensic telemetry certainty, while real-world forensic observations decay exponentially and carry epistemic ambiguity.</li>
+  <li><strong>The Containment Assumption Fallacy:</strong> Blocking one known attack path is naively celebrated as complete resolution, leaving secondary or tertiary lateral backdoor routes undetected and open.</li>
+</ul>
+
+<!-- Section 2: Comprehensive Sidebar Breakdown -->
+<h2><span class="num">2</span> Comprehensive R&D Breakdown of Left-Hand Sidebar Options</h2>
+
+<!-- Group 1: OVERVIEW -->
+<h3>GROUP 1: OVERVIEW</h3>
+
+<div class="option-card">
+  <div class="option-header">
+    <span class="option-title">1. Executive Briefing</span>
+    <span class="option-code">View: EXECUTIVE_OVERVIEW</span>
+  </div>
+  <div class="field-row"><span class="field-label">R&D Gap Solved:</span> C-suite and Incident Commanders are routinely flooded with technical vulnerability alerts without understanding the true financial blast radius or residual risk.</div>
+  <div class="field-row"><span class="field-label">Scientific Method:</span> Multi-objective risk aggregation comparing inherent exposure ($R_{\text{initial}}$) against simulated residual risk ($R_{\text{residual}}$) alongside real-time citizen workflow SLA status.</div>
+  <div class="field-row"><span class="field-label">Backend Module:</span> <code>backend/app/api/v1/router.py</code> (Aggregates <code>RiskEngine</code>, <code>SimulationSandbox</code>, <code>BusinessContinuityTwin</code>)</div>
+  <div class="pitch-box">
+    <strong>Judge Pitch:</strong>
+    "The Executive Briefing translates complex multi-hop graph attacks into clear decision metrics: total risk reduction achieved while proving zero citizen service outages."
+  </div>
+</div>
+
+<div class="option-card">
+  <div class="option-header">
+    <span class="option-title">2. SOC Operations</span>
+    <span class="option-code">View: SOC_OPERATIONS</span>
+  </div>
+  <div class="field-row"><span class="field-label">R&D Gap Solved:</span> Disconnected alerts across SIEM, EDR, and IAM lack unified graph correlation, leading to alert fatigue and delayed containment.</div>
+  <div class="field-row"><span class="field-label">Scientific Method:</span> Multi-source ingestion pipeline with cryptographic SHA-256 event fingerprinting to deduplicate repetitive alerts. Maps events to standardized MITRE ATT&CK techniques (T1078, T1021, T1190) and tags compromised entities in the graph.</div>
+  <div class="field-row"><span class="field-label">Backend Module:</span> <code>backend/app/ingestion/connectors.py</code> (<code>SIEMConnector</code>, <code>EDRConnector</code>, <code>IAMConnector</code>)</div>
+  <div class="pitch-box">
+    <strong>Judge Pitch:</strong>
+    "SOC Operations unifies endpoint, network, and identity telemetry with deduplication, directly tagging compromised entities into the graph topology."
+  </div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- Group 2: GRAPH INTELLIGENCE -->
+<h3>GROUP 2: GRAPH INTELLIGENCE</h3>
+
+<div class="option-card">
+  <div class="option-header">
+    <span class="option-title">3. Topology Explorer</span>
+    <span class="option-code">View: TOPOLOGY_EXPLORER</span>
+  </div>
+  <div class="field-row"><span class="field-label">R&D Gap Solved:</span> Static infrastructure diagrams isolate compute hardware from IAM identities and business workflows.</div>
+  <div class="field-row"><span class="field-label">Scientific Method:</span> Directed Property Multigraph ($G = (V, E)$) persisted in Neo4j AuraDB with hybrid in-memory NetworkX routing. Rendered via Cytoscape.js using distinct cyber encodings:
+    <ul>
+      <li><span class="tag tag-amber">👑 Diamond</span> Crown Jewel Databases (AES-256 Vaults)</li>
+      <li><span class="tag tag-red">⚠️ Circle</span> Compromised Accounts & Endpoints</li>
+      <li><span class="tag tag-blue">🖥️ Barrel</span> Infrastructure Transit Servers & Gateways</li>
+      <li><span class="tag tag-purple">💼 Hexagon</span> Mission-Critical Citizen Workflows</li>
+    </ul>
+  </div>
+  <div class="field-row"><span class="field-label">Backend Module:</span> <code>backend/app/graph/engine.py</code> & <code>frontend/src/components/CytoscapeGraph.tsx</code></div>
+  <div class="pitch-box">
+    <strong>Judge Pitch:</strong>
+    "Topology Explorer provides a unified enterprise graph—connecting users, permissions, infrastructure servers, and citizen workflows in one interactive map."
+  </div>
+</div>
+
+<div class="option-card">
+  <div class="option-header">
+    <span class="option-title">4. Attack Paths</span>
+    <span class="option-code">View: ATTACK_PATHS</span>
+  </div>
+  <div class="field-row"><span class="field-label">R&D Gap Solved:</span> Adversaries traverse multi-hop lateral routes across trusted permissions. Single-point vulnerability scans fail to discover these attack chains.</div>
+  <div class="field-row"><span class="field-label">Scientific Method:</span> Bounded Depth-First Search traversal algorithm ($cutoff = 7$) mapping simple directed paths from compromised entry nodes to crown jewels. Identifies topological <strong>choke points</strong> (nodes with highest path-intersection centrality).</div>
+  <div class="field-row"><span class="field-label">Backend Module:</span> <code>backend/app/graph/algorithms.py</code> (<code>discover_attack_paths()</code>)</div>
+  <div class="pitch-box">
+    <strong>Judge Pitch:</strong>
+    "Attack Paths calculates every viable multi-hop lateral traversal route to critical databases and reveals the common choke points where an attacker can be severed."
+  </div>
+</div>
+
+<div class="option-card">
+  <div class="option-header">
+    <span class="option-title">5. Evidence Uncertainty</span>
+    <span class="option-code">View: EVIDENCE_UNCERTAINTY</span>
+  </div>
+  <div class="field-row"><span class="field-label">R&D Gap Solved:</span> The Uncertainty Fallacy: Treating unverified or heuristic telemetry as confirmed facts leads to catastrophic false positives or missed breaches.</div>
+  <div class="field-row"><span class="field-label">Scientific Method:</span> 
+    5-State Epistemic Evidence Framework (<code>CONFIRMED</code>, <code>SUSPECTED</code>, <code>UNKNOWN</code>, <code>DISPUTED</code>, <code>STALE</code>) with Bayesian temporal confidence decay:
+    <div class="formula-box">c(t) = c_0 &middot; e<sup>-&lambda; t</sup> &nbsp;&nbsp;|&nbsp;&nbsp; &lambda; = 0.05 / day</div>
+    Coupled with Sensitivity Drift Analysis to test if perturbing suspected links flips the containment recommendation.
+  </div>
+  <div class="field-row"><span class="field-label">Backend Module:</span> <code>backend/app/evidence/engine.py</code> (<code>EvidenceEngine</code>)</div>
+  <div class="pitch-box">
+    <strong>Judge Pitch:</strong>
+    "SafeContain AI introduces uncertainty-aware containment: decaying confidence over time and attaching explicit uncertainty penalties to suspected links rather than assuming 100% telemetry certainty."
+  </div>
+</div>
+
+<div class="option-card">
+  <div class="option-header">
+    <span class="option-title">6. Asset Intelligence</span>
+    <span class="option-code">View: ASSET_INTELLIGENCE</span>
+  </div>
+  <div class="field-row"><span class="field-label">R&D Gap Solved:</span> Assets lack context on data sensitivity, subnet exposure, and encryption standards during active triage.</div>
+  <div class="field-row"><span class="field-label">Scientific Method:</span> Structured entity classification tracking IP subnets, operating systems, hardware MAC addresses, data tier classification, and assigned criticality ratings ($[0.0 - 1.0]$).</div>
+  <div class="field-row"><span class="field-label">Backend Module:</span> <code>backend/app/graph/engine.py</code> (<code>get_database_statistics()</code>)</div>
+  <div class="pitch-box">
+    <strong>Judge Pitch:</strong>
+    "Asset Intelligence tracks asset criticality, data classification tiers, and unpatched CVEs across the entire enterprise estate."
+  </div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- Group 3: RISK & BUSINESS TWIN -->
+<h3>GROUP 3: RISK & BUSINESS TWIN</h3>
+
+<div class="option-card">
+  <div class="option-header">
+    <span class="option-title">7. Decomposed Risk</span>
+    <span class="option-code">View: RISK_ANALYSIS</span>
+  </div>
+  <div class="field-row"><span class="field-label">R&D Gap Solved:</span> Commercial tools provide opaque, uncalibrated risk numbers (e.g. "Risk: 92") that cannot be explained or justified in audits.</div>
+  <div class="field-row"><span class="field-label">Scientific Method:</span> Transparent 5-Factor Weighted Additive Decomposition:
+    <div class="formula-box">R_total = 0.30&middot;F_jewel + 0.25&middot;F_cve + 0.20&middot;F_path + 0.15&middot;&Omega;_uncertainty + 0.10&middot;F_biz</div>
+    Provides exact factor contributions ensuring complete mathematical auditability.
+  </div>
+  <div class="field-row"><span class="field-label">Backend Module:</span> <code>backend/app/risk/engine.py</code> (<code>RiskEngine</code>)</div>
+  <div class="pitch-box">
+    <strong>Judge Pitch:</strong>
+    "We eliminate black-box risk numbers: every score is mathematically decomposed into transparent, auditable factors showing exactly why an asset is at risk."
+  </div>
+</div>
+
+<div class="option-card">
+  <div class="option-header">
+    <span class="option-title">8. Business Continuity Twin</span>
+    <span class="option-code">View: BUSINESS_TWIN</span>
+  </div>
+  <div class="field-row"><span class="field-label">R&D Gap Solved:</span> Naive cybersecurity playbooks isolate network zones blindly, frequently taking down critical national payment switches or patient care portals.</div>
+  <div class="field-row"><span class="field-label">Scientific Method:</span> Digital Twin modeling direct and indirect workflow dependencies via <code>SUPPORTS_WORKFLOW</code> edges. Calculates:
+    <ul>
+      <li><strong>Financial Downtime Impact:</strong> $\text{Downtime (Hours)} \times \text{Hourly Outage Cost (\$)}$</li>
+      <li><strong>Zero-Outage Hard Constraint:</strong> For Tier-1 mission-critical workflows, maximum allowable downtime is strictly constrained to <strong>$0.0\text{ hours}$</strong>.</li>
+    </ul>
+  </div>
+  <div class="field-row"><span class="field-label">Backend Module:</span> <code>backend/app/business/twin.py</code> (<code>BusinessContinuityTwin</code>)</div>
+  <div class="pitch-box">
+    <strong>Judge Pitch:</strong>
+    "Our Business Continuity Twin maps dependencies between infrastructure and citizen services—guaranteeing that containment does not inflict more financial damage than the cyberattack itself."
+  </div>
+</div>
+
+<!-- Group 4: DECISION SUPPORT -->
+<h3>GROUP 4: DECISION SUPPORT</h3>
+
+<div class="option-card">
+  <div class="option-header">
+    <span class="option-title">9. Action Catalog</span>
+    <span class="option-code">View: RESPONSE_PLANNER</span>
+  </div>
+  <div class="field-row"><span class="field-label">R&D Gap Solved:</span> Incident response playbooks lack formalization regarding implementation costs, duration, operational disruption, and reversibility.</div>
+  <div class="field-row"><span class="field-label">Scientific Method:</span> Formal catalog of 11+ cybersecurity interventions categorized by target layer:
+    <ul>
+      <li><strong>Identity:</strong> <code>REVOKE_SESSION</code>, <code>DISABLE_ACCOUNT</code>, <code>ROTATE_CREDENTIALS</code></li>
+      <li><strong>Network:</strong> <code>APPLY_FIREWALL_RULE</code>, <code>RESTRICT_NETWORK</code></li>
+      <li><strong>Endpoint:</strong> <code>ISOLATE_ENDPOINT</code>, <code>TERMINATE_PROCESS</code></li>
+      <li><strong>Resource:</strong> <code>RESTRICT_RESOURCE_ACCESS</code>, <code>PATCH_VULNERABILITY</code></li>
+    </ul>
+  </div>
+  <div class="field-row"><span class="field-label">Backend Module:</span> <code>backend/app/planning/catalog.py</code> (<code>ActionCatalog</code>)</div>
+  <div class="pitch-box">
+    <strong>Judge Pitch:</strong>
+    "The Action Catalog generates deterministic, calibrated containment actions targeting path choke points, each with explicit cost, disruption, and role requirements."
+  </div>
+</div>
+
+<div class="page-break"></div>
+
+<div class="option-card">
+  <div class="option-header">
+    <span class="option-title">10. Strategy Comparator</span>
+    <span class="option-code">View: STRATEGY_COMPARATOR</span>
+  </div>
+  <div class="field-row"><span class="field-label">R&D Gap Solved:</span> Security teams have no mechanism to evaluate whether a proposed heuristic plan is globally optimal or recklessly disruptive.</div>
+  <div class="field-row"><span class="field-label">Scientific Method:</span> Tri-Level Optimization Benchmark comparing three strategies on identical inputs:
+    <div class="formula-box">
+      Strategy 3 (Google OR-Tools CP-SAT):<br>
+      max [ &sum; x_j &Delta;R_j - &alpha; &sum; x_j D_j - &beta; &sum; x_j C_j ]<br>
+      subject to: &sum; x_j C_j &le; Budget &nbsp;&nbsp;AND&nbsp;&nbsp; Outage_k &le; SLA_k (0.0 hrs for Tier-1)
+    </div>
+  </div>
+  <div class="field-row"><span class="field-label">Backend Module:</span> <code>backend/app/optimization/solver.py</code> (<code>CPSATOptimizer</code>, <code>StrategyComparator</code>)</div>
+  <div class="pitch-box">
+    <strong>Judge Pitch:</strong>
+    "The Strategy Comparator mathematically demonstrates why Google OR-Tools CP-SAT beats crude baselines—maximizing threat elimination while strictly enforcing zero citizen service downtime."
+  </div>
+</div>
+
+<div class="option-card">
+  <div class="option-header">
+    <span class="option-title">11. Simulation Sandbox</span>
+    <span class="option-code">View: SIMULATION_SANDBOX</span>
+  </div>
+  <div class="field-row"><span class="field-label">R&D Gap Solved:</span> Testing defensive interventions directly on live production systems risks breaking business processes or corrupting graph states.</div>
+  <div class="field-row"><span class="field-label">Scientific Method:</span> Forensic Isolation & Graph Immutability. Deep-clones an isolated graph snapshot (<code>clone_isolated_snapshot()</code>), executes proposed interventions on the copy, and recalculates before-and-after risk without mutating the live Neo4j database.</div>
+  <div class="field-row"><span class="field-label">Backend Module:</span> <code>backend/app/simulation/sandbox.py</code> (<code>SimulationSandbox</code>)</div>
+  <div class="pitch-box">
+    <strong>Judge Pitch:</strong>
+    "A digital wind tunnel for cyber containment: we simulate containment actions on an isolated graph snapshot before any intervention touches production."
+  </div>
+</div>
+
+<div class="option-card">
+  <div class="option-header">
+    <span class="option-title">12. Residual Risk Inspector</span>
+    <span class="option-code">View: RESIDUAL_RISK</span>
+  </div>
+  <div class="field-row"><span class="field-label">R&D Gap Solved:</span> <strong>Non-Negotiable Principle #12</strong>: Cutting one known attack route gives teams false confidence, leaving lateral backdoors active.</div>
+  <div class="field-row"><span class="field-label">Scientific Method:</span> Unconditionally re-traverses the post-containment graph snapshot. If any lateral route to a crown jewel remains open, containment is explicitly marked <code>PARTIAL</code> and remaining open routes are highlighted in vivid orange.</div>
+  <div class="field-row"><span class="field-label">Backend Module:</span> <code>backend/app/simulation/sandbox.py</code> (Residual Traversal Re-check)</div>
+  <div class="pitch-box">
+    <strong>Judge Pitch:</strong>
+    "Residual Risk Inspector verifies whether secondary attack routes remain open after containment, preventing the dangerous false sense of security common in legacy SOAR."
+  </div>
+</div>
+
+<div class="option-card">
+  <div class="option-header">
+    <span class="option-title">13. Decision Explainer</span>
+    <span class="option-code">View: DECISION_EXPLAINER</span>
+  </div>
+  <div class="field-row"><span class="field-label">R&D Gap Solved:</span> Unchecked LLM wrappers hallucinate facts. Incident responders require mathematically provable counterfactual explanations.</div>
+  <div class="field-row"><span class="field-label">Scientific Method:</span> 7-Part Mathematical Decision Justification:
+    <ol style="margin: 4px 0 0 16px; padding: 0;">
+      <li>Primary justification for chosen actions</li>
+      <li>Supporting forensic telemetry evidence</li>
+      <li>Explicit model assumptions</li>
+      <li>Residual risk & open routes</li>
+      <li>Pre- and post-containment verification steps</li>
+      <li>Action rollback & contingency procedures</li>
+      <li><strong>Counterfactual Proof:</strong> Exact mathematical reasons why alternative baseline plans were rejected</li>
+    </ol>
+  </div>
+  <div class="field-row"><span class="field-label">Backend Module:</span> <code>backend/app/explanation/engine.py</code> (<code>DecisionExplainer</code>)</div>
+  <div class="pitch-box">
+    <strong>Judge Pitch:</strong>
+    "The Decision Explainer delivers full mathematical and counterfactual transparency: exactly why plan A was chosen, why plan B was rejected, and how to roll it back."
+  </div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- Group 5: GOVERNANCE & AUDIT -->
+<h3>GROUP 5: GOVERNANCE & AUDIT</h3>
+
+<div class="option-card">
+  <div class="option-header">
+    <span class="option-title">14. Human Approval Center</span>
+    <span class="option-code">View: APPROVAL_CENTER</span>
+  </div>
+  <div class="field-row"><span class="field-label">R&D Gap Solved:</span> Uncontrolled autonomous AI containment causes unacceptable operational liability. CISA and CERT-In mandates require strict human authorization.</div>
+  <div class="field-row"><span class="field-label">Scientific Method:</span> Multi-Tier Role-Based Access Control (RBAC) Governance State Machine:
+    <div class="formula-box">DRAFT &rarr; ANALYZED &rarr; SIMULATED &rarr; PENDING_APPROVAL &rarr; APPROVED / REJECTED</div>
+    Enforces strict role checks: <code>SOC_ANALYST</code> can simulate, but only <code>SECURITY_MANAGER</code> or <code>INCIDENT_COMMANDER</code> can sign off.
+  </div>
+  <div class="field-row"><span class="field-label">Backend Module:</span> <code>backend/app/governance/workflow.py</code> (<code>GovernanceWorkflow</code>)</div>
+  <div class="pitch-box">
+    <strong>Judge Pitch:</strong>
+    "SafeContain AI enforces strict human-in-the-loop governance: the AI recommends and simulates, but an authorized human commander must review and sign off."
+  </div>
+</div>
+
+<div class="option-card">
+  <div class="option-header">
+    <span class="option-title">15. Cryptographic Audit Ledger</span>
+    <span class="option-code">View: AUDIT_EXPLORER</span>
+  </div>
+  <div class="field-row"><span class="field-label">R&D Gap Solved:</span> Attackers with administrative privileges routinely alter or delete log files to cover their tracks post-incident.</div>
+  <div class="field-row"><span class="field-label">Scientific Method:</span> 
+    <strong>Dual Audit Architecture:</strong>
+    <ul>
+      <li><strong>Off-Chain SHA-256 Hash Chaining:</strong> $H_k = \text{SHA-256}(H_{k-1} \,\|\, E_k)$ ensuring forward integrity verification.</li>
+      <li><strong>On-Chain EVM Smart Contract:</strong> Minimal hashes anchored immutably to <code>SafeContainAuditLedger.sol</code> (Ethereum Sepolia Testnet / Local Anchor).</li>
+    </ul>
+  </div>
+  <div class="field-row"><span class="field-label">Backend Module:</span> <code>backend/app/audit/ledger.py</code> (<code>ChainedAuditLedger</code>)</div>
+  <div class="pitch-box">
+    <strong>Judge Pitch:</strong>
+    "Every recommendation, simulation, and approval is anchored in a tamper-evident SHA-256 cryptographic audit chain backed by an EVM smart contract, making unauthorized log modification impossible."
+  </div>
+</div>
+
+<!-- Section 3: Summary Pitch Table -->
+<h2><span class="num">3</span> Primary Demonstration: Disruptive vs. Targeted Containment</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Operational Metric</th>
+      <th>Option A: Disruptive Action (<code>act-firewall-api-gateway</code>)</th>
+      <th>Option B: SafeContain AI Targeted (<code>act-revoke-contractor</code>)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Target Asset</strong></td>
+      <td><code>api-gateway-internal</code> (Core API Ingress)</td>
+      <td><code>user-contractor-guest</code> (Compromised Contractor)</td>
+    </tr>
+    <tr>
+      <td><strong>Intervention Type</strong></td>
+      <td><code>APPLY_FIREWALL_RULE / ISOLATE</code></td>
+      <td><code>REVOKE_SESSION / DISABLE_ACCOUNT</code></td>
+    </tr>
+    <tr>
+      <td><strong>Disruption Score</strong></td>
+      <td><span class="tag tag-red">20.0 (High Disruption)</span></td>
+      <td><span class="tag tag-green">10.0 (Minimal Disruption)</span></td>
+    </tr>
+    <tr>
+      <td><strong>Business Workflow Impact</strong></td>
+      <td><span class="tag tag-red">❌ Payment Clearing Outage (\$250,000 Penalty)</span></td>
+      <td><span class="tag tag-green">✅ 0 Workflows Disrupted (\$0 Penalty)</span></td>
+    </tr>
+    <tr>
+      <td><strong>SLA Guarantee</strong></td>
+      <td><span class="tag tag-red">BREACHED (Zero-Outage Violation)</span></td>
+      <td><span class="tag tag-green">SATISFIED (100% Continuity)</span></td>
+    </tr>
+    <tr>
+      <td><strong>Residual Attack Paths</strong></td>
+      <td><span class="tag tag-red">6 Paths Remain OPEN via Route A</span></td>
+      <td><span class="tag tag-green">0 Residual Paths (100% Contained)</span></td>
+    </tr>
+    <tr>
+      <td><strong>Solver Outcome</strong></td>
+      <td><strong>REJECTED</strong> by Google OR-Tools CP-SAT</td>
+      <td><strong>RECOMMENDED & OPTIMAL</strong> by SafeContain AI</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="footer-note">
+  SafeContain AI &bull; Uncertainty-Aware Cyber Threat Containment with Business Continuity and Tamper-Evident Dual Audit &bull; Generated for Technical Review & Hackathon Judging
+</div>
+
+</body>
+</html>

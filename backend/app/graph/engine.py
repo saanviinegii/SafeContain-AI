@@ -23,6 +23,23 @@ from backend.app.models.domain import (
 logger = logging.getLogger(__name__)
 
 
+def _clean_properties_map(raw_props: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Prepares extended property map containing only primitive types safe for Cypher."""
+    if not isinstance(raw_props, dict):
+        return {}
+    clean = {}
+    for k, v in raw_props.items():
+        if v is None:
+            continue
+        if isinstance(v, (str, int, float, bool)):
+            clean[k] = v
+        elif isinstance(v, (list, set, tuple)):
+            clean[k] = [str(x) for x in v]
+        else:
+            clean[k] = str(v)
+    return clean
+
+
 class GraphEngine:
     """Unified Graph Intelligence Engine with Dual-Engine Architecture."""
 
@@ -45,74 +62,55 @@ class GraphEngine:
         print(f"[SAFECONTAIN NEO4J] Initializing driver: mode={self.mode}, uri={redacted_uri}, user={settings.NEO4J_USER}")
         try:
             from neo4j import GraphDatabase
+            from neo4j.exceptions import AuthError, ServiceUnavailable
             driver = None
             last_err = None
 
-            # Attempt 1: Standard direct URI (e.g. neo4j+s:// on Linux/Render)
-            try:
-                cand = GraphDatabase.driver(
-                    settings.NEO4J_URI,
-                    auth=(settings.NEO4J_USER, settings.NEO4J_PASSWORD),
-                    connection_timeout=settings.NEO4J_CONNECTION_TIMEOUT,
-                    max_connection_pool_size=settings.NEO4J_MAX_CONNECTION_POOL_SIZE,
-                )
-                cand.verify_connectivity()
-                driver = cand
-            except Exception as e1:
-                last_err = e1
-                # Attempt 2: If Aura/TLS routing failed (common on Windows without system cert bundle),
-                # retry with TrustCustomCAs(certifi.where()) or neo4j+ssc
-                if "databases.neo4j.io" in settings.NEO4J_URI or settings.NEO4J_URI.startswith("neo4j+s://"):
-                    try:
-                        import certifi
-                        from neo4j import TrustCustomCAs
-                        host = settings.NEO4J_URI.split("://")[-1]
-                        cand = GraphDatabase.driver(
-                            f"neo4j://{host}",
-                            auth=(settings.NEO4J_USER, settings.NEO4J_PASSWORD),
-                            encrypted=True,
-                            trusted_certificates=TrustCustomCAs(certifi.where()),
-                            connection_timeout=settings.NEO4J_CONNECTION_TIMEOUT,
-                            max_connection_pool_size=settings.NEO4J_MAX_CONNECTION_POOL_SIZE,
-                        )
-                        cand.verify_connectivity()
-                        driver = cand
-                    except Exception:
-                        try:
-                            ssc_uri = settings.NEO4J_URI.replace("neo4j+s://", "neo4j+ssc://")
-                            cand = GraphDatabase.driver(
-                                ssc_uri,
-                                auth=(settings.NEO4J_USER, settings.NEO4J_PASSWORD),
-                                connection_timeout=settings.NEO4J_CONNECTION_TIMEOUT,
-                                max_connection_pool_size=settings.NEO4J_MAX_CONNECTION_POOL_SIZE,
-                            )
-                            cand.verify_connectivity()
-                            driver = cand
-                        except Exception as e3:
-                            last_err = e3
+            # Prepare prioritized list of secure Aura connection protocols
+            candidate_uris = [settings.NEO4J_URI]
+            if settings.NEO4J_URI.startswith("neo4j+s://"):
+                candidate_uris.append(settings.NEO4J_URI.replace("neo4j+s://", "neo4j+ssc://"))
+                host = settings.NEO4J_URI.split("://")[-1].split(":")[0]
+                candidate_uris.append(f"bolt+ssc://{host}:7687")
+                candidate_uris.append(f"bolt+s://{host}:7687")
+            elif settings.NEO4J_URI.startswith("bolt+s://"):
+                candidate_uris.append(settings.NEO4J_URI.replace("bolt+s://", "bolt+ssc://"))
+
+            for cand_uri in candidate_uris:
+                try:
+                    cand = GraphDatabase.driver(
+                        cand_uri,
+                        auth=(settings.NEO4J_USER, settings.NEO4J_PASSWORD),
+                        connection_timeout=settings.NEO4J_CONNECTION_TIMEOUT,
+                        max_connection_pool_size=settings.NEO4J_MAX_CONNECTION_POOL_SIZE,
+                    )
+                    cand.verify_connectivity()
+                    driver = cand
+                    break
+                except Exception as cand_err:
+                    last_err = cand_err
+                    # If authentication was specifically rejected, stop retry loop
+                    if isinstance(cand_err, AuthError) or "Unauthorized" in str(cand_err):
+                        break
 
             if not driver:
                 raise last_err or RuntimeError("Failed to establish Neo4j driver connection")
 
-            # Execute real Cypher verification query (RETURN 1)
-            with driver.session() as probe_session:
-                probe_res = probe_session.run("RETURN 1 as probe").single()
-                if not probe_res or probe_res["probe"] != 1:
-                    raise RuntimeError("Verification Cypher query 'RETURN 1' failed to execute")
-
-            self._neo4j_driver = driver
-            self._neo4j_available = True
-            self._last_connection_error = None
-            logger.info("Connected to live Neo4j instance at %s", settings.NEO4J_URI)
-
             # Discover active database name dynamically without assuming instance ID
             self._active_database = None
-            db_candidates = [settings.NEO4J_DATABASE] if settings.NEO4J_DATABASE and settings.NEO4J_DATABASE.lower() != "neo4j" else []
+            db_candidates = []
+            if settings.NEO4J_DATABASE:
+                db_candidates.append(settings.NEO4J_DATABASE)
+            if settings.AURA_INSTANCEID and settings.AURA_INSTANCEID not in db_candidates:
+                db_candidates.append(settings.AURA_INSTANCEID)
+            db_candidates.append("neo4j")
+
+            # Probe candidate databases with RETURN 1 AS connection_test
             for db in db_candidates:
                 try:
-                    with self._neo4j_driver.session(database=db) as s:
-                        r = s.run("RETURN 1 as probe").single()
-                        if r and r["probe"] == 1:
+                    with driver.session(database=db) as s:
+                        probe_res = s.run("RETURN 1 AS connection_test").single()
+                        if probe_res and probe_res["connection_test"] == 1:
                             self._active_database = db
                             break
                 except Exception:
@@ -120,18 +118,23 @@ class GraphEngine:
 
             if not self._active_database:
                 try:
-                    with self._neo4j_driver.session() as s:
+                    with driver.session() as s:
+                        probe_res = s.run("RETURN 1 AS connection_test").single()
+                        if not probe_res or probe_res["connection_test"] != 1:
+                            raise RuntimeError("Verification Cypher query 'RETURN 1 AS connection_test' failed")
                         try:
                             db_info = s.run("CALL db.info() YIELD name RETURN name").single()
                             if db_info and db_info["name"]:
                                 self._active_database = str(db_info["name"])
                         except Exception:
                             pass
-                        if not self._active_database:
-                            self._active_database = settings.NEO4J_DATABASE or "neo4j"
                 except Exception as probe_err:
                     raise probe_err
 
+            self._neo4j_driver = driver
+            self._neo4j_available = True
+            self._last_connection_error = None
+            logger.info("Connected to live Neo4j instance at %s (database: %s)", settings.NEO4J_URI, self._active_database)
             print(f"[SAFECONTAIN NEO4J] SUCCESS: Driver connected and verified to {redacted_uri} (active database: '{self._active_database}')")
             self.init_neo4j_schema()
         except Exception as e:
@@ -179,8 +182,8 @@ class GraphEngine:
         self._node_store.clear()
         self._edge_store.clear()
 
-    def add_node(self, node: GraphNode) -> None:
-        """Adds or updates a node in the graph."""
+    def add_node(self, node: GraphNode, persist_to_neo4j: bool = False) -> None:
+        """Adds or updates a node in the in-memory graph, optionally persisting to Neo4j."""
         self._node_store[node.id] = node
         self._nx_graph.add_node(
             node.id,
@@ -192,9 +195,11 @@ class GraphEngine:
             properties=node.properties,
             provenance=node.provenance.value,
         )
+        if persist_to_neo4j and self.is_neo4j_live:
+            self.create_or_update_node_in_neo4j(node)
 
-    def add_edge(self, edge: GraphEdge) -> None:
-        """Adds or updates a directed edge in the graph."""
+    def add_edge(self, edge: GraphEdge, persist_to_neo4j: bool = False) -> None:
+        """Adds or updates a directed edge in the in-memory graph, optionally persisting to Neo4j."""
         self._edge_store[edge.id] = edge
         if edge.is_active:
             self._nx_graph.add_edge(
@@ -207,6 +212,8 @@ class GraphEngine:
                 weight=edge.weight,
                 provenance=edge.provenance.value,
             )
+        if persist_to_neo4j and self.is_neo4j_live:
+            self.create_or_update_edge_in_neo4j(edge)
 
     def get_node(self, node_id: str) -> Optional[GraphNode]:
         """Retrieves a node by identifier."""
@@ -318,6 +325,7 @@ class GraphEngine:
                 for node in self.get_all_nodes():
                     label = node.type.value if hasattr(node.type, "value") else str(node.type)
                     clean_label = "".join(c for c in label if c.isalnum() or c == "_") or "Node"
+                    props = _clean_properties_map(node.properties)
                     cypher = f"""
                     MERGE (n:{clean_label} {{id: $id}})
                     SET n.name = $name,
@@ -326,6 +334,7 @@ class GraphEngine:
                         n.is_compromised = $is_compromised,
                         n.is_crown_jewel = $is_crown_jewel,
                         n.provenance = $provenance
+                    SET n += $props
                     """
                     session.run(
                         cypher,
@@ -336,12 +345,14 @@ class GraphEngine:
                         is_compromised=node.is_compromised,
                         is_crown_jewel=node.is_crown_jewel,
                         provenance=node.provenance.value if hasattr(node.provenance, "value") else str(node.provenance),
+                        props=props,
                     )
                     synced_nodes += 1
 
                 for edge in self.get_all_edges():
                     rel_type = edge.type.value if hasattr(edge.type, "value") else str(edge.type)
                     clean_rel = "".join(c for c in rel_type if c.isalnum() or c == "_") or "CONNECTED_TO"
+                    props = _clean_properties_map(edge.properties)
                     cypher = f"""
                     MATCH (s {{id: $source}}), (t {{id: $target}})
                     MERGE (s)-[r:{clean_rel} {{id: $id}}]->(t)
@@ -351,6 +362,7 @@ class GraphEngine:
                         r.weight = $weight,
                         r.is_active = $is_active,
                         r.provenance = $provenance
+                    SET r += $props
                     """
                     session.run(
                         cypher,
@@ -363,6 +375,7 @@ class GraphEngine:
                         weight=float(edge.weight),
                         is_active=bool(edge.is_active),
                         provenance=edge.provenance.value if hasattr(edge.provenance, "value") else str(edge.provenance),
+                        props=props,
                     )
                     synced_edges += 1
 
@@ -384,19 +397,24 @@ class GraphEngine:
 
     def get_neo4j_status(self) -> Dict[str, Any]:
         """Queries live connectivity, node count, and edge count from Neo4j."""
+        redacted_uri = settings.NEO4J_URI.split("@")[-1] if "@" in settings.NEO4J_URI else settings.NEO4J_URI
         if not self.is_neo4j_live or not self._neo4j_driver:
+            is_auth_error = "Unauthorized" in (self.last_connection_error or "") or "authentication" in (self.last_connection_error or "").lower()
+            status_val = "AUTHENTICATION_FAILED" if is_auth_error else ("DEGRADED" if self.mode == "neo4j" else "OFFLINE_FALLBACK")
             return {
                 "connected": False,
                 "configured_backend": self.mode,
                 "active_engine": "in_memory_networkx",
-                "status": "DEGRADED" if self.mode == "neo4j" else "OFFLINE_FALLBACK",
-                "uri": settings.NEO4J_URI,
-                "database": settings.NEO4J_DATABASE,
+                "status": status_val,
+                "uri": redacted_uri,
+                "database": self._active_database or settings.NEO4J_DATABASE,
                 "last_error": self.last_connection_error,
                 "message": (
-                    "CRITICAL: Neo4j is required by GRAPH_BACKEND=neo4j but live connection failed. Running in degraded state."
-                    if self.mode == "neo4j"
-                    else "Neo4j Aura is currently unreachable or unconfigured. Operating in resilient dual fallback in-memory mode."
+                    "CRITICAL: Neo4j authentication failed with credentials in .env. Verify NEO4J_USER and NEO4J_PASSWORD."
+                    if is_auth_error
+                    else ("CRITICAL: Neo4j is required by GRAPH_BACKEND=neo4j but live connection failed. Running in degraded state."
+                          if self.mode == "neo4j"
+                          else "Neo4j Aura is currently unreachable or unconfigured. Operating in resilient dual fallback in-memory mode.")
                 ),
                 "in_memory_nodes": len(self._node_store),
                 "in_memory_edges": len(self._edge_store),
@@ -412,7 +430,7 @@ class GraphEngine:
                     "configured_backend": self.mode,
                     "active_engine": "live_neo4j",
                     "status": "CONNECTED",
-                    "uri": settings.NEO4J_URI,
+                    "uri": redacted_uri,
                     "database": self._active_database or settings.NEO4J_DATABASE,
                     "neo4j_node_count": node_count,
                     "neo4j_edge_count": edge_count,
@@ -425,8 +443,8 @@ class GraphEngine:
                 "configured_backend": self.mode,
                 "active_engine": "in_memory_networkx",
                 "status": "DEGRADED",
-                "uri": settings.NEO4J_URI,
-                "database": settings.NEO4J_DATABASE,
+                "uri": redacted_uri,
+                "database": self._active_database or settings.NEO4J_DATABASE,
                 "last_error": str(e),
                 "message": f"Connection lost during status query: {str(e)}",
             }
@@ -440,10 +458,13 @@ class GraphEngine:
             loaded_edges = 0
             with self._get_neo4j_session() as session:
                 self.clear()
+                reserved_node_keys = {"id", "name", "type", "criticality", "is_compromised", "is_crown_jewel", "provenance"}
+                reserved_edge_keys = {"id", "source", "target", "type", "evidence_status", "confidence", "weight", "is_active", "provenance"}
                 nodes_res = session.run(
                     "MATCH (n) RETURN n.id as id, n.name as name, n.type as type, "
                     "n.criticality as criticality, n.is_compromised as is_compromised, "
-                    "n.is_crown_jewel as is_crown_jewel, n.provenance as provenance, labels(n) as labels"
+                    "n.is_crown_jewel as is_crown_jewel, n.provenance as provenance, "
+                    "properties(n) as props, labels(n) as labels"
                 )
                 for record in nodes_res:
                     nid = record["id"]
@@ -460,6 +481,9 @@ class GraphEngine:
                     except Exception:
                         prov = DataProvenance.LIVE_TELEMETRY
 
+                    raw_props = record.get("props") or {}
+                    ext_props = {k: v for k, v in raw_props.items() if k not in reserved_node_keys}
+
                     node = GraphNode(
                         id=nid,
                         name=record["name"] or nid,
@@ -468,6 +492,7 @@ class GraphEngine:
                         is_compromised=bool(record["is_compromised"] or False),
                         is_crown_jewel=bool(record["is_crown_jewel"] or False),
                         provenance=prov,
+                        properties=ext_props,
                     )
                     self.add_node(node)
                     loaded_nodes += 1
@@ -476,7 +501,7 @@ class GraphEngine:
                     "MATCH (s)-[r]->(t) RETURN r.id as id, s.id as source, t.id as target, "
                     "type(r) as rel_type, r.evidence_status as evidence_status, "
                     "r.confidence as confidence, r.weight as weight, r.is_active as is_active, "
-                    "r.provenance as provenance"
+                    "r.provenance as provenance, properties(r) as props"
                 )
                 for record in edges_res:
                     if not record["source"] or not record["target"]:
@@ -498,6 +523,9 @@ class GraphEngine:
                     except Exception:
                         prov = DataProvenance.LIVE_TELEMETRY
 
+                    raw_props = record.get("props") or {}
+                    ext_props = {k: v for k, v in raw_props.items() if k not in reserved_edge_keys}
+
                     edge = GraphEdge(
                         id=eid,
                         source=record["source"],
@@ -508,6 +536,7 @@ class GraphEngine:
                         weight=float(record["weight"] or 1.0),
                         is_active=bool(record["is_active"] if record["is_active"] is not None else True),
                         provenance=prov,
+                        properties=ext_props,
                     )
                     self.add_edge(edge)
                     loaded_edges += 1
@@ -527,6 +556,7 @@ class GraphEngine:
             return False
         label = node.type.value if hasattr(node.type, "value") else str(node.type)
         clean_label = "".join(c for c in label if c.isalnum() or c == "_") or "Node"
+        props = _clean_properties_map(node.properties)
         cypher = f"""
         MERGE (n:{clean_label} {{id: $id}})
         SET n.name = $name,
@@ -535,6 +565,7 @@ class GraphEngine:
             n.is_compromised = $is_compromised,
             n.is_crown_jewel = $is_crown_jewel,
             n.provenance = $provenance
+        SET n += $props
         """
         try:
             with self._get_neo4j_session() as session:
@@ -547,6 +578,7 @@ class GraphEngine:
                     is_compromised=node.is_compromised,
                     is_crown_jewel=node.is_crown_jewel,
                     provenance=node.provenance.value if hasattr(node.provenance, "value") else str(node.provenance),
+                    props=props,
                 )
             return True
         except Exception as e:
@@ -557,7 +589,8 @@ class GraphEngine:
         """Retrieves an individual node from live Neo4j by ID."""
         if not self.is_neo4j_live or not self._neo4j_driver:
             return None
-        cypher = "MATCH (n {id: $id}) RETURN n.id as id, n.name as name, n.type as type, n.criticality as criticality, n.is_compromised as is_compromised, n.is_crown_jewel as is_crown_jewel, n.provenance as provenance, labels(n) as labels"
+        cypher = "MATCH (n {id: $id}) RETURN n.id as id, n.name as name, n.type as type, n.criticality as criticality, n.is_compromised as is_compromised, n.is_crown_jewel as is_crown_jewel, n.provenance as provenance, properties(n) as props, labels(n) as labels"
+        reserved_node_keys = {"id", "name", "type", "criticality", "is_compromised", "is_crown_jewel", "provenance"}
         try:
             with self._get_neo4j_session() as session:
                 result = session.run(cypher, id=node_id)
@@ -574,6 +607,8 @@ class GraphEngine:
                     prov = DataProvenance(prov_str)
                 except Exception:
                     prov = DataProvenance.LIVE_TELEMETRY
+                raw_props = rec.get("props") or {}
+                ext_props = {k: v for k, v in raw_props.items() if k not in reserved_node_keys}
                 return GraphNode(
                     id=rec["id"],
                     name=rec["name"] or rec["id"],
@@ -582,6 +617,7 @@ class GraphEngine:
                     is_compromised=bool(rec["is_compromised"] or False),
                     is_crown_jewel=bool(rec["is_crown_jewel"] or False),
                     provenance=prov,
+                    properties=ext_props,
                 )
         except Exception as e:
             logger.error("Failed to retrieve node %s from Neo4j: %s", node_id, str(e))
@@ -606,6 +642,7 @@ class GraphEngine:
             return False
         rel_type = edge.type.value if hasattr(edge.type, "value") else str(edge.type)
         clean_rel = "".join(c for c in rel_type if c.isalnum() or c == "_") or "CONNECTED_TO"
+        props = _clean_properties_map(edge.properties)
         cypher = f"""
         MATCH (s {{id: $source}}), (t {{id: $target}})
         MERGE (s)-[r:{clean_rel} {{id: $id}}]->(t)
@@ -615,6 +652,7 @@ class GraphEngine:
             r.weight = $weight,
             r.is_active = $is_active,
             r.provenance = $provenance
+        SET r += $props
         """
         try:
             with self._get_neo4j_session() as session:
@@ -629,6 +667,7 @@ class GraphEngine:
                     weight=float(edge.weight),
                     is_active=bool(edge.is_active),
                     provenance=edge.provenance.value if hasattr(edge.provenance, "value") else str(edge.provenance),
+                    props=props,
                 )
             return True
         except Exception as e:
@@ -639,7 +678,8 @@ class GraphEngine:
         """Retrieves an edge from live Neo4j by ID."""
         if not self.is_neo4j_live or not self._neo4j_driver:
             return None
-        cypher = "MATCH (s)-[r {id: $id}]->(t) RETURN r.id as id, s.id as source, t.id as target, type(r) as rel_type, r.evidence_status as evidence_status, r.confidence as confidence, r.weight as weight, r.is_active as is_active, r.provenance as provenance"
+        cypher = "MATCH (s)-[r {id: $id}]->(t) RETURN r.id as id, s.id as source, t.id as target, type(r) as rel_type, r.evidence_status as evidence_status, r.confidence as confidence, r.weight as weight, r.is_active as is_active, r.provenance as provenance, properties(r) as props"
+        reserved_edge_keys = {"id", "source", "target", "type", "evidence_status", "confidence", "weight", "is_active", "provenance"}
         try:
             with self._get_neo4j_session() as session:
                 result = session.run(cypher, id=edge_id)
@@ -651,16 +691,14 @@ class GraphEngine:
                     rtype = RelationshipType(r_str)
                 except Exception:
                     rtype = RelationshipType.CONNECTED_TO
-                ev_str = rec["evidence_status"] or "CONFIRMED"
-                try:
-                    ev_status = EvidenceStatus(ev_str)
-                except Exception:
                     ev_status = EvidenceStatus.CONFIRMED
                 prov_str = rec["provenance"] or "LIVE_TELEMETRY"
                 try:
                     prov = DataProvenance(prov_str)
                 except Exception:
                     prov = DataProvenance.LIVE_TELEMETRY
+                raw_props = rec.get("props") or {}
+                ext_props = {k: v for k, v in raw_props.items() if k not in reserved_edge_keys}
                 return GraphEdge(
                     id=rec["id"],
                     source=rec["source"],
@@ -671,6 +709,7 @@ class GraphEngine:
                     weight=float(rec["weight"] or 1.0),
                     is_active=bool(rec["is_active"] if rec["is_active"] is not None else True),
                     provenance=prov,
+                    properties=ext_props,
                 )
         except Exception as e:
             logger.error("Failed to retrieve edge %s from Neo4j: %s", edge_id, str(e))

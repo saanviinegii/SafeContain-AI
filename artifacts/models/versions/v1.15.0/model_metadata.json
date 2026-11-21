@@ -1,0 +1,87 @@
+{
+  "model_name": "logistic_regression",
+  "version": "v1.15.0",
+  "status": "ROLLED_BACK",
+  "is_champion": false,
+  "feature_subset": "topology_only",
+  "features": [
+    "node_type",
+    "environment",
+    "exposure",
+    "criticality",
+    "business_value",
+    "in_degree",
+    "out_degree",
+    "total_degree",
+    "in_out_degree_ratio",
+    "pagerank",
+    "is_high_privilege_connected",
+    "admin_edge_count",
+    "has_asset_profile"
+  ],
+  "numeric_features": [
+    "criticality",
+    "business_value",
+    "in_degree",
+    "out_degree",
+    "total_degree",
+    "in_out_degree_ratio",
+    "pagerank",
+    "is_high_privilege_connected",
+    "admin_edge_count",
+    "has_asset_profile"
+  ],
+  "categorical_features": [
+    "node_type",
+    "environment",
+    "exposure"
+  ],
+  "best_hyperparameters": {
+    "C": 0.5,
+    "class_weight": "balanced",
+    "solver": "liblinear",
+    "random_state": 42
+  },
+  "created_at": "2026-11-21T02:40:25.823204+00:00",
+  "trained_by": "test_analyst",
+  "trigger_type": "GOVERNANCE_TEST",
+  "user_notes": "",
+  "cv_metrics": {
+    "balanced_accuracy": 0.6538,
+    "recall": 0.5,
+    "precision": 0.3714,
+    "f1": 0.4231,
+    "roc_auc": 0.6421
+  },
+  "holdout_default_metrics": {
+    "threshold": 0.5,
+    "tp": 2,
+    "tn": 14,
+    "fp": 5,
+    "fn": 3,
+    "recall": 0.4,
+    "precision": 0.2857,
+    "f1": 0.3333,
+    "balanced_accuracy": 0.5684,
+    "total_cost": 35.0
+  },
+  "holdout_calibrated_metrics": {
+    "threshold": 0.23,
+    "tp": 5,
+    "tn": 2,
+    "fp": 17,
+    "fn": 0,
+    "recall": 1.0,
+    "precision": 0.2273,
+    "f1": 0.3704,
+    "balanced_accuracy": 0.5526,
+    "total_cost": 17.0
+  },
+  "holdout_roc_auc": 0.5789,
+  "calibrated_threshold": 0.23,
+  "promoted_at": "2026-11-21T02:40:25.865895+00:00",
+  "promoted_by": "test_secops_lead",
+  "approval_notes": "Approved via unit test",
+  "rolled_back_at": "2026-11-21T02:40:25.904213+00:00",
+  "rolled_back_by": "test_secops_lead"
+}

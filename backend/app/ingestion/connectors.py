@@ -627,3 +627,238 @@ class SyntheticScenarioGenerator:
             edges=edges,
             errors=[],
         )
+
+    @classmethod
+    def generate_hackathon_demo_scenario(cls) -> IngestionResult:
+        """Generates 'Hackathon Live Demonstration Scenario' matching prompt specification:
+
+        Components:
+        1. Suspicious Account: user-contractor-guest (compromised external contractor).
+        2. Two Distinct Routes to Critical Database (db-citizen-identity-vault):
+           - Route A: via jump-host-admin
+           - Route B: via api-gateway-internal -> app-service-auth
+        3. Disruptive Action candidate: act-firewall-api-gateway-internal impacting shared wf-payment-processing.
+        4. Targeted Alternative candidate: act-revoke-user-contractor-guest severing both paths with 0 SLA outage.
+        """
+        nodes: List[GraphNode] = [
+            # Suspicious Account / Compromised Identity & Device
+            GraphNode(
+                id="user-contractor-guest",
+                name="Guest Contractor Account (user-contractor-guest)",
+                type=NodeType.USER,
+                criticality=0.85,
+                is_compromised=True,
+                is_crown_jewel=False,
+                properties={
+                    "role": "External Contractor",
+                    "mfa": False,
+                    "source_ip": "198.51.100.88",
+                    "privilege_level": "Restricted-Guest",
+                },
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            GraphNode(
+                id="dev-contractor-laptop",
+                name="Contractor Workstation (Asset #CON-409)",
+                type=NodeType.DEVICE,
+                criticality=0.60,
+                is_compromised=True,
+                is_crown_jewel=False,
+                properties={"mac": "00:1B:44:11:3A:B2", "os": "Linux/Debian"},
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            # Route A Intermediate Hop
+            GraphNode(
+                id="jump-host-admin",
+                name="Administrative Bastion Jump Host (jump-host-admin)",
+                type=NodeType.SERVER,
+                criticality=0.80,
+                is_compromised=False,
+                is_crown_jewel=False,
+                properties={"role": "SSH/RDP Bastion Host", "subnet": "10.0.10.0/24"},
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            # Route B Intermediate Hops
+            GraphNode(
+                id="api-gateway-internal",
+                name="Internal Core API Gateway (api-gateway-internal)",
+                type=NodeType.SERVER,
+                criticality=0.85,
+                is_compromised=False,
+                is_crown_jewel=False,
+                properties={"role": "Microservices Ingress Controller", "subnet": "10.0.20.0/24"},
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            GraphNode(
+                id="app-service-auth",
+                name="Authentication Microservice (app-service-auth)",
+                type=NodeType.SERVER,
+                criticality=0.90,
+                is_compromised=False,
+                is_crown_jewel=False,
+                properties={"role": "Token Validation & OAuth Engine", "subnet": "10.0.20.0/24"},
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            # Target Crown Jewel Database
+            GraphNode(
+                id="db-citizen-identity-vault",
+                name="National Citizen Identity Vault (db-citizen-identity-vault)",
+                type=NodeType.DATABASE,
+                criticality=1.0,
+                is_compromised=False,
+                is_crown_jewel=True,
+                properties={
+                    "records_count": 50000000,
+                    "encryption": "AES-256-GCM",
+                    "data_tier": "Top Secret / Confidential",
+                },
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            # Shared Critical Business Workflow
+            GraphNode(
+                id="wf-payment-processing",
+                name="Real-Time Payment & Treasury Clearing (wf-payment-processing)",
+                type=NodeType.BUSINESS_WORKFLOW,
+                criticality=1.0,
+                properties={
+                    "criticality_tier": "TIER_1_MISSION_CRITICAL",
+                    "citizen_facing": True,
+                    "hourly_downtime_cost": 300000.0,
+                    "max_allowable_downtime_hours": 0.0,
+                },
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            # Critical Citizen Workflow
+            GraphNode(
+                id="wf-citizen-identity-portal",
+                name="National Citizen Identity Verification Portal (wf-citizen-identity-portal)",
+                type=NodeType.BUSINESS_WORKFLOW,
+                criticality=1.0,
+                properties={
+                    "criticality_tier": "TIER_1_MISSION_CRITICAL",
+                    "citizen_facing": True,
+                    "hourly_downtime_cost": 200000.0,
+                    "max_allowable_downtime_hours": 0.0,
+                },
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+        ]
+
+        edges: List[GraphEdge] = [
+            # Contractor Terminal to User Account
+            GraphEdge(
+                id="edge-demo-dev-to-user",
+                source="dev-contractor-laptop",
+                target="user-contractor-guest",
+                type=RelationshipType.AUTHENTICATES_TO,
+                evidence_status=EvidenceStatus.CONFIRMED,
+                confidence=0.98,
+                evidence_reference="EVID-EDR-9012",
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            # ROUTE A: user-contractor-guest -> jump-host-admin -> db-citizen-identity-vault
+            GraphEdge(
+                id="edge-demo-user-to-jumphost",
+                source="user-contractor-guest",
+                target="jump-host-admin",
+                type=RelationshipType.HAS_ACCESS_TO,
+                evidence_status=EvidenceStatus.CONFIRMED,
+                confidence=0.95,
+                evidence_reference="EVID-IAM-8081",
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            GraphEdge(
+                id="edge-demo-jumphost-to-db",
+                source="jump-host-admin",
+                target="db-citizen-identity-vault",
+                type=RelationshipType.CAN_ACCESS,
+                evidence_status=EvidenceStatus.CONFIRMED,
+                confidence=0.92,
+                evidence_reference="EVID-SSH-3012",
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            # ROUTE B: user-contractor-guest -> api-gateway-internal -> app-service-auth -> db-citizen-identity-vault
+            GraphEdge(
+                id="edge-demo-user-to-apigw",
+                source="user-contractor-guest",
+                target="api-gateway-internal",
+                type=RelationshipType.CONNECTED_TO,
+                evidence_status=EvidenceStatus.CONFIRMED,
+                confidence=0.90,
+                evidence_reference="EVID-NET-4022",
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            GraphEdge(
+                id="edge-demo-apigw-to-auth",
+                source="api-gateway-internal",
+                target="app-service-auth",
+                type=RelationshipType.CONNECTED_TO,
+                evidence_status=EvidenceStatus.CONFIRMED,
+                confidence=0.94,
+                evidence_reference="EVID-RPC-5501",
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            GraphEdge(
+                id="edge-demo-auth-to-db",
+                source="app-service-auth",
+                target="db-citizen-identity-vault",
+                type=RelationshipType.HAS_ACCESS_TO,
+                evidence_status=EvidenceStatus.CONFIRMED,
+                confidence=0.98,
+                evidence_reference="EVID-IAM-6602",
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            # Business Continuity Dependencies:
+            # 1. Payment processing depends directly on api-gateway-internal and db-citizen-identity-vault
+            GraphEdge(
+                id="edge-demo-apigw-supports-payment",
+                source="api-gateway-internal",
+                target="wf-payment-processing",
+                type=RelationshipType.SUPPORTS_WORKFLOW,
+                evidence_status=EvidenceStatus.CONFIRMED,
+                confidence=1.0,
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            GraphEdge(
+                id="edge-demo-db-supports-payment",
+                source="db-citizen-identity-vault",
+                target="wf-payment-processing",
+                type=RelationshipType.SUPPORTS_WORKFLOW,
+                evidence_status=EvidenceStatus.CONFIRMED,
+                confidence=1.0,
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            # 2. Citizen identity portal depends on app-service-auth and db-citizen-identity-vault
+            GraphEdge(
+                id="edge-demo-auth-supports-portal",
+                source="app-service-auth",
+                target="wf-citizen-identity-portal",
+                type=RelationshipType.SUPPORTS_WORKFLOW,
+                evidence_status=EvidenceStatus.CONFIRMED,
+                confidence=1.0,
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+            GraphEdge(
+                id="edge-demo-db-supports-portal",
+                source="db-citizen-identity-vault",
+                target="wf-citizen-identity-portal",
+                type=RelationshipType.SUPPORTS_WORKFLOW,
+                evidence_status=EvidenceStatus.CONFIRMED,
+                confidence=1.0,
+                provenance=DataProvenance.SYNTHETIC,
+            ),
+        ]
+
+        return IngestionResult(
+            source_name="SyntheticScenarioGenerator.HackathonDemoScenario",
+            provenance=DataProvenance.SYNTHETIC,
+            total_received=len(nodes) + len(edges),
+            nodes_created=len(nodes),
+            edges_created=len(edges),
+            duplicates_skipped=0,
+            errors_encountered=0,
+            is_success=True,
+            nodes=nodes,
+            edges=edges,
+            errors=[],
+        )

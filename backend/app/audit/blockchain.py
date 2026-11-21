@@ -6,6 +6,12 @@ Conforms strictly to SafeContain AI R&D Blueprint:
 - Page 2: "Off-chain: retain detailed logs, graph snapshots and sensitive evidence in controlled storage."
 - Page 2: "Integrity check: recompute the off-chain record hash and compare it with the ledger entry."
 - Page 2: "Limitation: blockchain provides tamper evidence, not truth; false input can still be recorded immutably."
+
+Phase 3 Upgrade:
+- Genuine EVM JSON-RPC connection management (Ethereum Sepolia / EVM compatible)
+- Deterministic binary Merkle tree evidence batch anchoring
+- Independent verification against on-chain smart contract (SafeContainAuditLedger.sol)
+- Safe, non-destructive tamper detection demonstration in isolated memory
 """
 
 import hashlib
@@ -17,6 +23,17 @@ from pydantic import BaseModel, Field
 
 from backend.app.core.config import settings
 from backend.app.models.domain import AuditEvent
+from backend.app.audit.merkle import MerkleTree, MerkleProof, MerkleBatchManifest
+from backend.app.audit.blockchain_client import (
+    BlockchainClient,
+    BlockchainStatusReport,
+    BlockchainNetworkConfig,
+    OnChainTransactionResult,
+)
+from backend.app.audit.anchor_storage import AnchorStorage, StoredAnchorManifest
+from backend.app.audit.anchor_service import AnchorService, AnchorPreview, CreateAnchorRequest, AnchorResponse
+from backend.app.audit.verifier import EvidenceVerifier, EvidenceVerificationResult, VerificationStatus
+from backend.app.audit.tamper_demo import TamperDemonstrator, TamperDemoReport
 
 logger = logging.getLogger(__name__)
 
@@ -55,13 +72,20 @@ class BlockchainVerificationResult(BaseModel):
 class BlockchainLedgerAnchor:
     """Smart contract anchor managing on-chain audit records & verification."""
 
-    def __init__(self, network_id: str = "safecontain-evm-testnet"):
+    def __init__(self, network_id: str = "Ethereum Sepolia Testnet"):
         self.network_id = network_id
         self._on_chain_store: Dict[str, OnChainAuditRecord] = {}
         self._current_block: int = 1000
 
+        # Phase 3 subsystems
+        self.client = BlockchainClient()
+        self.storage = AnchorStorage()
+        self.anchor_service = AnchorService(storage=self.storage, client=self.client)
+        self.verifier = EvidenceVerifier(storage=self.storage, client=self.client)
+        self.tamper_demo = TamperDemonstrator(verifier=self.verifier)
+
     def anchor_event(self, event: AuditEvent) -> OnChainAuditRecord:
-        """Anchors an off-chain AuditEvent onto the immutable ledger.
+        """Anchors an off-chain AuditEvent onto the immutable ledger (single record).
         
         Extracts only minimal on-chain fields:
         (record ID, cryptographic hash, timestamp, event type, minimal approval reference).
@@ -84,20 +108,11 @@ class BlockchainLedgerAnchor:
         )
 
         self._on_chain_store[event.event_id] = record
-        logger.info(
-            "Anchored event %s (Type: %s, Hash: %s) on block #%d (Tx: %s)",
-            event.event_id,
-            record.event_type,
-            record.cryptographic_hash[:12] + "...",
-            record.block_number,
-            record.transaction_hash[:12] + "...",
-        )
         return record
 
     def verify_event(self, event: AuditEvent, recomputed_hash: str) -> BlockchainVerificationResult:
-        """Integrity check: recomputes the off-chain record hash and compares it with ledger entry."""
+        """Integrity check: recomputes off-chain record hash and compares with ledger entry."""
         on_chain = self._on_chain_store.get(event.event_id)
-
         if not on_chain:
             return BlockchainVerificationResult(
                 is_valid=False,
@@ -107,7 +122,6 @@ class BlockchainLedgerAnchor:
                 tamper_detected=False,
             )
 
-        # Check if recomputed hash matches on-chain hash
         if on_chain.cryptographic_hash == recomputed_hash:
             return BlockchainVerificationResult(
                 is_valid=True,
@@ -150,54 +164,36 @@ class BlockchainLedgerAnchor:
 
     def get_ledger_status(self) -> Dict[str, Any]:
         """Returns operational summary of the blockchain / smart contract anchor."""
-        rpc_set = bool(settings.BLOCKCHAIN_RPC_URL)
-        key_set = bool(settings.BLOCKCHAIN_PRIVATE_KEY)
-        has_real_contract = bool(
-            settings.BLOCKCHAIN_CONTRACT_ADDRESS and
-            settings.BLOCKCHAIN_CONTRACT_ADDRESS != "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
-        )
-        live_ready = rpc_set and key_set and has_real_contract
+        client_status = self.client.get_status()
+        anchors = self.storage.get_all_manifests()
 
-        status_info = {
-            "network_id": settings.BLOCKCHAIN_NETWORK_NAME,
+        return {
+            "network_id": self.client.config.network_name,
+            "chain_id": self.client.config.chain_id,
             "smart_contract_name": "SafeContainAuditLedger",
             "smart_contract_standard": "Solidity 0.8.20 / EVM Compatible",
-            "contract_address": settings.BLOCKCHAIN_CONTRACT_ADDRESS,
-            "rpc_configured": rpc_set,
-            "private_key_configured": key_set,
-            "mode": "LIVE_TESTNET" if live_ready else "LOCAL_PERMISSIONED_ANCHOR",
-            "status": "ONLINE",
-            "live_testnet_status": (
-                "READY" if live_ready
-                else "EXTERNALLY_BLOCKED (Requires BLOCKCHAIN_RPC_URL and funded BLOCKCHAIN_PRIVATE_KEY with testnet ETH)"
-            ),
+            "contract_address": self.client.config.contract_address,
+            "wallet_address": self.client.config.wallet_address,
+            "wallet_balance_eth": client_status.wallet_balance_eth,
+            "rpc_configured": bool(self.client.config.rpc_url),
+            "private_key_configured": bool(settings.BLOCKCHAIN_PRIVATE_KEY),
+            "mode": client_status.mode,
+            "connected": client_status.connected,
+            "status": "ONLINE" if client_status.connected else "BLOCKCHAIN_UNAVAILABLE",
+            "status_message": client_status.status_message,
+            "can_anchor_on_chain": client_status.can_anchor_on_chain,
+            "live_node_block_height": client_status.current_block_height,
             "total_anchored_records": len(self._on_chain_store),
-            "current_block_height": self._current_block,
+            "total_merkle_batches": len(anchors),
+            "current_block_height": client_status.current_block_height or self._current_block,
+            "explorer_tx_template": self.client.config.explorer_tx_template,
+            "explorer_address_template": self.client.config.explorer_address_template,
             "design_principles": {
-                "on_chain_fields": ["record_id", "cryptographic_hash", "timestamp", "event_type", "approval_reference"],
-                "off_chain_storage": "Detailed telemetry, payload metadata, graph snapshots",
-                "integrity_verification": "recompute_off_chain_hash == on_chain_hash",
+                "on_chain_fields": [
+                    "batch_id", "merkle_root", "first_sequence", "last_sequence", "record_count", "timestamp", "submitter"
+                ],
+                "off_chain_storage": "Detailed telemetry, payload metadata, graph snapshots, and audit_ledger.jsonl",
+                "integrity_verification": "recomputed_hash -> Merkle proof -> on_chain_merkle_root",
                 "limitation": "Blockchain provides tamper evidence, not truth; false input can still be recorded immutably.",
             }
         }
-
-        # If live RPC is configured, query latest block from node
-        if rpc_set:
-            try:
-                import urllib.request
-                req_data = json.dumps({"jsonrpc": "2.0", "method": "eth_blockNumber", "params": [], "id": 1}).encode("utf-8")
-                req = urllib.request.Request(
-                    settings.BLOCKCHAIN_RPC_URL,
-                    data=req_data,
-                    headers={"Content-Type": "application/json"},
-                )
-                with urllib.request.urlopen(req, timeout=3.0) as resp:
-                    data = json.loads(resp.read().decode("utf-8"))
-                    if "result" in data:
-                        status_info["live_node_block_height"] = int(data["result"], 16)
-                        status_info["node_connectivity"] = "CONNECTED"
-            except Exception as e:
-                status_info["node_connectivity"] = f"RPC_UNAVAILABLE: {str(e)}"
-
-        return status_info
-

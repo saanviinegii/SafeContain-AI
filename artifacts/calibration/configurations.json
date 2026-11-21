@@ -1,0 +1,187 @@
+[
+  {
+    "config_id": "cfg-v1.0.0-baseline",
+    "version": "1.0.0",
+    "operating_threshold": 0.32,
+    "tiers": {
+      "low_cutoff": 0.0,
+      "medium_cutoff": 0.2,
+      "high_cutoff": 0.32,
+      "critical_cutoff": 0.7
+    },
+    "status": "ACTIVE",
+    "author_id": "system-baseline",
+    "author_role": "ADMIN",
+    "rationale": "Initial baseline decision threshold theta*=0.32 calibrated in Phase 7.2B. [ROLLED BACK by admin_auditor: Reverting to initial active configuration after audit] [ROLLED BACK by admin_auditor: Reverting to initial active configuration after audit] [ROLLED BACK by admin_auditor: Reverting to initial active configuration after audit] [ROLLED BACK by admin_auditor: Reverting to initial active configuration after audit] [ROLLED BACK by admin_auditor: Reverting to initial active configuration after audit] [ROLLED BACK by admin-auditor: Rollback to baseline after governance audit test]",
+    "supporting_evidence": {
+      "source": "Phase 7.2B Cost-Sensitive Calibration",
+      "recall": 0.9
+    },
+    "parent_version": null,
+    "approved_by": null,
+    "approved_at": null,
+    "activated_by": "admin-auditor",
+    "activated_at": "2026-11-21T02:38:48.037064Z",
+    "created_at": "2026-11-20T19:05:25.823026Z"
+  },
+  {
+    "config_id": "cfg-0401bea5",
+    "version": "1.1.0-opt-15",
+    "operating_threshold": 0.15,
+    "tiers": {
+      "low_cutoff": 0.0,
+      "medium_cutoff": 0.1,
+      "high_cutoff": 0.15,
+      "critical_cutoff": 0.6
+    },
+    "status": "PENDING_APPROVAL",
+    "author_id": "adaptive-risk-optimizer",
+    "author_role": "ANALYST",
+    "rationale": "Candidate threshold theta=0.15 reduces total cybersecurity cost from 563.0 to 407.0 (Cost Delta: -156.0) while maintaining recall >= 42.3% (57.7%) and zero critical threat degradation.",
+    "supporting_evidence": {
+      "evaluated_samples": 240,
+      "baseline_threshold": 0.32,
+      "candidate_threshold": 0.15,
+      "baseline_cost": 563.0,
+      "candidate_cost": 407.0,
+      "baseline_fp": 13,
+      "candidate_fp": 27,
+      "baseline_fn": 45,
+      "candidate_fn": 33
+    },
+    "parent_version": "1.0.0-baseline",
+    "approved_by": null,
+    "approved_at": null,
+    "activated_by": null,
+    "activated_at": null,
+    "created_at": "2026-11-20T19:42:25.419010Z"
+  },
+  {
+    "config_id": "cfg-2f7463f2",
+    "version": "1.1.0-opt-15",
+    "operating_threshold": 0.15,
+    "tiers": {
+      "low_cutoff": 0.0,
+      "medium_cutoff": 0.1,
+      "high_cutoff": 0.15,
+      "critical_cutoff": 0.6
+    },
+    "status": "PENDING_APPROVAL",
+    "author_id": "adaptive-risk-optimizer",
+    "author_role": "ANALYST",
+    "rationale": "Candidate threshold theta=0.15 reduces total cybersecurity cost from 563.0 to 407.0 (Cost Delta: -156.0) while maintaining recall >= 42.3% (57.7%) and zero critical threat degradation.",
+    "supporting_evidence": {
+      "evaluated_samples": 240,
+      "baseline_threshold": 0.32,
+      "candidate_threshold": 0.15,
+      "baseline_cost": 563.0,
+      "candidate_cost": 407.0,
+      "baseline_fp": 13,
+      "candidate_fp": 27,
+      "baseline_fn": 45,
+      "candidate_fn": 33
+    },
+    "parent_version": "1.0.0-baseline",
+    "approved_by": null,
+    "approved_at": null,
+    "activated_by": null,
+    "activated_at": null,
+    "created_at": "2026-11-21T02:22:28.618525Z"
+  },
+  {
+    "config_id": "cfg-7842f696",
+    "version": "1.1.0-opt-15",
+    "operating_threshold": 0.15,
+    "tiers": {
+      "low_cutoff": 0.0,
+      "medium_cutoff": 0.1,
+      "high_cutoff": 0.15,
+      "critical_cutoff": 0.6
+    },
+    "status": "PENDING_APPROVAL",
+    "author_id": "adaptive-risk-optimizer",
+    "author_role": "ANALYST",
+    "rationale": "Candidate threshold theta=0.15 reduces total cybersecurity cost from 563.0 to 407.0 (Cost Delta: -156.0) while maintaining recall >= 42.3% (57.7%) and zero critical threat degradation.",
+    "supporting_evidence": {
+      "evaluated_samples": 240,
+      "baseline_threshold": 0.32,
+      "candidate_threshold": 0.15,
+      "baseline_cost": 563.0,
+      "candidate_cost": 407.0,
+      "baseline_fp": 13,
+      "candidate_fp": 27,
+      "baseline_fn": 45,
+      "candidate_fn": 33
+    },
+    "parent_version": "1.0.0-baseline",
+    "approved_by": null,
+    "approved_at": null,
+    "activated_by": null,
+    "activated_at": null,
+    "created_at": "2026-11-21T02:23:17.160885Z"
+  },
+  {
+    "config_id": "cfg-49786587",
+    "version": "1.1.0-opt-15",
+    "operating_threshold": 0.15,
+    "tiers": {
+      "low_cutoff": 0.0,
+      "medium_cutoff": 0.1,
+      "high_cutoff": 0.15,
+      "critical_cutoff": 0.6
+    },
+    "status": "PENDING_APPROVAL",
+    "author_id": "adaptive-risk-optimizer",
+    "author_role": "ANALYST",
+    "rationale": "Candidate threshold theta=0.15 reduces total cybersecurity cost from 563.0 to 407.0 (Cost Delta: -156.0) while maintaining recall >= 42.3% (57.7%) and zero critical threat degradation.",
+    "supporting_evidence": {
+      "evaluated_samples": 240,
+      "baseline_threshold": 0.32,
+      "candidate_threshold": 0.15,
+      "baseline_cost": 563.0,
+      "candidate_cost": 407.0,
+      "baseline_fp": 13,
+      "candidate_fp": 27,
+      "baseline_fn": 45,
+      "candidate_fn": 33
+    },
+    "parent_version": "1.0.0-baseline",
+    "approved_by": null,
+    "approved_at": null,
+    "activated_by": null,
+    "activated_at": null,
+    "created_at": "2026-11-21T02:24:13.750271Z"
+  },
+  {
+    "config_id": "cfg-52510c66",
+    "version": "1.1.0-opt-15",
+    "operating_threshold": 0.15,
+    "tiers": {
+      "low_cutoff": 0.0,
+      "medium_cutoff": 0.1,
+      "high_cutoff": 0.15,
+      "critical_cutoff": 0.6
+    },
+    "status": "PENDING_APPROVAL",
+    "author_id": "adaptive-risk-optimizer",
+    "author_role": "ANALYST",
+    "rationale": "Candidate threshold theta=0.15 reduces total cybersecurity cost from 563.0 to 407.0 (Cost Delta: -156.0) while maintaining recall >= 42.3% (57.7%) and zero critical threat degradation.",
+    "supporting_evidence": {
+      "evaluated_samples": 240,
+      "baseline_threshold": 0.32,
+      "candidate_threshold": 0.15,
+      "baseline_cost": 563.0,
+      "candidate_cost": 407.0,
+      "baseline_fp": 13,
+      "candidate_fp": 27,
+      "baseline_fn": 45,
+      "candidate_fn": 33
+    },
+    "parent_version": "1.0.0-baseline",
+    "approved_by": null,
+    "approved_at": null,
+    "activated_by": null,
+    "activated_at": null,
+    "created_at": "2026-11-21T02:24:29.374950Z"
+  }
+]

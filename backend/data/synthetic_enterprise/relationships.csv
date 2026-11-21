@@ -1,0 +1,286 @@
+relationship_id,source_id,target_id,relationship_type,privilege_level,risk_score,confidence,discovered_by,timestamp,description
+rel-0001,node-user-marcus,node-ep-laptop-marcus,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T08:10:00+00:00,User node-user-marcus primary assigned hardware
+rel-0002,node-user-sarah,node-ep-ws02,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T08:15:00+00:00,User node-user-sarah primary assigned hardware
+rel-0003,node-user-alex,node-ep-ws03,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T08:20:00+00:00,User node-user-alex primary assigned hardware
+rel-0004,node-user-elena,node-ep-ws04,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T08:25:00+00:00,User node-user-elena primary assigned hardware
+rel-0005,node-user-david,node-ep-ws05,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T08:30:00+00:00,User node-user-david primary assigned hardware
+rel-0006,node-user-priya,node-ep-ws06,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T08:35:00+00:00,User node-user-priya primary assigned hardware
+rel-0007,node-user-james,node-ep-ws07,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T08:40:00+00:00,User node-user-james primary assigned hardware
+rel-0008,node-user-rachel,node-ep-ws08,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T08:45:00+00:00,User node-user-rachel primary assigned hardware
+rel-0009,node-user-liam,node-ep-ws09,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T08:50:00+00:00,User node-user-liam primary assigned hardware
+rel-0010,node-user-tom,node-ep-ws10,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T08:55:00+00:00,User node-user-tom primary assigned hardware
+rel-0011,node-user-svc-cicd,node-ep-ws11,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T09:00:00+00:00,User node-user-svc-cicd primary assigned hardware
+rel-0012,node-user-svc-backup,node-ep-ws12,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T09:05:00+00:00,User node-user-svc-backup primary assigned hardware
+rel-0013,node-user-svc-payment,node-ep-ws13,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T09:10:00+00:00,User node-user-svc-payment primary assigned hardware
+rel-0014,node-user-svc-siem,node-ep-ws14,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T09:15:00+00:00,User node-user-svc-siem primary assigned hardware
+rel-0015,node-user-svc-scan,node-ep-ws15,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T09:20:00+00:00,User node-user-svc-scan primary assigned hardware
+rel-0016,node-user-claire,node-ep-ws16,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T09:25:00+00:00,User node-user-claire primary assigned hardware
+rel-0017,node-user-ahmed,node-ep-ws17,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T09:30:00+00:00,User node-user-ahmed primary assigned hardware
+rel-0018,node-user-kevin,node-ep-ws18,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T09:35:00+00:00,User node-user-kevin primary assigned hardware
+rel-0019,node-user-chloe,node-ep-ws19,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T09:40:00+00:00,User node-user-chloe primary assigned hardware
+rel-0020,node-user-zack,node-ep-ws20,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T09:45:00+00:00,User node-user-zack primary assigned hardware
+rel-0021,node-user-maya,node-ep-ws21,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T09:50:00+00:00,User node-user-maya primary assigned hardware
+rel-0022,node-user-sam,node-ep-ws22,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T09:55:00+00:00,User node-user-sam primary assigned hardware
+rel-0023,node-user-george,node-ep-ws23,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T10:00:00+00:00,User node-user-george primary assigned hardware
+rel-0024,node-user-nina,node-ep-ws24,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T10:05:00+00:00,User node-user-nina primary assigned hardware
+rel-0025,node-user-breakglass,node-ep-ws25,USES_DEVICE,USER,15.0,0.99,CrowdStrike_EDR,2026-11-15T10:10:00+00:00,User node-user-breakglass primary assigned hardware
+rel-0026,node-ep-laptop-marcus,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T10:15:00+00:00,Kerberos ticket granting service
+rel-0027,node-ep-laptop-marcus,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T10:20:00+00:00,Recursive internal DNS resolution
+rel-0028,node-ep-ws02,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T10:25:00+00:00,Kerberos ticket granting service
+rel-0029,node-ep-ws02,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T10:30:00+00:00,Recursive internal DNS resolution
+rel-0030,node-ep-ws03,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T10:35:00+00:00,Kerberos ticket granting service
+rel-0031,node-ep-ws03,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T10:40:00+00:00,Recursive internal DNS resolution
+rel-0032,node-ep-ws04,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T10:45:00+00:00,Kerberos ticket granting service
+rel-0033,node-ep-ws04,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T10:50:00+00:00,Recursive internal DNS resolution
+rel-0034,node-ep-ws05,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T10:55:00+00:00,Kerberos ticket granting service
+rel-0035,node-ep-ws05,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T11:00:00+00:00,Recursive internal DNS resolution
+rel-0036,node-ep-ws06,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T11:05:00+00:00,Kerberos ticket granting service
+rel-0037,node-ep-ws06,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T11:10:00+00:00,Recursive internal DNS resolution
+rel-0038,node-ep-ws07,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T11:15:00+00:00,Kerberos ticket granting service
+rel-0039,node-ep-ws07,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T11:20:00+00:00,Recursive internal DNS resolution
+rel-0040,node-ep-ws08,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T11:25:00+00:00,Kerberos ticket granting service
+rel-0041,node-ep-ws08,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T11:30:00+00:00,Recursive internal DNS resolution
+rel-0042,node-ep-ws09,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T11:35:00+00:00,Kerberos ticket granting service
+rel-0043,node-ep-ws09,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T11:40:00+00:00,Recursive internal DNS resolution
+rel-0044,node-ep-ws10,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T11:45:00+00:00,Kerberos ticket granting service
+rel-0045,node-ep-ws10,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T11:50:00+00:00,Recursive internal DNS resolution
+rel-0046,node-ep-ws11,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T11:55:00+00:00,Kerberos ticket granting service
+rel-0047,node-ep-ws11,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T12:00:00+00:00,Recursive internal DNS resolution
+rel-0048,node-ep-ws12,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T12:05:00+00:00,Kerberos ticket granting service
+rel-0049,node-ep-ws12,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T12:10:00+00:00,Recursive internal DNS resolution
+rel-0050,node-ep-ws13,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T12:15:00+00:00,Kerberos ticket granting service
+rel-0051,node-ep-ws13,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T12:20:00+00:00,Recursive internal DNS resolution
+rel-0052,node-ep-ws14,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T12:25:00+00:00,Kerberos ticket granting service
+rel-0053,node-ep-ws14,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T12:30:00+00:00,Recursive internal DNS resolution
+rel-0054,node-ep-ws15,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T12:35:00+00:00,Kerberos ticket granting service
+rel-0055,node-ep-ws15,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T12:40:00+00:00,Recursive internal DNS resolution
+rel-0056,node-ep-ws16,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T12:45:00+00:00,Kerberos ticket granting service
+rel-0057,node-ep-ws16,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T12:50:00+00:00,Recursive internal DNS resolution
+rel-0058,node-ep-ws17,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T12:55:00+00:00,Kerberos ticket granting service
+rel-0059,node-ep-ws17,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T13:00:00+00:00,Recursive internal DNS resolution
+rel-0060,node-ep-ws18,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T13:05:00+00:00,Kerberos ticket granting service
+rel-0061,node-ep-ws18,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T13:10:00+00:00,Recursive internal DNS resolution
+rel-0062,node-ep-ws19,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T13:15:00+00:00,Kerberos ticket granting service
+rel-0063,node-ep-ws19,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T13:20:00+00:00,Recursive internal DNS resolution
+rel-0064,node-ep-ws20,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T13:25:00+00:00,Kerberos ticket granting service
+rel-0065,node-ep-ws20,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T13:30:00+00:00,Recursive internal DNS resolution
+rel-0066,node-ep-ws21,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T13:35:00+00:00,Kerberos ticket granting service
+rel-0067,node-ep-ws21,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T13:40:00+00:00,Recursive internal DNS resolution
+rel-0068,node-ep-ws22,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T13:45:00+00:00,Kerberos ticket granting service
+rel-0069,node-ep-ws22,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T13:50:00+00:00,Recursive internal DNS resolution
+rel-0070,node-ep-ws23,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T13:55:00+00:00,Kerberos ticket granting service
+rel-0071,node-ep-ws23,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T14:00:00+00:00,Recursive internal DNS resolution
+rel-0072,node-ep-ws24,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T14:05:00+00:00,Kerberos ticket granting service
+rel-0073,node-ep-ws24,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T14:10:00+00:00,Recursive internal DNS resolution
+rel-0074,node-ep-ws25,node-srv-dc01,AUTHENTICATES_TO,USER,25.0,0.98,Active_Directory,2026-11-15T14:15:00+00:00,Kerberos ticket granting service
+rel-0075,node-ep-ws25,node-srv-dns-internal,CONNECTS_TO,USER,10.0,0.99,NetFlow,2026-11-15T14:20:00+00:00,Recursive internal DNS resolution
+rel-0076,node-user-marcus,node-ep-laptop-marcus,HAS_ACCESS,USER,75.0,0.99,Splunk_SIEM,2026-11-15T14:25:00+00:00,Marcus interactive desktop session
+rel-0077,node-ep-laptop-marcus,node-srv-jumpbox01,CONNECTS_TO,ADMIN,85.0,0.92,CrowdStrike_EDR,2026-11-15T14:30:00+00:00,Compromised SSH private key cached in memory utilized to pivot to Jumpbox
+rel-0078,node-srv-jumpbox01,node-app-payment-gateway,ADMIN_ACCESS,ADMIN,90.0,0.88,NetFlow,2026-11-15T14:35:00+00:00,Bastion administrative SSH tunnel to payment microservice
+rel-0079,node-app-payment-gateway,node-db-customer-core,HAS_ACCESS,ADMIN,95.0,0.95,App_Config,2026-11-15T14:40:00+00:00,Direct database connection pool holding decrypted citizen table credentials
+rel-0080,node-ep-laptop-marcus,node-srv-vpn-concentrator,AUTHENTICATES_TO,USER,70.0,0.9,VPN_Logs,2026-11-15T14:45:00+00:00,Remote access session via GlobalProtect
+rel-0081,node-srv-vpn-concentrator,node-srv-staging-api,CAN_REACH,USER,65.0,0.85,Firewall_Logs,2026-11-15T14:50:00+00:00,Network route from VPN pool to staging network
+rel-0082,node-srv-staging-api,node-srv-jumpbox02,CONNECTS_TO,USER,75.0,0.7,CrowdStrike_EDR,2026-11-15T14:55:00+00:00,Suspected unsegmented debug connection to secondary jumpbox
+rel-0083,node-srv-jumpbox02,node-db-customer-core,CONNECTS_TO,ADMIN,85.0,0.8,DB_Audit,2026-11-15T15:00:00+00:00,Secondary administrative maintenance route
+rel-0084,node-net-fw-perimeter,node-srv-web-public,CAN_REACH,USER,80.0,0.99,Edge_FW,2026-11-15T15:05:00+00:00,Inbound HTTPS 443 port forward to Web Portal
+rel-0085,node-srv-web-public,node-app-citizen-portal,HOSTS,USER,85.0,0.99,Nginx_Config,2026-11-15T15:10:00+00:00,Web portal application running on public server
+rel-0086,node-app-citizen-portal,node-srv-api-gateway,CONNECTS_TO,USER,85.0,0.95,API_Logs,2026-11-15T15:15:00+00:00,Backend API requests forwarded through API gateway
+rel-0087,node-srv-api-gateway,node-app-auth-service,DEPENDS_ON,SERVICE,90.0,0.96,Kong_Route,2026-11-15T15:20:00+00:00,Authentication token verification hook
+rel-0088,node-app-auth-service,node-db-id-vault,HAS_ACCESS,ROOT,95.0,0.98,Vault_Client,2026-11-15T15:25:00+00:00,Hardware security module backed biometric and token verification
+rel-0089,node-user-svc-cicd,node-srv-gitlab,AUTHENTICATES_TO,ADMIN,80.0,0.95,GitLab_Audit,2026-11-15T15:30:00+00:00,CI runner access token with deploy privileges
+rel-0090,node-srv-gitlab,node-srv-k8s-master01,CONNECTS_TO,ADMIN,88.0,0.92,Kube_API,2026-11-15T15:35:00+00:00,Kubernetes cluster administrative deployment webhook
+rel-0091,node-srv-k8s-master01,node-cld-iam-role,ADMIN_ACCESS,ROOT,92.0,0.9,AWS_CloudTrail,2026-11-15T15:40:00+00:00,Node instance profile assuming SuperAdmin IAM role
+rel-0092,node-cld-iam-role,node-cld-s3-lake,OWNS,ROOT,90.0,0.99,AWS_IAM,2026-11-15T15:45:00+00:00,Full read/write permissions on sovereign data lake
+rel-0093,node-cld-s3-lake,node-db-payment-ledger,BACKED_UP_BY,SERVICE,85.0,0.9,S3_Lifecycle,2026-11-15T15:50:00+00:00,Daily raw transaction ledger archive bucket
+rel-0094,node-app-payment-gateway,node-srv-payment-app01,RUNS_ON,USER,10.0,0.99,Systemd,2026-11-15T15:55:00+00:00,Payment gateway running on app host 1
+rel-0095,node-app-payment-gateway,node-srv-payment-app02,RUNS_ON,USER,10.0,0.99,Systemd,2026-11-15T16:00:00+00:00,Payment gateway running on app host 2
+rel-0096,node-app-payment-gateway,node-db-payment-ledger,HAS_ACCESS,ADMIN,95.0,0.99,JDBC_Pool,2026-11-15T16:05:00+00:00,Direct synchronous write to payment ledger
+rel-0097,node-app-payment-gateway,node-db-billing-gateway,CONNECTS_TO,ADMIN,90.0,0.98,PCI_Enclave,2026-11-15T16:10:00+00:00,Credit card tokenization lookup
+rel-0098,node-app-payment-gateway,node-app-fraud-engine,DEPENDS_ON,SERVICE,80.0,0.95,gRPC,2026-11-15T16:15:00+00:00,Real-time AI fraud transaction validation
+rel-0099,node-app-payroll-proc,node-srv-finance-erp,RUNS_ON,USER,15.0,0.99,SAP_Kernel,2026-11-15T16:20:00+00:00,Payroll processor running on SAP ERP host
+rel-0100,node-app-payroll-proc,node-db-finance-ledger,HAS_ACCESS,ADMIN,92.0,0.99,HANA_Driver,2026-11-15T16:25:00+00:00,Direct ledger entry commit
+rel-0101,node-app-payroll-proc,node-app-file-transfer,DEPENDS_ON,SERVICE,85.0,0.9,SFTP_Client,2026-11-15T16:30:00+00:00,ACH batch distribution to central bank clearing
+rel-0102,node-app-citizen-portal,node-srv-web-public,RUNS_ON,USER,15.0,0.99,Docker,2026-11-15T16:35:00+00:00,Citizen portal container on web host
+rel-0103,node-app-citizen-portal,node-db-telemetry-cache,DEPENDS_ON,USER,50.0,0.95,Redis_Client,2026-11-15T16:40:00+00:00,Active session token store
+rel-0104,node-db-customer-core,node-srv-backup-primary,BACKED_UP_BY,SERVICE,15.0,0.98,Veeam_Agent,2026-11-15T16:45:00+00:00,Nightly encrypted snapshot
+rel-0105,node-db-payment-ledger,node-srv-backup-primary,BACKED_UP_BY,SERVICE,15.0,0.98,Veeam_Agent,2026-11-15T16:50:00+00:00,Hourly incremental differential backup
+rel-0106,node-db-id-vault,node-srv-backup-primary,BACKED_UP_BY,SERVICE,20.0,0.95,Veeam_Agent,2026-11-15T16:55:00+00:00,Air-gapped key escrow archive
+rel-0107,node-srv-backup-primary,node-bak-immutable,CONNECTS_TO,ADMIN,10.0,0.99,S3_WORM,2026-11-15T17:00:00+00:00,Immutable off-site replication
+rel-0108,node-srv-jumpbox01,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T17:05:00+00:00,node-srv-jumpbox01 forward syslog to Splunk
+rel-0109,node-srv-jumpbox01,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T17:10:00+00:00,node-srv-jumpbox01 endpoint telemetry to Falcon
+rel-0110,node-srv-jumpbox02,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T17:15:00+00:00,node-srv-jumpbox02 forward syslog to Splunk
+rel-0111,node-srv-jumpbox02,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T17:20:00+00:00,node-srv-jumpbox02 endpoint telemetry to Falcon
+rel-0112,node-srv-dc01,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T17:25:00+00:00,node-srv-dc01 forward syslog to Splunk
+rel-0113,node-srv-dc01,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T17:30:00+00:00,node-srv-dc01 endpoint telemetry to Falcon
+rel-0114,node-srv-dc02,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T17:35:00+00:00,node-srv-dc02 forward syslog to Splunk
+rel-0115,node-srv-dc02,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T17:40:00+00:00,node-srv-dc02 endpoint telemetry to Falcon
+rel-0116,node-srv-idp-okta,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T17:45:00+00:00,node-srv-idp-okta forward syslog to Splunk
+rel-0117,node-srv-idp-okta,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T17:50:00+00:00,node-srv-idp-okta endpoint telemetry to Falcon
+rel-0118,node-srv-web-public,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T17:55:00+00:00,node-srv-web-public forward syslog to Splunk
+rel-0119,node-srv-web-public,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T18:00:00+00:00,node-srv-web-public endpoint telemetry to Falcon
+rel-0120,node-srv-api-gateway,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T18:05:00+00:00,node-srv-api-gateway forward syslog to Splunk
+rel-0121,node-srv-api-gateway,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T18:10:00+00:00,node-srv-api-gateway endpoint telemetry to Falcon
+rel-0122,node-srv-payment-app01,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T18:15:00+00:00,node-srv-payment-app01 forward syslog to Splunk
+rel-0123,node-srv-payment-app01,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T18:20:00+00:00,node-srv-payment-app01 endpoint telemetry to Falcon
+rel-0124,node-srv-payment-app02,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T18:25:00+00:00,node-srv-payment-app02 forward syslog to Splunk
+rel-0125,node-srv-payment-app02,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T18:30:00+00:00,node-srv-payment-app02 endpoint telemetry to Falcon
+rel-0126,node-srv-vault01,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T18:35:00+00:00,node-srv-vault01 forward syslog to Splunk
+rel-0127,node-srv-vault01,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T18:40:00+00:00,node-srv-vault01 endpoint telemetry to Falcon
+rel-0128,node-srv-siem-splunk,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T18:45:00+00:00,node-srv-siem-splunk forward syslog to Splunk
+rel-0129,node-srv-siem-splunk,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T18:50:00+00:00,node-srv-siem-splunk endpoint telemetry to Falcon
+rel-0130,node-srv-edr-console,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T18:55:00+00:00,node-srv-edr-console forward syslog to Splunk
+rel-0131,node-srv-edr-console,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T19:00:00+00:00,node-srv-edr-console endpoint telemetry to Falcon
+rel-0132,node-srv-gitlab,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T19:05:00+00:00,node-srv-gitlab forward syslog to Splunk
+rel-0133,node-srv-gitlab,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T19:10:00+00:00,node-srv-gitlab endpoint telemetry to Falcon
+rel-0134,node-srv-k8s-master01,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T19:15:00+00:00,node-srv-k8s-master01 forward syslog to Splunk
+rel-0135,node-srv-k8s-master01,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T19:20:00+00:00,node-srv-k8s-master01 endpoint telemetry to Falcon
+rel-0136,node-srv-k8s-worker01,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T19:25:00+00:00,node-srv-k8s-worker01 forward syslog to Splunk
+rel-0137,node-srv-k8s-worker01,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T19:30:00+00:00,node-srv-k8s-worker01 endpoint telemetry to Falcon
+rel-0138,node-srv-k8s-worker02,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T19:35:00+00:00,node-srv-k8s-worker02 forward syslog to Splunk
+rel-0139,node-srv-k8s-worker02,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T19:40:00+00:00,node-srv-k8s-worker02 endpoint telemetry to Falcon
+rel-0140,node-srv-backup-primary,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T19:45:00+00:00,node-srv-backup-primary forward syslog to Splunk
+rel-0141,node-srv-backup-primary,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T19:50:00+00:00,node-srv-backup-primary endpoint telemetry to Falcon
+rel-0142,node-srv-mail-relay,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T19:55:00+00:00,node-srv-mail-relay forward syslog to Splunk
+rel-0143,node-srv-mail-relay,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T20:00:00+00:00,node-srv-mail-relay endpoint telemetry to Falcon
+rel-0144,node-srv-dns-internal,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T20:05:00+00:00,node-srv-dns-internal forward syslog to Splunk
+rel-0145,node-srv-dns-internal,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T20:10:00+00:00,node-srv-dns-internal endpoint telemetry to Falcon
+rel-0146,node-srv-hr-portal,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T20:15:00+00:00,node-srv-hr-portal forward syslog to Splunk
+rel-0147,node-srv-hr-portal,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T20:20:00+00:00,node-srv-hr-portal endpoint telemetry to Falcon
+rel-0148,node-srv-finance-erp,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T20:25:00+00:00,node-srv-finance-erp forward syslog to Splunk
+rel-0149,node-srv-finance-erp,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T20:30:00+00:00,node-srv-finance-erp endpoint telemetry to Falcon
+rel-0150,node-srv-vpn-concentrator,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T20:35:00+00:00,node-srv-vpn-concentrator forward syslog to Splunk
+rel-0151,node-srv-vpn-concentrator,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T20:40:00+00:00,node-srv-vpn-concentrator endpoint telemetry to Falcon
+rel-0152,node-srv-pki-ca,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T20:45:00+00:00,node-srv-pki-ca forward syslog to Splunk
+rel-0153,node-srv-pki-ca,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T20:50:00+00:00,node-srv-pki-ca endpoint telemetry to Falcon
+rel-0154,node-srv-monitoring-elk,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T20:55:00+00:00,node-srv-monitoring-elk forward syslog to Splunk
+rel-0155,node-srv-monitoring-elk,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T21:00:00+00:00,node-srv-monitoring-elk endpoint telemetry to Falcon
+rel-0156,node-srv-staging-api,node-srv-siem-splunk,COMMUNICATES_WITH,USER,5.0,0.99,Syslog_TLS,2026-11-15T21:05:00+00:00,node-srv-staging-api forward syslog to Splunk
+rel-0157,node-srv-staging-api,node-srv-edr-console,COMMUNICATES_WITH,USER,5.0,0.99,CrowdStrike_Relay,2026-11-15T21:10:00+00:00,node-srv-staging-api endpoint telemetry to Falcon
+rel-0158,node-net-fw-perimeter,node-net-waf,CONNECTS_TO,USER,5.0,0.99,Net_Config,2026-11-15T21:15:00+00:00,Perimeter traffic routed through WAF
+rel-0159,node-net-waf,node-srv-web-public,CAN_REACH,USER,15.0,0.99,Reverse_Proxy,2026-11-15T21:20:00+00:00,Clean HTTP requests forwarded to web frontend
+rel-0160,node-net-fw-internal,node-srv-payment-app01,CONTROLLED_BY,ADMIN,10.0,0.99,ACL_Rule,2026-11-15T21:25:00+00:00,Microsegmentation rule isolating Payment Node 1
+rel-0161,node-net-fw-internal,node-srv-payment-app02,CONTROLLED_BY,ADMIN,10.0,0.99,ACL_Rule,2026-11-15T21:30:00+00:00,Microsegmentation rule isolating Payment Node 2
+rel-0162,node-net-fw-internal,node-db-customer-core,CONTROLLED_BY,ADMIN,10.0,0.99,ACL_Rule,2026-11-15T21:35:00+00:00,Strict database subnet isolation
+rel-0163,node-user-sarah,node-srv-jumpbox01,ADMIN_ACCESS,ADMIN,40.0,0.99,Okta_MFA,2026-11-15T21:40:00+00:00,DevOps Admin MFA session to Bastion
+rel-0164,node-user-sarah,node-cld-iam-role,ADMIN_ACCESS,ROOT,50.0,0.95,AWS_SSO,2026-11-15T21:45:00+00:00,Cloud infrastructure admin role assumption
+rel-0165,node-user-priya,node-srv-jumpbox01,ADMIN_ACCESS,ADMIN,45.0,0.99,Okta_MFA,2026-11-15T21:50:00+00:00,DBA MFA access to maintenance jumpbox
+rel-0166,node-user-priya,node-db-customer-core,ADMIN_ACCESS,ADMIN,50.0,0.99,DB_Audit,2026-11-15T21:55:00+00:00,Authorized DBA maintenance query access
+rel-0167,node-user-priya,node-db-payment-ledger,ADMIN_ACCESS,ADMIN,50.0,0.99,DB_Audit,2026-11-15T22:00:00+00:00,Authorized DBA maintenance query access
+rel-0168,node-user-breakglass,node-srv-dc01,ADMIN_ACCESS,DOMAIN_ADMIN,80.0,0.9,CyberArk_Vault,2026-11-15T22:05:00+00:00,Emergency Breakglass Domain Admin check-out
+rel-0169,node-srv-k8s-master01,node-srv-k8s-worker01,MANAGES,ROOT,10.0,0.99,Kubelet,2026-11-15T22:10:00+00:00,K8s worker 1 orchestration
+rel-0170,node-srv-k8s-master01,node-srv-k8s-worker02,MANAGES,ROOT,10.0,0.99,Kubelet,2026-11-15T22:15:00+00:00,K8s worker 2 orchestration
+rel-0171,node-srv-k8s-worker01,node-cld-k8s-cluster,MEMBER_OF,USER,5.0,0.99,Cluster_Config,2026-11-15T22:20:00+00:00,Worker node joined to EKS cluster
+rel-0172,node-srv-k8s-worker02,node-cld-k8s-cluster,MEMBER_OF,USER,5.0,0.99,Cluster_Config,2026-11-15T22:25:00+00:00,Worker node joined to EKS cluster
+rel-0173,node-user-svc-cicd,node-app-support-desk,HAS_ACCESS,USER,10.0,0.99,Okta_SSO,2026-11-15T22:30:00+00:00,svc-cicd-pipeline ITSM portal access
+rel-0174,node-user-svc-cicd,node-app-email-exchange,HAS_ACCESS,USER,10.0,0.99,Exchange_ActiveSync,2026-11-15T22:35:00+00:00,svc-cicd-pipeline corporate email access
+rel-0175,node-user-svc-backup,node-app-support-desk,HAS_ACCESS,USER,10.0,0.99,Okta_SSO,2026-11-15T22:40:00+00:00,svc-backup-daemon ITSM portal access
+rel-0176,node-user-svc-backup,node-app-email-exchange,HAS_ACCESS,USER,10.0,0.99,Exchange_ActiveSync,2026-11-15T22:45:00+00:00,svc-backup-daemon corporate email access
+rel-0177,node-user-svc-payment,node-app-support-desk,HAS_ACCESS,USER,10.0,0.99,Okta_SSO,2026-11-15T22:50:00+00:00,svc-payment-broker ITSM portal access
+rel-0178,node-user-svc-payment,node-app-email-exchange,HAS_ACCESS,USER,10.0,0.99,Exchange_ActiveSync,2026-11-15T22:55:00+00:00,svc-payment-broker corporate email access
+rel-0179,node-user-svc-siem,node-app-support-desk,HAS_ACCESS,USER,10.0,0.99,Okta_SSO,2026-11-15T23:00:00+00:00,svc-splunk-forwarder ITSM portal access
+rel-0180,node-user-svc-siem,node-app-email-exchange,HAS_ACCESS,USER,10.0,0.99,Exchange_ActiveSync,2026-11-15T23:05:00+00:00,svc-splunk-forwarder corporate email access
+rel-0181,node-user-svc-scan,node-app-support-desk,HAS_ACCESS,USER,10.0,0.99,Okta_SSO,2026-11-15T23:10:00+00:00,svc-vuln-scanner ITSM portal access
+rel-0182,node-user-svc-scan,node-app-email-exchange,HAS_ACCESS,USER,10.0,0.99,Exchange_ActiveSync,2026-11-15T23:15:00+00:00,svc-vuln-scanner corporate email access
+rel-0183,node-user-claire,node-app-support-desk,HAS_ACCESS,USER,10.0,0.99,Okta_SSO,2026-11-15T23:20:00+00:00,Claire Dupont ITSM portal access
+rel-0184,node-user-claire,node-app-email-exchange,HAS_ACCESS,USER,10.0,0.99,Exchange_ActiveSync,2026-11-15T23:25:00+00:00,Claire Dupont corporate email access
+rel-0185,node-user-ahmed,node-srv-gitlab,AUTHENTICATES_TO,USER,20.0,0.98,GitLab_SSH,2026-11-15T23:30:00+00:00,Ahmed Mansour git commit access
+rel-0186,node-user-ahmed,node-app-developer-ide,HAS_ACCESS,USER,15.0,0.95,Web_Session,2026-11-15T23:35:00+00:00,Ahmed Mansour cloud workspace access
+rel-0187,node-user-kevin,node-app-support-desk,HAS_ACCESS,USER,10.0,0.99,Okta_SSO,2026-11-15T23:40:00+00:00,Kevin Novak ITSM portal access
+rel-0188,node-user-kevin,node-app-email-exchange,HAS_ACCESS,USER,10.0,0.99,Exchange_ActiveSync,2026-11-15T23:45:00+00:00,Kevin Novak corporate email access
+rel-0189,node-user-chloe,node-app-support-desk,HAS_ACCESS,USER,10.0,0.99,Okta_SSO,2026-11-15T23:50:00+00:00,Chloe Martin ITSM portal access
+rel-0190,node-user-chloe,node-app-email-exchange,HAS_ACCESS,USER,10.0,0.99,Exchange_ActiveSync,2026-11-15T23:55:00+00:00,Chloe Martin corporate email access
+rel-0191,node-user-zack,node-app-support-desk,HAS_ACCESS,USER,10.0,0.99,Okta_SSO,2026-11-16T00:00:00+00:00,Zack Taylor ITSM portal access
+rel-0192,node-user-zack,node-app-email-exchange,HAS_ACCESS,USER,10.0,0.99,Exchange_ActiveSync,2026-11-16T00:05:00+00:00,Zack Taylor corporate email access
+rel-0193,node-user-maya,node-srv-gitlab,AUTHENTICATES_TO,USER,20.0,0.98,GitLab_SSH,2026-11-16T00:10:00+00:00,Maya Lin git commit access
+rel-0194,node-user-maya,node-app-developer-ide,HAS_ACCESS,USER,15.0,0.95,Web_Session,2026-11-16T00:15:00+00:00,Maya Lin cloud workspace access
+rel-0195,node-user-sam,node-app-payroll-proc,HAS_ACCESS,USER,25.0,0.95,Okta_SSO,2026-11-16T00:20:00+00:00,Samira Khan access to payroll app
+rel-0196,node-user-sam,node-srv-finance-erp,AUTHENTICATES_TO,USER,20.0,0.95,SAP_Logon,2026-11-16T00:25:00+00:00,Samira Khan logon to SAP ERP
+rel-0197,node-user-george,node-app-support-desk,HAS_ACCESS,USER,10.0,0.99,Okta_SSO,2026-11-16T00:30:00+00:00,George Bailey ITSM portal access
+rel-0198,node-user-george,node-app-email-exchange,HAS_ACCESS,USER,10.0,0.99,Exchange_ActiveSync,2026-11-16T00:35:00+00:00,George Bailey corporate email access
+rel-0199,node-user-nina,node-app-support-desk,HAS_ACCESS,USER,10.0,0.99,Okta_SSO,2026-11-16T00:40:00+00:00,Nina Simone ITSM portal access
+rel-0200,node-user-nina,node-app-email-exchange,HAS_ACCESS,USER,10.0,0.99,Exchange_ActiveSync,2026-11-16T00:45:00+00:00,Nina Simone corporate email access
+rel-0201,node-user-breakglass,node-app-support-desk,HAS_ACCESS,USER,10.0,0.99,Okta_SSO,2026-11-16T00:50:00+00:00,admin-breakglass-01 ITSM portal access
+rel-0202,node-user-breakglass,node-app-email-exchange,HAS_ACCESS,USER,10.0,0.99,Exchange_ActiveSync,2026-11-16T00:55:00+00:00,admin-breakglass-01 corporate email access
+rel-0203,node-user-carlos,node-srv-gitlab,AUTHENTICATES_TO,USER,20.0,0.98,GitLab_SSH,2026-11-16T01:00:00+00:00,Carlos Santana git commit access
+rel-0204,node-user-carlos,node-app-developer-ide,HAS_ACCESS,USER,15.0,0.95,Web_Session,2026-11-16T01:05:00+00:00,Carlos Santana cloud workspace access
+rel-0205,node-user-emily,node-app-hr-manager,HAS_ACCESS,USER,20.0,0.95,Okta_SSO,2026-11-16T01:10:00+00:00,Emily Watson access to HR manager
+rel-0206,node-user-emily,node-db-hr-records,HAS_ACCESS,USER,25.0,0.9,DB_Audit,2026-11-16T01:15:00+00:00,Emily Watson query employee records
+rel-0207,node-user-brian,node-srv-gitlab,AUTHENTICATES_TO,USER,20.0,0.98,GitLab_SSH,2026-11-16T01:20:00+00:00,Brian Cox git commit access
+rel-0208,node-user-brian,node-app-developer-ide,HAS_ACCESS,USER,15.0,0.95,Web_Session,2026-11-16T01:25:00+00:00,Brian Cox cloud workspace access
+rel-0209,node-user-hannah,node-app-support-desk,HAS_ACCESS,USER,10.0,0.99,Okta_SSO,2026-11-16T01:30:00+00:00,Hannah Abbott ITSM portal access
+rel-0210,node-user-hannah,node-app-email-exchange,HAS_ACCESS,USER,10.0,0.99,Exchange_ActiveSync,2026-11-16T01:35:00+00:00,Hannah Abbott corporate email access
+rel-0211,node-user-svc-monitoring,node-app-support-desk,HAS_ACCESS,USER,10.0,0.99,Okta_SSO,2026-11-16T01:40:00+00:00,svc-datadog-agent ITSM portal access
+rel-0212,node-user-svc-monitoring,node-app-email-exchange,HAS_ACCESS,USER,10.0,0.99,Exchange_ActiveSync,2026-11-16T01:45:00+00:00,svc-datadog-agent corporate email access
+rel-0213,node-ep-ws21,node-srv-mail-relay,COMMUNICATES_WITH,USER,10.9,0.78,NetFlow,2026-11-16T01:50:00+00:00,Periodic telemetry communication from node-ep-ws21 to node-srv-mail-relay
+rel-0214,node-ep-ws08,node-app-support-desk,COMMUNICATES_WITH,USER,35.8,0.9,NetFlow,2026-11-16T01:55:00+00:00,Periodic telemetry communication from node-ep-ws08 to node-app-support-desk
+rel-0215,node-ep-ws18,node-srv-mail-relay,COMMUNICATES_WITH,USER,30.7,0.71,NetFlow,2026-11-16T02:00:00+00:00,Periodic telemetry communication from node-ep-ws18 to node-srv-mail-relay
+rel-0216,node-ep-ws03,node-app-support-desk,COMMUNICATES_WITH,USER,18.1,0.87,NetFlow,2026-11-16T02:05:00+00:00,Periodic telemetry communication from node-ep-ws03 to node-app-support-desk
+rel-0217,node-ep-ws18,node-app-support-desk,COMMUNICATES_WITH,USER,35.1,0.9,NetFlow,2026-11-16T02:10:00+00:00,Periodic telemetry communication from node-ep-ws18 to node-app-support-desk
+rel-0218,node-ep-ws14,node-app-support-desk,COMMUNICATES_WITH,USER,25.7,0.78,NetFlow,2026-11-16T02:15:00+00:00,Periodic telemetry communication from node-ep-ws14 to node-app-support-desk
+rel-0219,node-ep-laptop-marcus,node-app-support-desk,COMMUNICATES_WITH,USER,34.4,0.8,NetFlow,2026-11-16T02:20:00+00:00,Periodic telemetry communication from node-ep-laptop-marcus to node-app-support-desk
+rel-0220,node-ep-ws05,node-app-support-desk,COMMUNICATES_WITH,USER,43.5,0.8,NetFlow,2026-11-16T02:25:00+00:00,Periodic telemetry communication from node-ep-ws05 to node-app-support-desk
+rel-0221,node-ep-ws03,node-srv-staging-api,COMMUNICATES_WITH,USER,13.4,0.95,NetFlow,2026-11-16T02:30:00+00:00,Periodic telemetry communication from node-ep-ws03 to node-srv-staging-api
+rel-0222,node-ep-ws20,node-srv-monitoring-elk,COMMUNICATES_WITH,USER,38.2,0.91,NetFlow,2026-11-16T02:35:00+00:00,Periodic telemetry communication from node-ep-ws20 to node-srv-monitoring-elk
+rel-0223,node-ep-ws18,node-srv-mail-relay,COMMUNICATES_WITH,USER,44.1,0.81,NetFlow,2026-11-16T02:40:00+00:00,Periodic telemetry communication from node-ep-ws18 to node-srv-mail-relay
+rel-0224,node-ep-ws18,node-srv-monitoring-elk,COMMUNICATES_WITH,USER,39.0,0.88,NetFlow,2026-11-16T02:45:00+00:00,Periodic telemetry communication from node-ep-ws18 to node-srv-monitoring-elk
+rel-0225,node-ep-ws12,node-app-citizen-portal,COMMUNICATES_WITH,USER,16.7,0.72,NetFlow,2026-11-16T02:50:00+00:00,Periodic telemetry communication from node-ep-ws12 to node-app-citizen-portal
+rel-0226,node-ep-ws22,node-app-support-desk,COMMUNICATES_WITH,USER,37.1,0.99,NetFlow,2026-11-16T02:55:00+00:00,Periodic telemetry communication from node-ep-ws22 to node-app-support-desk
+rel-0227,node-ep-ws08,node-srv-mail-relay,COMMUNICATES_WITH,USER,23.3,0.83,NetFlow,2026-11-16T03:00:00+00:00,Periodic telemetry communication from node-ep-ws08 to node-srv-mail-relay
+rel-0228,node-ep-ws12,node-app-support-desk,COMMUNICATES_WITH,USER,23.0,0.76,NetFlow,2026-11-16T03:05:00+00:00,Periodic telemetry communication from node-ep-ws12 to node-app-support-desk
+rel-0229,node-ep-ws09,node-srv-mail-relay,COMMUNICATES_WITH,USER,31.3,0.75,NetFlow,2026-11-16T03:10:00+00:00,Periodic telemetry communication from node-ep-ws09 to node-srv-mail-relay
+rel-0230,node-ep-ws24,node-app-support-desk,COMMUNICATES_WITH,USER,15.7,0.81,NetFlow,2026-11-16T03:15:00+00:00,Periodic telemetry communication from node-ep-ws24 to node-app-support-desk
+rel-0231,node-ep-ws21,node-app-citizen-portal,COMMUNICATES_WITH,USER,17.7,0.79,NetFlow,2026-11-16T03:20:00+00:00,Periodic telemetry communication from node-ep-ws21 to node-app-citizen-portal
+rel-0232,node-ep-ws25,node-srv-mail-relay,COMMUNICATES_WITH,USER,18.0,0.71,NetFlow,2026-11-16T03:25:00+00:00,Periodic telemetry communication from node-ep-ws25 to node-srv-mail-relay
+rel-0233,node-ep-ws11,node-srv-staging-api,COMMUNICATES_WITH,USER,19.4,0.76,NetFlow,2026-11-16T03:30:00+00:00,Periodic telemetry communication from node-ep-ws11 to node-srv-staging-api
+rel-0234,node-ep-ws19,node-srv-monitoring-elk,COMMUNICATES_WITH,USER,17.4,0.84,NetFlow,2026-11-16T03:35:00+00:00,Periodic telemetry communication from node-ep-ws19 to node-srv-monitoring-elk
+rel-0235,node-ep-ws21,node-srv-staging-api,COMMUNICATES_WITH,USER,15.0,0.74,NetFlow,2026-11-16T03:40:00+00:00,Periodic telemetry communication from node-ep-ws21 to node-srv-staging-api
+rel-0236,node-ep-ws24,node-app-citizen-portal,COMMUNICATES_WITH,USER,28.9,0.92,NetFlow,2026-11-16T03:45:00+00:00,Periodic telemetry communication from node-ep-ws24 to node-app-citizen-portal
+rel-0237,node-ep-ws14,node-app-citizen-portal,COMMUNICATES_WITH,USER,24.0,0.76,NetFlow,2026-11-16T03:50:00+00:00,Periodic telemetry communication from node-ep-ws14 to node-app-citizen-portal
+rel-0238,node-ep-ws05,node-app-citizen-portal,COMMUNICATES_WITH,USER,27.3,0.92,NetFlow,2026-11-16T03:55:00+00:00,Periodic telemetry communication from node-ep-ws05 to node-app-citizen-portal
+rel-0239,node-ep-ws04,node-app-support-desk,COMMUNICATES_WITH,USER,32.0,0.93,NetFlow,2026-11-16T04:00:00+00:00,Periodic telemetry communication from node-ep-ws04 to node-app-support-desk
+rel-0240,node-ep-ws14,node-app-citizen-portal,COMMUNICATES_WITH,USER,12.2,0.81,NetFlow,2026-11-16T04:05:00+00:00,Periodic telemetry communication from node-ep-ws14 to node-app-citizen-portal
+rel-0241,node-ep-ws15,node-app-citizen-portal,COMMUNICATES_WITH,USER,18.8,0.86,NetFlow,2026-11-16T04:10:00+00:00,Periodic telemetry communication from node-ep-ws15 to node-app-citizen-portal
+rel-0242,node-ep-laptop-marcus,node-srv-mail-relay,COMMUNICATES_WITH,USER,33.9,0.86,NetFlow,2026-11-16T04:15:00+00:00,Periodic telemetry communication from node-ep-laptop-marcus to node-srv-mail-relay
+rel-0243,node-ep-ws09,node-srv-monitoring-elk,COMMUNICATES_WITH,USER,13.9,0.83,NetFlow,2026-11-16T04:20:00+00:00,Periodic telemetry communication from node-ep-ws09 to node-srv-monitoring-elk
+rel-0244,node-ep-ws15,node-srv-mail-relay,COMMUNICATES_WITH,USER,43.4,0.95,NetFlow,2026-11-16T04:25:00+00:00,Periodic telemetry communication from node-ep-ws15 to node-srv-mail-relay
+rel-0245,node-ep-ws09,node-app-citizen-portal,COMMUNICATES_WITH,USER,36.7,0.85,NetFlow,2026-11-16T04:30:00+00:00,Periodic telemetry communication from node-ep-ws09 to node-app-citizen-portal
+rel-0246,node-ep-ws04,node-srv-monitoring-elk,COMMUNICATES_WITH,USER,39.5,0.85,NetFlow,2026-11-16T04:35:00+00:00,Periodic telemetry communication from node-ep-ws04 to node-srv-monitoring-elk
+rel-0247,node-ep-ws07,node-app-support-desk,COMMUNICATES_WITH,USER,23.1,0.75,NetFlow,2026-11-16T04:40:00+00:00,Periodic telemetry communication from node-ep-ws07 to node-app-support-desk
+rel-0248,node-ep-ws25,node-app-citizen-portal,COMMUNICATES_WITH,USER,42.1,0.87,NetFlow,2026-11-16T04:45:00+00:00,Periodic telemetry communication from node-ep-ws25 to node-app-citizen-portal
+rel-0249,node-ep-ws16,node-srv-mail-relay,COMMUNICATES_WITH,USER,13.9,0.81,NetFlow,2026-11-16T04:50:00+00:00,Periodic telemetry communication from node-ep-ws16 to node-srv-mail-relay
+rel-0250,node-ep-ws10,node-app-support-desk,COMMUNICATES_WITH,USER,12.0,0.95,NetFlow,2026-11-16T04:55:00+00:00,Periodic telemetry communication from node-ep-ws10 to node-app-support-desk
+rel-0251,node-ep-ws03,node-srv-mail-relay,COMMUNICATES_WITH,USER,35.6,0.94,NetFlow,2026-11-16T05:00:00+00:00,Periodic telemetry communication from node-ep-ws03 to node-srv-mail-relay
+rel-0252,node-ep-ws25,node-app-citizen-portal,COMMUNICATES_WITH,USER,36.8,0.74,NetFlow,2026-11-16T05:05:00+00:00,Periodic telemetry communication from node-ep-ws25 to node-app-citizen-portal
+rel-0253,node-ep-ws16,node-app-citizen-portal,COMMUNICATES_WITH,USER,15.8,0.85,NetFlow,2026-11-16T05:10:00+00:00,Periodic telemetry communication from node-ep-ws16 to node-app-citizen-portal
+rel-0254,node-ep-ws20,node-srv-staging-api,COMMUNICATES_WITH,USER,43.8,0.97,NetFlow,2026-11-16T05:15:00+00:00,Periodic telemetry communication from node-ep-ws20 to node-srv-staging-api
+rel-0255,node-ep-ws25,node-app-support-desk,COMMUNICATES_WITH,USER,35.0,0.82,NetFlow,2026-11-16T05:20:00+00:00,Periodic telemetry communication from node-ep-ws25 to node-app-support-desk
+rel-0256,node-ep-ws22,node-srv-monitoring-elk,COMMUNICATES_WITH,USER,25.3,0.85,NetFlow,2026-11-16T05:25:00+00:00,Periodic telemetry communication from node-ep-ws22 to node-srv-monitoring-elk
+rel-0257,node-ep-ws04,node-app-support-desk,COMMUNICATES_WITH,USER,17.9,0.8,NetFlow,2026-11-16T05:30:00+00:00,Periodic telemetry communication from node-ep-ws04 to node-app-support-desk
+rel-0258,node-ep-ws19,node-app-citizen-portal,COMMUNICATES_WITH,USER,18.1,0.76,NetFlow,2026-11-16T05:35:00+00:00,Periodic telemetry communication from node-ep-ws19 to node-app-citizen-portal
+rel-0259,node-ep-ws03,node-srv-mail-relay,COMMUNICATES_WITH,USER,18.0,0.96,NetFlow,2026-11-16T05:40:00+00:00,Periodic telemetry communication from node-ep-ws03 to node-srv-mail-relay
+rel-0260,node-ep-ws11,node-srv-mail-relay,COMMUNICATES_WITH,USER,28.0,0.78,NetFlow,2026-11-16T05:45:00+00:00,Periodic telemetry communication from node-ep-ws11 to node-srv-mail-relay
+rel-0261,node-ep-ws16,node-app-support-desk,COMMUNICATES_WITH,USER,28.9,0.91,NetFlow,2026-11-16T05:50:00+00:00,Periodic telemetry communication from node-ep-ws16 to node-app-support-desk
+rel-0262,node-ep-ws19,node-app-citizen-portal,COMMUNICATES_WITH,USER,26.5,0.93,NetFlow,2026-11-16T05:55:00+00:00,Periodic telemetry communication from node-ep-ws19 to node-app-citizen-portal
+rel-0263,node-ep-ws14,node-app-support-desk,COMMUNICATES_WITH,USER,13.3,0.89,NetFlow,2026-11-16T06:00:00+00:00,Periodic telemetry communication from node-ep-ws14 to node-app-support-desk
+rel-0264,node-ep-ws12,node-srv-staging-api,COMMUNICATES_WITH,USER,24.4,0.95,NetFlow,2026-11-16T06:05:00+00:00,Periodic telemetry communication from node-ep-ws12 to node-srv-staging-api
+rel-0265,node-ep-ws02,node-srv-mail-relay,COMMUNICATES_WITH,USER,12.1,0.91,NetFlow,2026-11-16T06:10:00+00:00,Periodic telemetry communication from node-ep-ws02 to node-srv-mail-relay
+rel-0266,node-ep-ws04,node-app-support-desk,COMMUNICATES_WITH,USER,16.7,0.86,NetFlow,2026-11-16T06:15:00+00:00,Periodic telemetry communication from node-ep-ws04 to node-app-support-desk
+rel-0267,node-ep-ws05,node-srv-staging-api,COMMUNICATES_WITH,USER,16.4,0.83,NetFlow,2026-11-16T06:20:00+00:00,Periodic telemetry communication from node-ep-ws05 to node-srv-staging-api
+rel-0268,node-ep-ws03,node-srv-staging-api,COMMUNICATES_WITH,USER,38.3,0.95,NetFlow,2026-11-16T06:25:00+00:00,Periodic telemetry communication from node-ep-ws03 to node-srv-staging-api
+rel-0269,node-ep-ws04,node-srv-mail-relay,COMMUNICATES_WITH,USER,32.8,0.86,NetFlow,2026-11-16T06:30:00+00:00,Periodic telemetry communication from node-ep-ws04 to node-srv-mail-relay
+rel-0270,node-ep-laptop-marcus,node-srv-mail-relay,COMMUNICATES_WITH,USER,42.4,0.95,NetFlow,2026-11-16T06:35:00+00:00,Periodic telemetry communication from node-ep-laptop-marcus to node-srv-mail-relay
+rel-0271,node-ep-ws06,node-srv-staging-api,COMMUNICATES_WITH,USER,27.0,0.76,NetFlow,2026-11-16T06:40:00+00:00,Periodic telemetry communication from node-ep-ws06 to node-srv-staging-api
+rel-0272,node-ep-ws13,node-srv-mail-relay,COMMUNICATES_WITH,USER,15.8,0.7,NetFlow,2026-11-16T06:45:00+00:00,Periodic telemetry communication from node-ep-ws13 to node-srv-mail-relay
+rel-0273,node-ep-ws13,node-srv-monitoring-elk,COMMUNICATES_WITH,USER,42.4,0.93,NetFlow,2026-11-16T06:50:00+00:00,Periodic telemetry communication from node-ep-ws13 to node-srv-monitoring-elk
+rel-0274,node-ep-ws10,node-srv-staging-api,COMMUNICATES_WITH,USER,34.4,0.91,NetFlow,2026-11-16T06:55:00+00:00,Periodic telemetry communication from node-ep-ws10 to node-srv-staging-api
+rel-0275,node-ep-ws18,node-srv-staging-api,COMMUNICATES_WITH,USER,15.4,0.79,NetFlow,2026-11-16T07:00:00+00:00,Periodic telemetry communication from node-ep-ws18 to node-srv-staging-api
+rel-0276,node-ep-ws02,node-app-citizen-portal,COMMUNICATES_WITH,USER,35.8,0.72,NetFlow,2026-11-16T07:05:00+00:00,Periodic telemetry communication from node-ep-ws02 to node-app-citizen-portal
+rel-0277,node-ep-ws11,node-srv-mail-relay,COMMUNICATES_WITH,USER,11.8,0.84,NetFlow,2026-11-16T07:10:00+00:00,Periodic telemetry communication from node-ep-ws11 to node-srv-mail-relay
+rel-0278,node-ep-ws17,node-app-support-desk,COMMUNICATES_WITH,USER,12.0,0.85,NetFlow,2026-11-16T07:15:00+00:00,Periodic telemetry communication from node-ep-ws17 to node-app-support-desk
+rel-0279,node-ep-ws06,node-srv-mail-relay,COMMUNICATES_WITH,USER,30.8,0.9,NetFlow,2026-11-16T07:20:00+00:00,Periodic telemetry communication from node-ep-ws06 to node-srv-mail-relay
+rel-0280,node-ep-ws08,node-srv-staging-api,COMMUNICATES_WITH,USER,14.2,0.96,NetFlow,2026-11-16T07:25:00+00:00,Periodic telemetry communication from node-ep-ws08 to node-srv-staging-api
+rel-0281,node-ep-ws08,node-app-citizen-portal,COMMUNICATES_WITH,USER,30.8,0.88,NetFlow,2026-11-16T07:30:00+00:00,Periodic telemetry communication from node-ep-ws08 to node-app-citizen-portal
+rel-0282,node-ep-ws14,node-app-citizen-portal,COMMUNICATES_WITH,USER,29.8,0.79,NetFlow,2026-11-16T07:35:00+00:00,Periodic telemetry communication from node-ep-ws14 to node-app-citizen-portal
+rel-0283,node-ep-ws09,node-app-support-desk,COMMUNICATES_WITH,USER,33.4,0.79,NetFlow,2026-11-16T07:40:00+00:00,Periodic telemetry communication from node-ep-ws09 to node-app-support-desk
+rel-0284,node-ep-ws09,node-srv-staging-api,COMMUNICATES_WITH,USER,14.6,0.89,NetFlow,2026-11-16T07:45:00+00:00,Periodic telemetry communication from node-ep-ws09 to node-srv-staging-api
+rel-0285,node-ep-ws15,node-srv-monitoring-elk,COMMUNICATES_WITH,USER,42.5,0.97,NetFlow,2026-11-16T07:50:00+00:00,Periodic telemetry communication from node-ep-ws15 to node-srv-monitoring-elk

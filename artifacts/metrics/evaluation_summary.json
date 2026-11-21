@@ -1,0 +1,96 @@
+{
+  "selected_model": "logistic_regression",
+  "cv_comparison": {
+    "logistic_regression": {
+      "best_params": {
+        "clf__C": 0.5,
+        "clf__class_weight": "balanced",
+        "clf__solver": "liblinear"
+      },
+      "metrics": {
+        "accuracy_mean": 0.7705,
+        "accuracy_std": 0.0434,
+        "balanced_accuracy_mean": 0.6942,
+        "balanced_accuracy_std": 0.0799,
+        "precision_mean": 0.42,
+        "precision_std": 0.1108,
+        "recall_mean": 0.5667,
+        "recall_std": 0.178,
+        "f1_mean": 0.4683,
+        "f1_std": 0.1223,
+        "roc_auc_mean": 0.715,
+        "roc_auc_std": 0.0759,
+        "average_precision_mean": 0.4899,
+        "average_precision_std": 0.142
+      }
+    },
+    "random_forest": {
+      "best_params": {
+        "clf__class_weight": "balanced",
+        "clf__max_depth": 2,
+        "clf__min_samples_leaf": 4,
+        "clf__n_estimators": 25
+      },
+      "metrics": {
+        "accuracy_mean": 0.6868,
+        "accuracy_std": 0.1258,
+        "balanced_accuracy_mean": 0.6512,
+        "balanced_accuracy_std": 0.1417,
+        "precision_mean": 0.3364,
+        "precision_std": 0.1244,
+        "recall_mean": 0.5833,
+        "recall_std": 0.2472,
+        "f1_mean": 0.4127,
+        "f1_std": 0.1542,
+        "roc_auc_mean": 0.6506,
+        "roc_auc_std": 0.1589,
+        "average_precision_mean": 0.4629,
+        "average_precision_std": 0.2185
+      }
+    },
+    "gradient_boosting": {
+      "best_params": {
+        "clf__class_weight": "balanced",
+        "clf__learning_rate": 0.01,
+        "clf__max_depth": 3,
+        "clf__max_iter": 40,
+        "clf__min_samples_leaf": 5
+      },
+      "metrics": {
+        "accuracy_mean": 0.7079,
+        "accuracy_std": 0.1142,
+        "balanced_accuracy_mean": 0.5988,
+        "balanced_accuracy_std": 0.2133,
+        "precision_mean": 0.2524,
+        "precision_std": 0.2127,
+        "recall_mean": 0.4167,
+        "recall_std": 0.4014,
+        "f1_mean": 0.3091,
+        "f1_std": 0.274,
+        "roc_auc_mean": 0.5671,
+        "roc_auc_std": 0.2465,
+        "average_precision_mean": 0.3936,
+        "average_precision_std": 0.2188
+      }
+    }
+  },
+  "holdout_test_results": {
+    "test_samples": 24,
+    "accuracy": 0.6667,
+    "balanced_accuracy": 0.5684,
+    "precision": 0.2857,
+    "recall": 0.4,
+    "f1_score": 0.3333,
+    "roc_auc": 0.5789,
+    "average_precision_pr_auc": 0.3055,
+    "confusion_matrix": {
+      "true_negatives": 14,
+      "false_positives": 5,
+      "false_negatives": 3,
+      "true_positives": 2
+    },
+    "false_positive_rate": 0.2632,
+    "false_negative_rate": 0.6
+  },
+  "selection_justification": "Logistic Regression selected as best model based on superior Cross-Validation Balanced Accuracy (0.6942 +/- 0.0799), Recall on threat class (0.5667), ROC-AUC (0.7150), and structural stability."
+}
