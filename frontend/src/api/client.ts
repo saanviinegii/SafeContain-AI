@@ -656,6 +656,8 @@ export interface CSVIngestionSummary {
   }>;
   status: string;
   message: string;
+  is_sampled?: boolean;
+  processing_duration_ms?: number;
   timestamp: string;
 }
 

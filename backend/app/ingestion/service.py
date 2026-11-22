@@ -23,6 +23,7 @@ from backend.app.core.config import settings
 from backend.app.graph.engine import GraphEngine
 from backend.app.ingestion.contracts import IngestionError
 from backend.app.ingestion.synthetic_enterprise_loader import SyntheticEnterpriseLoader
+from backend.app.ingestion.cic_ids_adapter import CICIDS2017Adapter, detect_cic_ids_headers
 from backend.app.models.domain import (
     DataProvenance,
     EvidenceStatus,
@@ -35,15 +36,16 @@ from backend.app.models.domain import (
 logger = logging.getLogger(__name__)
 
 # Configurable Ingestion Safeguards
-MAX_CSV_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB limit
-MAX_CSV_ROW_COUNT = 10_000                  # 10,000 rows limit
+MAX_CSV_FILE_SIZE_BYTES = 250 * 1024 * 1024  # 250 MB limit
+MAX_CSV_ROW_COUNT = 10_000                  # 10,000 rows default limit for standard entity batches
+MAX_FLOW_CSV_ROW_COUNT = 50_000             # 50,000 rows limit for network flow datasets
 
 
 class CSVIngestionSummary(BaseModel):
     """Structured response summary for CSV upload operations."""
     upload_id: str = Field(description="Unique batch identifier for audit attribution")
     filename: str
-    csv_type: str = Field(description="NODES | RELATIONSHIPS | UNKNOWN")
+    csv_type: str = Field(description="NODES | RELATIONSHIPS | CIC_IDS2017_FLOWS | UNKNOWN")
     total_rows: int = Field(default=0)
     accepted_rows: int = Field(default=0)
     rejected_rows: int = Field(default=0)
@@ -58,6 +60,8 @@ class CSVIngestionSummary(BaseModel):
     validation_errors: List[Dict[str, Any]] = Field(default_factory=list)
     status: str = Field(default="SUCCESS", description="SUCCESS | PARTIAL_SUCCESS | FAILED")
     message: str
+    is_sampled: bool = Field(default=False)
+    processing_duration_ms: Optional[float] = Field(default=None)
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -68,11 +72,11 @@ class CSVIngestionParser:
     def parse_and_validate_raw_csv(
         raw_bytes: bytes,
         filename: str
-    ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], str]:
+    ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], str, int]:
         """Validates file extension, byte limits, row bounds, and parses CSV content.
         
         Returns:
-            Tuple of (valid_rows, malformed_row_errors, detected_schema_type)
+            Tuple of (valid_records, malformed_row_errors, detected_schema_type, total_file_data_rows)
         """
         # 1. Extension check
         lower_name = filename.lower()
@@ -117,23 +121,33 @@ class CSVIngestionParser:
         has_node_id = any(h in headers for h in ("node_id", "id"))
         has_source = any(h in headers for h in ("source_id", "source", "source_node_id"))
         has_target = any(h in headers for h in ("target_id", "target", "target_node_id"))
+        cic_map = detect_cic_ids_headers(headers_raw)
 
         if has_source and has_target:
             schema_type = "RELATIONSHIPS"
         elif has_node_id:
             schema_type = "NODES"
+        elif cic_map is not None:
+            schema_type = "CIC_IDS2017_FLOWS"
         else:
             raise ValueError(
-                f"Unrecognized CSV header structure. Found headers: {headers}. "
-                "Expected either 'node_id'/'id' for nodes, or 'source_id'/'source' and 'target_id'/'target' for relationships."
+                f"Unrecognized CSV header structure. Found headers: {headers[:8]}... "
+                "Expected either 'node_id'/'id' for nodes, 'source_id'/'target_id' for relationships, or network flow columns for CIC-IDS2017 datasets."
             )
 
         # 5. Row-count check
         data_rows = rows_raw[1:]
-        if len(data_rows) > MAX_CSV_ROW_COUNT:
+        total_data_row_count = len(data_rows)
+        max_allowed_rows = MAX_FLOW_CSV_ROW_COUNT if schema_type == "CIC_IDS2017_FLOWS" else MAX_CSV_ROW_COUNT
+
+        if schema_type != "CIC_IDS2017_FLOWS" and total_data_row_count > max_allowed_rows:
             raise ValueError(
-                f"CSV row count ({len(data_rows)}) exceeds maximum batch limit of {MAX_CSV_ROW_COUNT} rows."
+                f"CSV row count ({total_data_row_count}) exceeds maximum batch limit of {max_allowed_rows} rows."
             )
+
+        # For CIC-IDS2017 flow datasets, cap parsing at MAX_FLOW_CSV_ROW_COUNT to ensure memory safety & responsive graph rendering
+        if schema_type == "CIC_IDS2017_FLOWS" and total_data_row_count > max_allowed_rows:
+            data_rows = data_rows[:max_allowed_rows]
 
         expected_col_count = len(headers_raw)
         parsed_records: List[Dict[str, str]] = []
@@ -155,12 +169,14 @@ class CSVIngestionParser:
 
             # Clean and map to normalized headers
             record_dict = {}
-            for h_clean, cell in zip(headers, row):
+            for h_raw, h_clean, cell in zip(headers_raw, headers, row):
                 record_dict[h_clean] = cell.strip()
+                record_dict[h_raw.strip().lower()] = cell.strip()
+                record_dict[h_raw.strip()] = cell.strip()
 
             parsed_records.append({"_row_number": row_idx, **record_dict})
 
-        return parsed_records, errors, schema_type
+        return parsed_records, errors, schema_type, total_data_row_count
 
 
 class TelemetryIngestionService:
@@ -188,11 +204,16 @@ class TelemetryIngestionService:
         provenance = override_provenance or DataProvenance.CSV
 
         try:
-            records, parse_errors, schema_type = CSVIngestionParser.parse_and_validate_raw_csv(
+            records, parse_errors, schema_type, total_file_rows = CSVIngestionParser.parse_and_validate_raw_csv(
                 raw_bytes=raw_bytes,
                 filename=filename
             )
         except ValueError as ve:
+            neo4j_status = "CONNECTED" if engine.is_neo4j_live else "OFFLINE_FALLBACK"
+            neo4j_details = {
+                "database": getattr(engine, "active_database", None) if engine.is_neo4j_live else None,
+                "message": "Parsing failed prior to graph sync. 0 rows ingested." if engine.is_neo4j_live else "Neo4j is offline. Ingestion was not performed due to parse error."
+            }
             return CSVIngestionSummary(
                 upload_id=upload_id,
                 filename=filename,
@@ -200,10 +221,13 @@ class TelemetryIngestionService:
                 total_rows=0,
                 status="FAILED",
                 message=str(ve),
+                neo4j_synced=False,
+                neo4j_status=neo4j_status,
+                neo4j_details=neo4j_details,
                 validation_errors=[{"row": 1, "field": "header", "error": "PARSING_FAILED", "message": str(ve)}]
             )
 
-        total_rows = len(records) + len(parse_errors)
+        total_rows = total_file_rows
         accepted_rows = 0
         rejected_rows = len(parse_errors)
         duplicate_rows = 0
@@ -212,6 +236,8 @@ class TelemetryIngestionService:
         relationships_created = 0
         relationships_updated = 0
         validation_errors = list(parse_errors)
+        is_sampled = False
+        processing_duration_ms = None
 
         # Process based on detected schema
         if schema_type == "NODES":
@@ -450,6 +476,27 @@ class TelemetryIngestionService:
                 if engine.is_neo4j_live:
                     engine.create_or_update_edge_in_neo4j(edge)
 
+        elif schema_type == "CIC_IDS2017_FLOWS":
+            adapter_result = CICIDS2017Adapter.process_records(
+                records=records,
+                filename=filename,
+                engine=engine,
+                upload_id=upload_id,
+                provenance=provenance,
+                total_file_rows=total_file_rows,
+                max_rows=MAX_FLOW_CSV_ROW_COUNT
+            )
+            accepted_rows = adapter_result["accepted_rows"]
+            rejected_rows += adapter_result["rejected_rows"]
+            duplicate_rows = adapter_result["duplicate_rows"]
+            nodes_created = adapter_result["nodes_created"]
+            nodes_updated = adapter_result["nodes_updated"]
+            relationships_created = adapter_result["relationships_created"]
+            relationships_updated = adapter_result["relationships_updated"]
+            validation_errors.extend(adapter_result["validation_errors"])
+            is_sampled = adapter_result["is_sampled"]
+            processing_duration_ms = adapter_result["duration_ms"]
+
         # Sync diagnostic reporting
         neo4j_synced = False
         neo4j_status = "OFFLINE_FALLBACK"
@@ -471,10 +518,20 @@ class TelemetryIngestionService:
         # Overall Status
         if rejected_rows == 0:
             final_status = "SUCCESS"
-            msg = f"Successfully processed {accepted_rows} rows from '{filename}'. ({nodes_created} nodes created, {relationships_created} edges created)."
+            if is_sampled:
+                msg = (
+                    f"Successfully ingested {accepted_rows} network flow records from '{filename}' "
+                    f"(sampled from {total_rows:,} total flows for graph responsiveness). "
+                    f"({nodes_created} nodes, {relationships_created} flow edges created)."
+                )
+            else:
+                msg = f"Successfully processed {accepted_rows} rows from '{filename}'. ({nodes_created} nodes created, {relationships_created} edges created)."
         elif accepted_rows > 0:
             final_status = "PARTIAL_SUCCESS"
-            msg = f"Processed {accepted_rows} valid rows from '{filename}'; {rejected_rows} invalid rows rejected."
+            if is_sampled:
+                msg = f"Processed {accepted_rows} valid flows from '{filename}' (sampled from {total_rows:,} total rows); {rejected_rows} invalid rows rejected."
+            else:
+                msg = f"Processed {accepted_rows} valid rows from '{filename}'; {rejected_rows} invalid rows rejected."
         else:
             final_status = "FAILED"
             msg = f"All {rejected_rows} rows in '{filename}' failed validation."
@@ -497,6 +554,8 @@ class TelemetryIngestionService:
             validation_errors=validation_errors,
             status=final_status,
             message=msg,
+            is_sampled=is_sampled,
+            processing_duration_ms=processing_duration_ms,
         )
 
     @staticmethod

@@ -51,9 +51,9 @@
   "holdout_test_roc_auc": 0.5789,
   "status": "ACTIVE",
   "is_champion": true,
-  "archived_at": "2026-11-21T13:57:35.207002+00:00",
+  "archived_at": "2026-11-21T15:26:05.836423+00:00",
   "demoted_by": "test_secops_lead",
-  "restored_at": "2026-11-21T13:57:35.247042+00:00",
+  "restored_at": "2026-11-21T15:26:05.892319+00:00",
   "restored_by": "test_secops_lead",
   "rollback_reason": "Emergency rollback test"
 }

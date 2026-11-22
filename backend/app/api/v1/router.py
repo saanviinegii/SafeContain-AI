@@ -496,6 +496,12 @@ def ingest_edr_telemetry(
     tags=["Ingestion"],
     include_in_schema=False
 )
+@api_router.post(
+    "/ingestion/cic-ids2017",
+    response_model=CSVIngestionSummary,
+    tags=["Ingestion"],
+    summary="Upload and ingest CIC-IDS2017 network flow datasets"
+)
 def upload_and_ingest_csv(
     file: UploadFile = File(..., description="Multipart CSV file (*.csv)"),
     override_provenance: Optional[str] = Form(default=None, description="Optional provenance override (default: CSV)"),

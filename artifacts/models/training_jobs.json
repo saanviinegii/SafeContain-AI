@@ -1,5 +1,203 @@
 [
   {
+    "job_id": "retrain-5418270c",
+    "version": "v1.31.0",
+    "status": "COMPLETED",
+    "trigger_type": "REJECTION_TEST",
+    "initiator": "SYSTEM_OR_ANALYST",
+    "created_at": "2026-11-21T15:26:05.952173+00:00",
+    "completed_at": "2026-11-21T15:26:06.880675+00:00",
+    "duration_seconds": 0.93,
+    "recommendation": "RECOMMEND_PROMOTION",
+    "recommendation_reason": "Challenger v1.31.0 demonstrates superior or equal threat detection recall (100.00% vs Champion 80.00%) with 0 missed threats vs 1. Operational containment disruption cost remains bounded ($17.0 vs $23.0).",
+    "validation_gate": {
+      "is_valid": true,
+      "errors": [],
+      "warnings": [],
+      "metrics": {
+        "sample_count": 120,
+        "unique_classes": [
+          1,
+          0
+        ],
+        "class_distribution": {
+          "0": 97,
+          "1": 23
+        },
+        "positive_samples": 23,
+        "positive_ratio": 0.1917,
+        "leakage_check_passed": true,
+        "missing_rates_per_feature": {
+          "node_type": 0.0,
+          "environment": 0.0,
+          "exposure": 0.0,
+          "criticality": 0.0,
+          "business_value": 0.0,
+          "in_degree": 0.0,
+          "out_degree": 0.0,
+          "total_degree": 0.0,
+          "in_out_degree_ratio": 0.0,
+          "pagerank": 0.0,
+          "is_high_privilege_connected": 0.0,
+          "admin_edge_count": 0.0,
+          "has_asset_profile": 0.0
+        },
+        "overall_missing_rate": 0.0
+      }
+    },
+    "cv_metrics": {
+      "balanced_accuracy": 0.6538,
+      "recall": 0.5,
+      "precision": 0.3714,
+      "f1": 0.4231,
+      "roc_auc": 0.6421
+    },
+    "holdout_metrics": {
+      "threshold": 0.23,
+      "tp": 5,
+      "tn": 2,
+      "fp": 17,
+      "fn": 0,
+      "recall": 1.0,
+      "precision": 0.2273,
+      "f1": 0.3704,
+      "balanced_accuracy": 0.5526,
+      "total_cost": 17.0
+    }
+  },
+  {
+    "job_id": "retrain-4b2a5ba0",
+    "version": "v1.30.0",
+    "status": "COMPLETED",
+    "trigger_type": "GOVERNANCE_TEST",
+    "initiator": "test_analyst",
+    "created_at": "2026-11-21T15:26:04.920866+00:00",
+    "completed_at": "2026-11-21T15:26:05.818558+00:00",
+    "duration_seconds": 0.9,
+    "recommendation": "RECOMMEND_PROMOTION",
+    "recommendation_reason": "Challenger v1.30.0 demonstrates superior or equal threat detection recall (100.00% vs Champion 80.00%) with 0 missed threats vs 1. Operational containment disruption cost remains bounded ($17.0 vs $23.0).",
+    "validation_gate": {
+      "is_valid": true,
+      "errors": [],
+      "warnings": [],
+      "metrics": {
+        "sample_count": 120,
+        "unique_classes": [
+          1,
+          0
+        ],
+        "class_distribution": {
+          "0": 97,
+          "1": 23
+        },
+        "positive_samples": 23,
+        "positive_ratio": 0.1917,
+        "leakage_check_passed": true,
+        "missing_rates_per_feature": {
+          "node_type": 0.0,
+          "environment": 0.0,
+          "exposure": 0.0,
+          "criticality": 0.0,
+          "business_value": 0.0,
+          "in_degree": 0.0,
+          "out_degree": 0.0,
+          "total_degree": 0.0,
+          "in_out_degree_ratio": 0.0,
+          "pagerank": 0.0,
+          "is_high_privilege_connected": 0.0,
+          "admin_edge_count": 0.0,
+          "has_asset_profile": 0.0
+        },
+        "overall_missing_rate": 0.0
+      }
+    },
+    "cv_metrics": {
+      "balanced_accuracy": 0.6538,
+      "recall": 0.5,
+      "precision": 0.3714,
+      "f1": 0.4231,
+      "roc_auc": 0.6421
+    },
+    "holdout_metrics": {
+      "threshold": 0.23,
+      "tp": 5,
+      "tn": 2,
+      "fp": 17,
+      "fn": 0,
+      "recall": 1.0,
+      "precision": 0.2273,
+      "f1": 0.3704,
+      "balanced_accuracy": 0.5526,
+      "total_cost": 17.0
+    }
+  },
+  {
+    "job_id": "retrain-e7e8d7e3",
+    "version": "v1.29.0",
+    "status": "COMPLETED",
+    "trigger_type": "AUTOMATED_TEST",
+    "initiator": "test_analyst",
+    "created_at": "2026-11-21T15:26:03.859516+00:00",
+    "completed_at": "2026-11-21T15:26:04.845959+00:00",
+    "duration_seconds": 0.99,
+    "recommendation": "RECOMMEND_PROMOTION",
+    "recommendation_reason": "Challenger v1.29.0 demonstrates superior or equal threat detection recall (100.00% vs Champion 80.00%) with 0 missed threats vs 1. Operational containment disruption cost remains bounded ($17.0 vs $23.0).",
+    "validation_gate": {
+      "is_valid": true,
+      "errors": [],
+      "warnings": [],
+      "metrics": {
+        "sample_count": 120,
+        "unique_classes": [
+          1,
+          0
+        ],
+        "class_distribution": {
+          "0": 97,
+          "1": 23
+        },
+        "positive_samples": 23,
+        "positive_ratio": 0.1917,
+        "leakage_check_passed": true,
+        "missing_rates_per_feature": {
+          "node_type": 0.0,
+          "environment": 0.0,
+          "exposure": 0.0,
+          "criticality": 0.0,
+          "business_value": 0.0,
+          "in_degree": 0.0,
+          "out_degree": 0.0,
+          "total_degree": 0.0,
+          "in_out_degree_ratio": 0.0,
+          "pagerank": 0.0,
+          "is_high_privilege_connected": 0.0,
+          "admin_edge_count": 0.0,
+          "has_asset_profile": 0.0
+        },
+        "overall_missing_rate": 0.0
+      }
+    },
+    "cv_metrics": {
+      "balanced_accuracy": 0.6538,
+      "recall": 0.5,
+      "precision": 0.3714,
+      "f1": 0.4231,
+      "roc_auc": 0.6421
+    },
+    "holdout_metrics": {
+      "threshold": 0.23,
+      "tp": 5,
+      "tn": 2,
+      "fp": 17,
+      "fn": 0,
+      "recall": 1.0,
+      "precision": 0.2273,
+      "f1": 0.3704,
+      "balanced_accuracy": 0.5526,
+      "total_cost": 17.0
+    }
+  },
+  {
     "job_id": "retrain-2daed1db",
     "version": "v1.28.0",
     "status": "COMPLETED",

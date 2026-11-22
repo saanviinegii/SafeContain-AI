@@ -1,6 +1,6 @@
 {
-  "calibration_timestamp": "2026-11-21T13:59:04.604781+00:00",
-  "duration_seconds": 0.66,
+  "calibration_timestamp": "2026-11-21T15:28:46.329623+00:00",
+  "duration_seconds": 1.09,
   "feature_subset": "topology_only",
   "operating_threshold": 0.32,
   "default_threshold": 0.5,

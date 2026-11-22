@@ -7747,9 +7747,15 @@ export const App: React.FC = () => {
                             <span className="badge badge-blue">
                               {csvUploadSummary.csv_type}
                             </span>
+                            {csvUploadSummary.is_sampled && (
+                              <span className="badge badge-purple" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <Zap size={10} />
+                                SAMPLED STREAM
+                              </span>
+                            )}
                           </div>
 
-                          {/* Requirement 4: Clearly distinguish successful Neo4j sync from OFFLINE or ERROR */}
+                          {/* Clearly distinguish successful Neo4j sync from OFFLINE, REJECTED or ERROR */}
                           <div>
                             {csvUploadSummary.neo4j_synced && csvUploadSummary.neo4j_status === 'CONNECTED' ? (
                               <span className="badge badge-emerald" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -7761,6 +7767,11 @@ export const App: React.FC = () => {
                                 <XCircle size={12} />
                                 NEO4J SYNC ERROR
                               </span>
+                            ) : csvUploadSummary.accepted_rows === 0 || csvUploadSummary.status === 'FAILED' ? (
+                              <span className="badge badge-crimson" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <XCircle size={12} />
+                                INGESTION REJECTED (NO GRAPH CHANGES)
+                              </span>
                             ) : (
                               <span className="badge badge-amber" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                 <AlertTriangle size={12} />
@@ -7771,7 +7782,11 @@ export const App: React.FC = () => {
                         </div>
 
                         {/* Persistence Clarification Note */}
-                        {csvUploadSummary.neo4j_synced && csvUploadSummary.neo4j_status === 'CONNECTED' ? (
+                        {csvUploadSummary.accepted_rows === 0 || csvUploadSummary.status === 'FAILED' ? (
+                          <div style={{ fontSize: '12px', color: 'var(--accent-crimson)', marginBottom: '12px' }}>
+                            ✕ Ingestion halted prior to graph commit: {csvUploadSummary.message || 'Validation failed. No records were committed to Neo4j or memory.'}
+                          </div>
+                        ) : csvUploadSummary.neo4j_synced && csvUploadSummary.neo4j_status === 'CONNECTED' ? (
                           <div style={{ fontSize: '12px', color: 'var(--accent-emerald)', marginBottom: '12px' }}>
                             ✓ Data successfully synchronized to persistent Neo4j AuraDB graph. Overview statistics have been refreshed.
                           </div>

@@ -169,5 +169,23 @@
     "drifted_features_count": 0,
     "retraining_recommended": false,
     "dataset_label": "API_TRIGGERED_AUDIT"
+  },
+  {
+    "report_id": "drift-run-20261121-152603",
+    "timestamp": "2026-11-21T15:26:03.584881+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "TEST_VERIFICATION_BATCH"
+  },
+  {
+    "report_id": "drift-run-20261121-152607",
+    "timestamp": "2026-11-21T15:26:07.346650+00:00",
+    "overall_severity": "NORMAL",
+    "overall_drift_score": 0.0,
+    "drifted_features_count": 0,
+    "retraining_recommended": false,
+    "dataset_label": "API_TRIGGERED_AUDIT"
   }
 ]
