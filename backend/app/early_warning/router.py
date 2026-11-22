@@ -130,24 +130,27 @@ class EarlyWarningPlatformState:
             try:
                 with open(predictions_path, "r", encoding="utf-8") as f:
                     preds = json.load(f)
-                    for p in preds:
+                    # Optimize startup: take most recent window for responsive trajectory analysis
+                    eval_preds = preds[-2000:] if len(preds) > 2000 else preds
+                    for p in eval_preds:
                         aid = p.get("asset_id")
                         if not aid:
                             continue
-                        ts_raw = p.get("prediction_timestamp") or p.get("created_at")
-                        r_score = p.get("predicted_risk_score", 20.0)
-                        if ts_raw:
-                            try:
-                                ts = datetime.fromisoformat(str(ts_raw).replace("Z", "+00:00"))
-                                risk_sequences.setdefault(aid, []).append(
-                                    RiskTrajectoryPoint(timestamp=ts, risk_score=float(r_score))
-                                )
-                            except Exception:
-                                pass
+                        if len(risk_sequences.get(aid, [])) < 30:
+                            ts_raw = p.get("prediction_timestamp") or p.get("created_at")
+                            r_score = p.get("predicted_risk_score", 20.0)
+                            if ts_raw:
+                                try:
+                                    ts = datetime.fromisoformat(str(ts_raw).replace("Z", "+00:00"))
+                                    risk_sequences.setdefault(aid, []).append(
+                                        RiskTrajectoryPoint(timestamp=ts, risk_score=float(r_score))
+                                    )
+                                except Exception:
+                                    pass
 
                         # Store outcome for validation
                         outcome = p.get("actual_outcome")
-                        if outcome:
+                        if outcome and aid not in ground_truth_map:
                             ground_truth_map[aid] = outcome
             except Exception as e:
                 logger.warning("Error reading prediction history: %s", e)

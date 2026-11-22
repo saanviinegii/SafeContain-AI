@@ -76,12 +76,13 @@ class GraphEngine:
             elif settings.NEO4J_URI.startswith("bolt+s://"):
                 candidate_uris.append(settings.NEO4J_URI.replace("bolt+s://", "bolt+ssc://"))
 
+            timeout_sec = min(3.0, float(getattr(settings, "NEO4J_CONNECTION_TIMEOUT", 8.0) or 3.0))
             for cand_uri in candidate_uris:
                 try:
                     cand = GraphDatabase.driver(
                         cand_uri,
                         auth=(settings.NEO4J_USER, settings.NEO4J_PASSWORD),
-                        connection_timeout=settings.NEO4J_CONNECTION_TIMEOUT,
+                        connection_timeout=timeout_sec,
                         max_connection_pool_size=settings.NEO4J_MAX_CONNECTION_POOL_SIZE,
                     )
                     cand.verify_connectivity()
@@ -89,8 +90,9 @@ class GraphEngine:
                     break
                 except Exception as cand_err:
                     last_err = cand_err
-                    # If authentication was specifically rejected, stop retry loop
-                    if isinstance(cand_err, AuthError) or "Unauthorized" in str(cand_err):
+                    # If authentication was rejected or DNS cannot resolve hostname, abort candidate loop immediately
+                    err_str = str(cand_err)
+                    if isinstance(cand_err, AuthError) or "Unauthorized" in err_str or "getaddrinfo failed" in err_str or "Name or service not known" in err_str:
                         break
 
             if not driver:

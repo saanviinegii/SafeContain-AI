@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 # Configurable Ingestion Safeguards
 MAX_CSV_FILE_SIZE_BYTES = 250 * 1024 * 1024  # 250 MB limit
 MAX_CSV_ROW_COUNT = 10_000                  # 10,000 rows default limit for standard entity batches
-MAX_FLOW_CSV_ROW_COUNT = 50_000             # 50,000 rows limit for network flow datasets
+MAX_FLOW_CSV_ROW_COUNT = 10_000             # 10,000 flows limit for optimal memory and response time in cloud containers
 
 
 class CSVIngestionSummary(BaseModel):
@@ -68,15 +68,16 @@ class CSVIngestionSummary(BaseModel):
 
 
 class CSVIngestionParser:
-    """Robust CSV stream parser and schema validator."""
+    """Robust, streaming CSV parser and schema validator."""
 
     @staticmethod
     def parse_and_validate_raw_csv(
-        raw_bytes: bytes,
+        raw_bytes: Any,
         filename: str
     ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], str, int]:
-        """Validates file extension, byte limits, row bounds, and parses CSV content.
+        """Validates file extension, byte limits, row bounds, and parses CSV content with minimal memory.
         
+        Supports both bytes buffer and file-like stream objects.
         Returns:
             Tuple of (valid_records, malformed_row_errors, detected_schema_type, total_file_data_rows)
         """
@@ -85,42 +86,55 @@ class CSVIngestionParser:
         if not lower_name.endswith(".csv"):
             raise ValueError(f"Invalid file extension for '{filename}'. Only .csv files are supported.")
 
-        # 2. File size limit
-        if len(raw_bytes) > MAX_CSV_FILE_SIZE_BYTES:
+        # 2. File size limit & stream normalization
+        if isinstance(raw_bytes, (bytes, bytearray)):
+            byte_len = len(raw_bytes)
+            stream = io.BytesIO(raw_bytes)
+        elif hasattr(raw_bytes, "read"):
+            stream = raw_bytes
+            stream.seek(0, io.SEEK_END)
+            byte_len = stream.tell()
+            stream.seek(0)
+        else:
+            raise ValueError(f"Unsupported payload input type: {type(raw_bytes)}")
+
+        if byte_len > MAX_CSV_FILE_SIZE_BYTES:
             raise ValueError(
                 f"File size exceeds maximum allowable limit of {MAX_CSV_FILE_SIZE_BYTES // (1024 * 1024)}MB "
-                f"({len(raw_bytes)} bytes provided)."
+                f"({byte_len} bytes provided)."
             )
 
-        if not raw_bytes or not raw_bytes.strip():
+        if byte_len == 0:
             raise ValueError("Uploaded CSV file is completely empty.")
 
-        # 3. Decode content & sanitize null bytes
-        clean_bytes = raw_bytes.replace(b"\x00", b"")
-        try:
-            text = clean_bytes.decode("utf-8-sig")
-        except UnicodeDecodeError:
-            try:
-                text = clean_bytes.decode("latin-1")
-            except Exception as e:
-                raise ValueError(f"Unable to decode CSV with UTF-8 or Latin-1 encoding: {str(e)}")
+        # 3. Auto-detect delimiter from first chunk without full decode
+        sample_chunk = stream.read(16384)
+        if not sample_chunk or not sample_chunk.strip():
+            raise ValueError("Uploaded CSV file contains no readable content.")
 
-        text = text.replace("\x00", "")
-
-        # 4. Auto-detect delimiter from first chunk
-        sample_chunk = text[:16384]
+        sample_text = sample_chunk.decode("utf-8-sig", errors="replace").replace("\x00", "")
         delimiter = ","
-        semis = sample_chunk.count(";")
-        commas = sample_chunk.count(",")
-        tabs = sample_chunk.count("\t")
+        semis = sample_text.count(";")
+        commas = sample_text.count(",")
+        tabs = sample_text.count("\t")
         if semis > commas and semis > 3:
             delimiter = ";"
         elif tabs > commas and tabs > 3:
             delimiter = "\t"
 
-        # 5. Parse rows with stream iterator
-        stream = io.StringIO(text)
-        reader = csv.reader(stream, delimiter=delimiter)
+        stream.seek(0)
+
+        # 4. Stream rows line-by-line with null-byte sanitization
+        text_stream = io.TextIOWrapper(stream, encoding="utf-8-sig", errors="replace")
+
+        def sanitized_line_generator():
+            for line in text_stream:
+                if "\x00" in line:
+                    yield line.replace("\x00", "")
+                else:
+                    yield line
+
+        reader = csv.reader(sanitized_line_generator(), delimiter=delimiter)
 
         headers_raw: List[str] = []
         header_row_num = 1
@@ -150,7 +164,7 @@ class CSVIngestionParser:
             schema_type = "RELATIONSHIPS"
         elif has_node_id:
             schema_type = "NODES"
-        elif cic_map is not None or any(term in lower_name for term in ("portscan", "pcap", "cic", "ids2017", "flow")):
+        elif cic_map is not None or any(term in lower_name for term in ("portscan", "pcap", "cic", "ids2017", "flow", "ddos", "dos", "attack")):
             schema_type = "CIC_IDS2017_FLOWS"
         else:
             raise ValueError(
@@ -158,7 +172,7 @@ class CSVIngestionParser:
                 "Expected either 'node_id'/'id' for nodes, 'source_id'/'target_id' for relationships, or network flow columns for CIC-IDS2017 datasets."
             )
 
-        # 6. Stream and bound data rows safely without memory spikes
+        # 5. Stream and bound data rows safely without memory spikes
         max_allowed_rows = MAX_FLOW_CSV_ROW_COUNT if schema_type == "CIC_IDS2017_FLOWS" else MAX_CSV_ROW_COUNT
         parsed_records: List[Dict[str, str]] = []
         errors: List[Dict[str, Any]] = []
@@ -191,13 +205,10 @@ class CSVIngestionParser:
                     })
                     continue
 
-            # Clean and map to normalized headers
+            # Store only cleaned keys to avoid memory overhead
             record_dict = {"_row_number": row_idx}
-            for h_raw, h_clean, cell in zip(headers_raw, headers, row):
-                val = cell.strip()
-                record_dict[h_clean] = val
-                record_dict[h_raw.strip().lower()] = val
-                record_dict[h_raw.strip()] = val
+            for h_clean, cell in zip(headers, row):
+                record_dict[h_clean] = cell.strip()
 
             parsed_records.append(record_dict)
 
@@ -220,7 +231,7 @@ class TelemetryIngestionService:
 
     def ingest_csv_payload(
         self,
-        raw_bytes: bytes,
+        raw_bytes: Any,
         filename: str,
         engine: GraphEngine,
         override_provenance: Optional[DataProvenance] = None,

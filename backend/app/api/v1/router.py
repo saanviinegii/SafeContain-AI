@@ -524,11 +524,15 @@ def upload_and_ingest_csv(
         )
 
     try:
-        raw_bytes = file.file.read()
+        if hasattr(file, "file") and hasattr(file.file, "seek"):
+            file.file.seek(0)
+            payload_source = file.file
+        else:
+            payload_source = file.file.read()
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to read uploaded file stream: {str(e)}"
+            detail=f"Failed to access uploaded file stream: {str(e)}"
         )
 
     prov = None
@@ -539,7 +543,7 @@ def upload_and_ingest_csv(
             prov = DataProvenance.CSV
 
     summary = platform_ctx.csv_service.ingest_csv_payload(
-        raw_bytes=raw_bytes,
+        raw_bytes=payload_source,
         filename=file.filename,
         engine=platform_ctx.engine,
         override_provenance=prov
