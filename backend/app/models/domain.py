@@ -144,6 +144,10 @@ class GraphNode(BaseModel):
     is_crown_jewel: bool = Field(default=False, description="Explicit mission-critical target asset")
     properties: Dict[str, Any] = Field(default_factory=dict, description="Metadata key-value attributes")
     provenance: DataProvenance = Field(default=DataProvenance.LIVE_TELEMETRY)
+    dataset_id: Optional[str] = Field(default=None, description="Dataset identifier for lifecycle isolation")
+    source_file: Optional[str] = Field(default=None, description="Original source file name")
+    ingestion_batch_id: Optional[str] = Field(default=None, description="Batch upload identifier")
+    is_demo: bool = Field(default=False, description="Flag for built-in demo scenario data")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -164,6 +168,10 @@ class GraphEdge(BaseModel):
     evidence_references: List[str] = Field(default_factory=list, description="Supporting evidence record IDs")
     properties: Dict[str, Any] = Field(default_factory=dict)
     provenance: DataProvenance = Field(default=DataProvenance.LIVE_TELEMETRY)
+    dataset_id: Optional[str] = Field(default=None, description="Dataset identifier for lifecycle isolation")
+    source_file: Optional[str] = Field(default=None, description="Original source file name")
+    ingestion_batch_id: Optional[str] = Field(default=None, description="Batch upload identifier")
+    is_demo: bool = Field(default=False, description="Flag for built-in demo scenario data")
     last_verified_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 

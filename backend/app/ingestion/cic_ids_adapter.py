@@ -50,7 +50,7 @@ HEADER_ALIASES = {
     ],
     "destination_port": [
         "destination port", "destination_port", "dst port", "dst_port", "dest port",
-        "dest_port", "destinationport", "dstport", "dport"
+        "dest_port", "destinationport", "dstport", "dport", "dest_port_number", "dst_port_number"
     ],
     "protocol": [
         "protocol", "proto", "ip_protocol", "ip proto"
@@ -59,7 +59,7 @@ HEADER_ALIASES = {
         "timestamp", "time", "flow_timestamp", "date_time", "date/time"
     ],
     "flow_duration": [
-        "flow duration", "flow_duration", "duration"
+        "flow duration", "flow_duration", "duration", "flow_duration_us", "flow_duration_ms"
     ],
     "total_fwd_packets": [
         "total fwd packets", "total_fwd_packets", "total forward packets", "tot fwd pkts", "tot_fwd_pkts", "fwd_packets"
@@ -68,7 +68,7 @@ HEADER_ALIASES = {
         "total backward packets", "total_backward_packets", "total bwd packets", "tot bwd pkts", "tot_bwd_pkts", "bwd_packets"
     ],
     "label": [
-        "label", "class", "attack_label", "threat_label", "classification"
+        "label", "class", "attack_label", "threat_label", "classification", "attack_type", "attack"
     ],
 }
 
@@ -80,13 +80,14 @@ def normalize_header_name(raw_header: str) -> str:
     return cleaned
 
 
-def detect_cic_ids_headers(headers: List[str]) -> Optional[Dict[str, str]]:
+def detect_cic_ids_headers(headers: List[str], filename: str = "") -> Optional[Dict[str, str]]:
     """Checks if header list matches CIC-IDS2017 flow format.
     
     Supports:
     1. Full flow format with explicit Source IP and Destination IP.
     2. Flow format with Flow ID column.
     3. Official CIC-IDS2017 79-column ML format (starts with Destination Port, Flow Duration, etc. and ends with Label).
+    4. Flexible keyword and filename matching for network dump CSVs.
     
     Returns:
         Mapping of canonical_field_name -> actual_csv_header_name, or None if not matched.
@@ -100,6 +101,25 @@ def detect_cic_ids_headers(headers: List[str]) -> Optional[Dict[str, str]]:
                 matched_mapping[canonical_name] = normalized_to_actual[alias]
                 break
 
+    # Substring fallback for flexible matching
+    if "destination_port" not in matched_mapping:
+        for norm_h, actual_h in normalized_to_actual.items():
+            if any(term in norm_h for term in ("destination port", "dest port", "dst port", "dport")):
+                matched_mapping["destination_port"] = actual_h
+                break
+
+    if "flow_duration" not in matched_mapping:
+        for norm_h, actual_h in normalized_to_actual.items():
+            if "flow duration" in norm_h or "duration" in norm_h:
+                matched_mapping["flow_duration"] = actual_h
+                break
+
+    if "label" not in matched_mapping:
+        for norm_h, actual_h in normalized_to_actual.items():
+            if norm_h in ("label", "class", "attack") or norm_h.endswith(" label"):
+                matched_mapping["label"] = actual_h
+                break
+
     # Case 1: Explicit endpoints
     if "source_ip" in matched_mapping and "destination_ip" in matched_mapping:
         return matched_mapping
@@ -109,13 +129,18 @@ def detect_cic_ids_headers(headers: List[str]) -> Optional[Dict[str, str]]:
         return matched_mapping
 
     # Case 3: Standard CIC-IDS2017 CSV (e.g. Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv)
-    # Typically contains Destination Port, Flow Duration / Total Fwd Packets, and Label
     has_dst_port = "destination_port" in matched_mapping
     has_flow_metrics = any(k in matched_mapping for k in ("flow_duration", "total_fwd_packets", "total_bwd_packets"))
     has_label = "label" in matched_mapping
 
     if has_dst_port and (has_flow_metrics or has_label):
         return matched_mapping
+
+    # Case 4: Known dataset filename keyword matching
+    lower_fn = filename.lower() if filename else ""
+    if any(k in lower_fn for k in ("portscan", "pcap", "cic", "ids2017", "flow")):
+        if has_dst_port or has_flow_metrics or has_label:
+            return matched_mapping
 
     return None
 
@@ -197,7 +222,8 @@ class CICIDS2017Adapter:
         upload_id: str,
         provenance: DataProvenance = DataProvenance.CSV,
         total_file_rows: Optional[int] = None,
-        max_rows: int = HARD_MAX_FLOW_ROWS
+        max_rows: int = HARD_MAX_FLOW_ROWS,
+        dataset_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """Ingests parsed network flow records into graph nodes and communication edges.
         
@@ -224,6 +250,10 @@ class CICIDS2017Adapter:
         # Flow aggregation per batch: Key: (src_id, dst_id, proto) -> metadata
         flow_aggregations: Dict[Tuple[str, str, str], Dict[str, Any]] = {}
         seen_nodes: Set[str] = set()
+        created_node_ids: Set[str] = set()
+        created_edge_ids: Set[str] = set()
+        nodes_to_sync_neo4j: List[GraphNode] = []
+        edges_to_sync_neo4j: List[GraphEdge] = []
 
         for rec in capped_records:
             row_idx = rec.get("_row_number", 0)
@@ -258,7 +288,7 @@ class CICIDS2017Adapter:
             if not src_ip or not dst_ip:
                 # Canonical CIC-IDS2017 topology resolution
                 if is_malicious:
-                    # In CIC-IDS2017, the PortScan attacker is external host 172.16.0.1
+                    # In CIC-IDS2017, the PortScan/DDoS attacker is external host 172.16.0.1
                     src_ip = "172.16.0.1"
                     dst_ip = "192.168.10.50"
                     if src_port == "0":
@@ -309,6 +339,8 @@ class CICIDS2017Adapter:
                         "first_seen": ts_str,
                         "last_seen": ts_str,
                         "upload_batch_id": upload_id,
+                        "dataset_id": dataset_id,
+                        "source_file": filename,
                     }
 
                     new_node = GraphNode(
@@ -319,15 +351,21 @@ class CICIDS2017Adapter:
                         is_compromised=comp_status,
                         is_crown_jewel=False,
                         properties=props,
-                        provenance=provenance
+                        provenance=provenance,
+                        dataset_id=dataset_id,
+                        source_file=filename,
+                        ingestion_batch_id=upload_id,
+                        is_demo=False
                     )
                     engine.add_node(new_node)
-                    if engine.is_neo4j_live:
-                        engine.create_or_update_node_in_neo4j(new_node)
+                    nodes_to_sync_neo4j.append(new_node)
                     nodes_created += 1
                     seen_nodes.add(nid)
+                    created_node_ids.add(nid)
                 else:
                     if existing_node:
+                        if dataset_id and not existing_node.dataset_id:
+                            existing_node.dataset_id = dataset_id
                         labels = existing_node.properties.get("observed_labels", [])
                         if raw_label and raw_label not in labels:
                             labels.append(raw_label)
@@ -335,9 +373,9 @@ class CICIDS2017Adapter:
                         existing_node.properties["last_seen"] = ts_str
                         if is_malicious and is_src and not existing_node.is_compromised:
                             existing_node.is_compromised = True
-                            if engine.is_neo4j_live:
-                                engine.create_or_update_node_in_neo4j(existing_node)
+                            nodes_to_sync_neo4j.append(existing_node)
                             nodes_updated += 1
+                        created_node_ids.add(nid)
 
             # -----------------------------------------------------------------
             # 2. AGGREGATE COMMUNICATION FLOWS
@@ -395,6 +433,8 @@ class CICIDS2017Adapter:
                 "dataset_source": "CIC_IDS2017",
                 "source_filename": filename,
                 "upload_batch_id": upload_id,
+                "dataset_id": dataset_id,
+                "source_file": filename,
             }
 
             edge = GraphEdge(
@@ -407,23 +447,41 @@ class CICIDS2017Adapter:
                 weight=weight_val,
                 is_active=True,
                 properties=edge_props,
-                provenance=provenance
+                provenance=provenance,
+                dataset_id=dataset_id,
+                source_file=filename,
+                ingestion_batch_id=upload_id,
+                is_demo=False
             )
 
+            created_edge_ids.add(rel_id)
+
             if existing_edge:
+                if dataset_id and not existing_edge.dataset_id:
+                    existing_edge.dataset_id = dataset_id
                 existing_edge.properties.update(edge_props)
                 existing_edge.weight = min(existing_edge.weight, weight_val)
                 if is_attack:
                     existing_edge.evidence_status = EvidenceStatus.CONFIRMED
                 engine.add_edge(existing_edge)
-                if engine.is_neo4j_live:
-                    engine.create_or_update_edge_in_neo4j(existing_edge)
+                edges_to_sync_neo4j.append(existing_edge)
                 relationships_updated += 1
             else:
                 engine.add_edge(edge)
-                if engine.is_neo4j_live:
-                    engine.create_or_update_edge_in_neo4j(edge)
+                edges_to_sync_neo4j.append(edge)
                 relationships_created += 1
+
+        # Synchronize representative graph sample to Neo4j Aura without causing request timeout
+        if engine.is_neo4j_live:
+            MAX_NEO4J_SYNC_NODES = 150
+            MAX_NEO4J_SYNC_EDGES = 300
+            try:
+                for n in nodes_to_sync_neo4j[:MAX_NEO4J_SYNC_NODES]:
+                    engine.create_or_update_node_in_neo4j(n)
+                for e in edges_to_sync_neo4j[:MAX_NEO4J_SYNC_EDGES]:
+                    engine.create_or_update_edge_in_neo4j(e)
+            except Exception as neo_err:
+                logger.warning("Bounded Neo4j sync note: %s", str(neo_err))
 
         duration_ms = round((time.time() - start_time) * 1000, 2)
 
@@ -441,4 +499,6 @@ class CICIDS2017Adapter:
             "duration_ms": duration_ms,
             "validation_errors": validation_errors,
             "flow_aggregations_count": len(flow_aggregations),
+            "created_node_ids": list(created_node_ids),
+            "created_edge_ids": list(created_edge_ids),
         }

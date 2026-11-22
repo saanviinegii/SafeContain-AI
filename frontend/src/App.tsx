@@ -42,11 +42,13 @@ import {
   Blocks,
   Boxes,
   Clock,
+  Trash2,
 } from 'lucide-react';
 import {
   api,
   AuthUser,
   CSVIngestionSummary,
+  DatasetMetadata,
   ThreatIndicator,
   ThreatCorrelation,
   IncidentCluster,
@@ -181,6 +183,12 @@ export const App: React.FC = () => {
   const [csvUploadProgress, setCsvUploadProgress] = useState<string | null>(null);
   const [csvUploadSummary, setCsvUploadSummary] = useState<CSVIngestionSummary | null>(null);
   const [csvUploadError, setCsvUploadError] = useState<string | null>(null);
+
+  // Dynamic Dataset Lifecycle & Neo4j / Bloom Synchronization State
+  const [datasets, setDatasets] = useState<DatasetMetadata[]>([]);
+  const [activeDataset, setActiveDataset] = useState<DatasetMetadata | null>(null);
+  const [datasetToDelete, setDatasetToDelete] = useState<string | null>(null);
+  const [isDeletingDataset, setIsDeletingDataset] = useState<boolean>(false);
 
   // Phase 7.2D: Drift Monitoring, Retraining Governance & Incident Dossier State
   const [driftReport, setDriftReport] = useState<any>(null);
@@ -518,6 +526,7 @@ export const App: React.FC = () => {
       loadForecastingData().catch(() => null);
       loadEarlyWarningData().catch(() => null);
       refreshBlockchainData().catch(() => null);
+      loadDatasets().catch(() => null);
     } catch (err: any) {
       console.error('Failed loading data:', err);
       showNotification(`Error: ${err.message}`);
@@ -1269,10 +1278,13 @@ export const App: React.FC = () => {
       if (summary.neo4j_synced && summary.neo4j_status === 'CONNECTED') {
         showNotification(`✓ Upload Ingested & Persisted to Neo4j (${summary.accepted_rows} rows). Overview updated.`);
         await loadAllData();
+        await loadDatasets();
       } else if (summary.neo4j_status === 'OFFLINE_FALLBACK' || !summary.neo4j_synced) {
         showNotification(`⚠ Upload processed in OFFLINE fallback mode (In-Memory Only, Not Persisted to Neo4j).`);
+        await loadDatasets();
       } else {
         showNotification(`CSV Ingested with status: ${summary.status} (Neo4j: ${summary.neo4j_status})`);
+        await loadDatasets();
       }
     } catch (err: any) {
       setCsvUploadError(err.message || 'CSV Ingestion failed');
@@ -1280,6 +1292,60 @@ export const App: React.FC = () => {
       showNotification(`CSV Ingestion Failed: ${err.message}`);
     } finally {
       setIsUploadingCsv(false);
+    }
+  };
+
+  const loadDatasets = async () => {
+    try {
+      const [dList, aData] = await Promise.all([
+        api.listDatasets().catch(() => []),
+        api.getActiveDataset().catch(() => null),
+      ]);
+      setDatasets(dList);
+      setActiveDataset(aData);
+    } catch (err: any) {
+      console.error('Failed to load datasets:', err);
+    }
+  };
+
+  const handleActivateDataset = async (datasetId: string) => {
+    try {
+      await api.activateDataset(datasetId);
+      showNotification(`Switched active dataset to '${datasetId}'`);
+      await loadAllData();
+      await loadDatasets();
+    } catch (err: any) {
+      showNotification(`Failed to activate dataset: ${err.message}`);
+    }
+  };
+
+  const handleDeleteDataset = async (datasetId: string) => {
+    setIsDeletingDataset(true);
+    try {
+      const res = await api.deleteDataset(datasetId, true);
+      showNotification(`Deleted dataset '${datasetId}': ${res.nodes_deleted} nodes, ${res.edges_deleted} edges removed (Neo4j: ${res.neo4j_nodes_deleted} nodes purged).`);
+      setDatasetToDelete(null);
+      if (csvUploadSummary?.dataset_id === datasetId) {
+        setCsvUploadSummary(null);
+        setCsvFile(null);
+      }
+      await loadAllData();
+      await loadDatasets();
+    } catch (err: any) {
+      showNotification(`Failed to delete dataset: ${err.message}`);
+    } finally {
+      setIsDeletingDataset(false);
+    }
+  };
+
+  const handleResetDemoDataset = async () => {
+    try {
+      await api.resetDemoDataset('SCEN-001');
+      showNotification('Restored baseline demo scenario (SCEN-001) into graph and Neo4j.');
+      await loadAllData();
+      await loadDatasets();
+    } catch (err: any) {
+      showNotification(`Failed to reset demo: ${err.message}`);
     }
   };
 
@@ -5944,6 +6010,41 @@ export const App: React.FC = () => {
               {activeView === 'TOPOLOGY_EXPLORER' && (
                 <div>
                   <div className="data-table-container">
+                    {/* Active Dataset Context Banner */}
+                    {activeDataset && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        background: 'rgba(6, 182, 212, 0.06)',
+                        borderBottom: '1px solid rgba(6, 182, 212, 0.2)',
+                        padding: '8px 16px',
+                        fontSize: '12px',
+                        flexWrap: 'wrap',
+                        gap: '6px'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontWeight: 700, color: 'var(--accent-cyan)' }}>ACTIVE DATASET:</span>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{activeDataset.dataset_id}</span>
+                          <span style={{ color: 'var(--text-secondary)' }}>({activeDataset.name})</span>
+                          <span className="badge badge-blue">{activeDataset.csv_type}</span>
+                          {activeDataset.is_demo && <span className="badge badge-purple">DEMO SCENARIO</span>}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>
+                            {topology.nodes.length} nodes · {topology.edges.length} edges
+                          </span>
+                          <button
+                            className="btn-secondary"
+                            onClick={() => setActiveView('INTEGRATIONS')}
+                            style={{ padding: '2px 8px', fontSize: '11px' }}
+                          >
+                            Manage Datasets →
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="table-header" style={{ flexWrap: 'wrap', gap: '12px' }}>
                       <div className="table-title">Interactive Infrastructure Graph Explorer</div>
                       <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -6055,12 +6156,47 @@ export const App: React.FC = () => {
                         )}
                       </div>
                     </div>
-                    <CytoscapeGraph
-                      nodes={filteredTopologyNodes}
-                      edges={filteredTopologyEdges}
-                      mlRiskMap={mlRiskMap}
-                      onSelectNode={handleSelectNode}
-                    />
+                    {topology.nodes.length === 0 ? (
+                      <div style={{
+                        padding: '60px 20px',
+                        textAlign: 'center',
+                        background: 'rgba(255, 255, 255, 0.01)',
+                        borderRadius: '8px',
+                        border: '1px dashed var(--border-color)',
+                        margin: '20px',
+                      }}>
+                        <Database size={48} style={{ color: 'var(--text-muted)', marginBottom: '16px', opacity: 0.5 }} />
+                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                          No dataset currently loaded.
+                        </h3>
+                        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto 20px' }}>
+                          Upload a CSV dataset to build and visualize your graph, or restore the baseline enterprise demo scenario.
+                        </p>
+                        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                          <button
+                            className="btn-primary"
+                            onClick={() => setActiveView('INTEGRATIONS')}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                          >
+                            <Upload size={14} /> Upload CSV Dataset
+                          </button>
+                          <button
+                            className="btn-secondary"
+                            onClick={handleResetDemoDataset}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                          >
+                            <RefreshCw size={14} /> Restore Demo Graph (SCEN-001)
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <CytoscapeGraph
+                        nodes={filteredTopologyNodes}
+                        edges={filteredTopologyEdges}
+                        mlRiskMap={mlRiskMap}
+                        onSelectNode={handleSelectNode}
+                      />
+                    )}
                   </div>
                   {selectedNode && (() => {
                     const nodeMl = mlRiskMap[selectedNode.id] || selectedNode.ml_risk;
@@ -7658,7 +7794,14 @@ export const App: React.FC = () => {
                             ({(csvFile.size / 1024).toFixed(1)} KB)
                           </span>
                           <button
-                            onClick={() => {
+                            onClick={async () => {
+                              const dsId = csvUploadSummary?.dataset_id;
+                              if (dsId) {
+                                if (window.confirm(`A dataset was uploaded from this file (ID: ${dsId}). Do you also want to permanently delete it from the graph and Neo4j AuraDB?`)) {
+                                  await handleDeleteDataset(dsId);
+                                  return;
+                                }
+                              }
                               setCsvFile(null);
                               setCsvUploadSummary(null);
                             }}
@@ -7849,7 +7992,13 @@ export const App: React.FC = () => {
                                     <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-crimson)', fontWeight: 600 }}>{err.row}</td>
                                     <td style={{ fontFamily: 'var(--font-mono)' }}>{err.entity_id || '—'}</td>
                                     <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-amber)' }}>{err.field || '—'}</td>
-                                    <td style={{ color: 'var(--text-secondary)' }}>{err.error}</td>
+                                    <td style={{ color: 'var(--text-secondary)' }}>
+                                      {err.message ? (
+                                        <span><strong style={{ color: 'var(--accent-crimson)' }}>{err.error}:</strong> {err.message}</span>
+                                      ) : (
+                                        err.error
+                                      )}
+                                    </td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -7919,6 +8068,136 @@ export const App: React.FC = () => {
                       </tr>
                     </tbody>
                   </table>
+
+                  {/* Dynamic Dataset Lifecycle & Neo4j / Bloom Synchronization */}
+                  <div style={{ marginTop: '28px', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                      <div>
+                        <h3 style={{ color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <Database size={18} style={{ color: 'var(--accent-cyan)' }} />
+                          Dynamic Dataset Lifecycle & Neo4j / Bloom Synchronization
+                        </h3>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: '4px 0 0 0' }}>
+                          Scoped persistence manager. Deleting a dataset safely removes its nodes and relationships from both memory and Neo4j AuraDB via targeted Cypher, ensuring Neo4j Bloom and UI stay in sync.
+                        </p>
+                      </div>
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <button
+                          className="btn-secondary"
+                          onClick={loadDatasets}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
+                        >
+                          <RefreshCw size={13} /> Refresh Datasets
+                        </button>
+                        <button
+                          className="btn-secondary"
+                          onClick={handleResetDemoDataset}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
+                          title="Restores the standard SCEN-001 enterprise demo topology"
+                        >
+                          <Database size={13} /> Reset Demo (SCEN-001)
+                        </button>
+                      </div>
+                    </div>
+
+                    {datasets.length === 0 ? (
+                      <div style={{ padding: '24px', textAlign: 'center', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '6px', border: '1px dashed var(--border-color)' }}>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '13px', margin: '0 0 12px 0' }}>
+                          No active datasets currently loaded in the system.
+                        </p>
+                        <button
+                          className="btn-primary"
+                          onClick={handleResetDemoDataset}
+                          style={{ fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                        >
+                          <RefreshCw size={13} /> Load Demo Dataset (SCEN-001)
+                        </button>
+                      </div>
+                    ) : (
+                      <table className="safe-table" style={{ fontSize: '12px' }}>
+                        <thead>
+                          <tr>
+                            <th>Dataset ID</th>
+                            <th>Source / Name</th>
+                            <th>Schema Type</th>
+                            <th>Entities</th>
+                            <th>Created</th>
+                            <th>Status</th>
+                            <th style={{ textAlign: 'right' }}>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {datasets.map((ds) => {
+                            const isActive = ds.is_active;
+                            return (
+                              <tr key={ds.dataset_id} style={{ background: isActive ? 'rgba(6, 182, 212, 0.04)' : undefined }}>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--accent-cyan)' }}>
+                                  {ds.dataset_id}
+                                </td>
+                                <td>
+                                  <div style={{ fontWeight: 600 }}>{ds.name}</div>
+                                  {ds.filename && ds.filename !== ds.name && (
+                                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{ds.filename}</div>
+                                  )}
+                                </td>
+                                <td>
+                                  <span className="badge badge-blue">{ds.csv_type}</span>
+                                </td>
+                                <td style={{ fontFamily: 'var(--font-mono)' }}>
+                                  {ds.node_count} nodes · {ds.edge_count} edges
+                                </td>
+                                <td style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
+                                  {ds.created_at ? new Date(ds.created_at).toLocaleString() : '—'}
+                                </td>
+                                <td>
+                                  {isActive ? (
+                                    <span className="badge badge-emerald" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                      <CheckCircle2 size={11} /> ACTIVE
+                                    </span>
+                                  ) : (
+                                    <span className="badge" style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'var(--text-muted)' }}>
+                                      INACTIVE
+                                    </span>
+                                  )}
+                                </td>
+                                <td style={{ textAlign: 'right' }}>
+                                  <div style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
+                                    {!isActive && (
+                                      <button
+                                        className="btn-secondary"
+                                        onClick={() => handleActivateDataset(ds.dataset_id)}
+                                        style={{ padding: '3px 8px', fontSize: '11px' }}
+                                        title="Switch active visualization to this dataset"
+                                      >
+                                        Activate
+                                      </button>
+                                    )}
+                                    <button
+                                      className="btn-secondary"
+                                      onClick={() => setDatasetToDelete(ds.dataset_id)}
+                                      disabled={isDeletingDataset}
+                                      style={{
+                                        padding: '3px 8px',
+                                        fontSize: '11px',
+                                        color: 'var(--accent-crimson)',
+                                        borderColor: 'rgba(239, 68, 68, 0.3)',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px'
+                                      }}
+                                      title="Delete dataset nodes & relationships from graph and Neo4j"
+                                    >
+                                      <Trash2 size={12} /> Delete
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
 
                   {/* Synthetic Enterprise Dataset Catalog & Downloader */}
                   <div style={{ marginTop: '28px', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
@@ -10498,6 +10777,98 @@ export const App: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Scoped Dataset Deletion Confirmation Modal */}
+      {datasetToDelete && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(5, 10, 20, 0.85)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+          }}
+        >
+          <div
+            style={{
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '12px',
+              padding: '28px',
+              width: '480px',
+              maxWidth: '90vw',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div
+                style={{
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  padding: '10px',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                }}
+              >
+                <AlertTriangle size={24} style={{ color: 'var(--accent-crimson)' }} />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '18px', color: 'var(--text-primary)' }}>
+                  Confirm Scoped Dataset Deletion
+                </h3>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  Targeted Database & Neo4j Cleanup
+                </div>
+              </div>
+            </div>
+
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: '0 0 16px 0' }}>
+              Are you sure you want to permanently delete dataset <strong style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)' }}>{datasetToDelete}</strong>?
+            </p>
+
+            <div
+              style={{
+                background: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                borderRadius: '8px',
+                padding: '12px 16px',
+                fontSize: '12px',
+                color: '#fca5a5',
+                marginBottom: '20px',
+              }}
+            >
+              <strong style={{ display: 'block', marginBottom: '6px' }}>Database & Bloom Synchronization:</strong>
+              <ul style={{ margin: 0, paddingLeft: '18px', lineHeight: '1.5' }}>
+                <li>Scoped Cypher removes all matching nodes and edges from Neo4j AuraDB.</li>
+                <li>Neo4j Bloom and UI graph views will no longer display stale nodes.</li>
+                <li>Demo scenarios and unrelated datasets remain completely untouched.</li>
+              </ul>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                className="btn-secondary"
+                disabled={isDeletingDataset}
+                onClick={() => setDatasetToDelete(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                disabled={isDeletingDataset}
+                onClick={() => handleDeleteDataset(datasetToDelete)}
+                style={{ background: 'var(--accent-crimson)', borderColor: 'var(--accent-crimson)' }}
+              >
+                {isDeletingDataset ? 'Deleting from Neo4j...' : 'Yes, Delete Dataset'}
+              </button>
+            </div>
           </div>
         </div>
       )}

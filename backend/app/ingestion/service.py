@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 from backend.app.core.config import settings
 from backend.app.graph.engine import GraphEngine
 from backend.app.ingestion.contracts import IngestionError
+from backend.app.ingestion.dataset_manager import DatasetManager, DatasetMetadata, dataset_manager
 from backend.app.ingestion.synthetic_enterprise_loader import SyntheticEnterpriseLoader
 from backend.app.ingestion.cic_ids_adapter import CICIDS2017Adapter, detect_cic_ids_headers
 from backend.app.models.domain import (
@@ -44,6 +45,7 @@ MAX_FLOW_CSV_ROW_COUNT = 50_000             # 50,000 rows limit for network flow
 class CSVIngestionSummary(BaseModel):
     """Structured response summary for CSV upload operations."""
     upload_id: str = Field(description="Unique batch identifier for audit attribution")
+    dataset_id: Optional[str] = Field(default=None, description="Unique dataset identifier for lifecycle tracking")
     filename: str
     csv_type: str = Field(description="NODES | RELATIONSHIPS | CIC_IDS2017_FLOWS | UNKNOWN")
     total_rows: int = Field(default=0)
@@ -93,41 +95,62 @@ class CSVIngestionParser:
         if not raw_bytes or not raw_bytes.strip():
             raise ValueError("Uploaded CSV file is completely empty.")
 
-        # 3. Decode content
+        # 3. Decode content & sanitize null bytes
+        clean_bytes = raw_bytes.replace(b"\x00", b"")
         try:
-            text = raw_bytes.decode("utf-8-sig")
+            text = clean_bytes.decode("utf-8-sig")
         except UnicodeDecodeError:
             try:
-                text = raw_bytes.decode("latin-1")
+                text = clean_bytes.decode("latin-1")
             except Exception as e:
                 raise ValueError(f"Unable to decode CSV with UTF-8 or Latin-1 encoding: {str(e)}")
 
-        # 4. Parse rows
-        stream = io.StringIO(text.strip())
-        reader = csv.reader(stream)
-        rows_raw = list(reader)
+        text = text.replace("\x00", "")
 
-        if not rows_raw:
-            raise ValueError("CSV contains no rows.")
+        # 4. Auto-detect delimiter from first chunk
+        sample_chunk = text[:16384]
+        delimiter = ","
+        semis = sample_chunk.count(";")
+        commas = sample_chunk.count(",")
+        tabs = sample_chunk.count("\t")
+        if semis > commas and semis > 3:
+            delimiter = ";"
+        elif tabs > commas and tabs > 3:
+            delimiter = "\t"
 
-        headers_raw = rows_raw[0]
-        headers = [h.strip().lower() for h in headers_raw if h.strip()]
+        # 5. Parse rows with stream iterator
+        stream = io.StringIO(text)
+        reader = csv.reader(stream, delimiter=delimiter)
 
-        if not headers:
+        headers_raw: List[str] = []
+        header_row_num = 1
+        for row in reader:
+            if not row or not any(c.strip() for c in row):
+                header_row_num += 1
+                continue
+            if row[0].strip().startswith("#"):
+                header_row_num += 1
+                continue
+            headers_raw = [c.strip() for c in row if c is not None]
+            break
+
+        if not headers_raw or not any(headers_raw):
             raise ValueError("CSV header row contains no valid column names.")
+
+        headers = [h.strip().lower() for h in headers_raw if h.strip()]
 
         # Determine schema type
         schema_type = "UNKNOWN"
         has_node_id = any(h in headers for h in ("node_id", "id"))
         has_source = any(h in headers for h in ("source_id", "source", "source_node_id"))
         has_target = any(h in headers for h in ("target_id", "target", "target_node_id"))
-        cic_map = detect_cic_ids_headers(headers_raw)
+        cic_map = detect_cic_ids_headers(headers_raw, filename=filename)
 
         if has_source and has_target:
             schema_type = "RELATIONSHIPS"
         elif has_node_id:
             schema_type = "NODES"
-        elif cic_map is not None:
+        elif cic_map is not None or any(term in lower_name for term in ("portscan", "pcap", "cic", "ids2017", "flow")):
             schema_type = "CIC_IDS2017_FLOWS"
         else:
             raise ValueError(
@@ -135,46 +158,56 @@ class CSVIngestionParser:
                 "Expected either 'node_id'/'id' for nodes, 'source_id'/'target_id' for relationships, or network flow columns for CIC-IDS2017 datasets."
             )
 
-        # 5. Row-count check
-        data_rows = rows_raw[1:]
-        total_data_row_count = len(data_rows)
+        # 6. Stream and bound data rows safely without memory spikes
         max_allowed_rows = MAX_FLOW_CSV_ROW_COUNT if schema_type == "CIC_IDS2017_FLOWS" else MAX_CSV_ROW_COUNT
+        parsed_records: List[Dict[str, str]] = []
+        errors: List[Dict[str, Any]] = []
+        expected_col_count = len(headers_raw)
+        total_data_row_count = 0
+
+        for row_idx, row in enumerate(reader, start=header_row_num + 1):
+            if not row or not any(c.strip() for c in row):
+                continue
+            total_data_row_count += 1
+
+            # Once capped for processing, quickly count remainder without dict allocations
+            if len(parsed_records) >= max_allowed_rows:
+                continue
+
+            if len(row) != expected_col_count:
+                # Tolerant recovery: pad or slice minor discrepancy of +/- 2 columns
+                if abs(len(row) - expected_col_count) <= 2:
+                    if len(row) < expected_col_count:
+                        row = row + [""] * (expected_col_count - len(row))
+                    else:
+                        row = row[:expected_col_count]
+                else:
+                    errors.append({
+                        "row": row_idx,
+                        "field": None,
+                        "error": "MALFORMED_ROW",
+                        "message": f"Row has {len(row)} columns, expected {expected_col_count} matching header.",
+                        "raw_line": ",".join(row[:5]) + "..."
+                    })
+                    continue
+
+            # Clean and map to normalized headers
+            record_dict = {"_row_number": row_idx}
+            for h_raw, h_clean, cell in zip(headers_raw, headers, row):
+                val = cell.strip()
+                record_dict[h_clean] = val
+                record_dict[h_raw.strip().lower()] = val
+                record_dict[h_raw.strip()] = val
+
+            parsed_records.append(record_dict)
+
+        if total_data_row_count == 0:
+            raise ValueError("CSV contains a header row but 0 data rows.")
 
         if schema_type != "CIC_IDS2017_FLOWS" and total_data_row_count > max_allowed_rows:
             raise ValueError(
                 f"CSV row count ({total_data_row_count}) exceeds maximum batch limit of {max_allowed_rows} rows."
             )
-
-        # For CIC-IDS2017 flow datasets, cap parsing at MAX_FLOW_CSV_ROW_COUNT to ensure memory safety & responsive graph rendering
-        if schema_type == "CIC_IDS2017_FLOWS" and total_data_row_count > max_allowed_rows:
-            data_rows = data_rows[:max_allowed_rows]
-
-        expected_col_count = len(headers_raw)
-        parsed_records: List[Dict[str, str]] = []
-        errors: List[Dict[str, Any]] = []
-
-        for row_idx, row in enumerate(data_rows, start=2):  # 1-based, row 1 is header
-            if not row or all(not cell.strip() for cell in row):
-                continue  # Skip blank lines safely
-
-            if len(row) != expected_col_count:
-                errors.append({
-                    "row": row_idx,
-                    "field": None,
-                    "error": "MALFORMED_ROW",
-                    "message": f"Row has {len(row)} columns, expected {expected_col_count} matching header.",
-                    "raw_line": ",".join(row)
-                })
-                continue
-
-            # Clean and map to normalized headers
-            record_dict = {}
-            for h_raw, h_clean, cell in zip(headers_raw, headers, row):
-                record_dict[h_clean] = cell.strip()
-                record_dict[h_raw.strip().lower()] = cell.strip()
-                record_dict[h_raw.strip()] = cell.strip()
-
-            parsed_records.append({"_row_number": row_idx, **record_dict})
 
         return parsed_records, errors, schema_type, total_data_row_count
 
@@ -190,7 +223,8 @@ class TelemetryIngestionService:
         raw_bytes: bytes,
         filename: str,
         engine: GraphEngine,
-        override_provenance: Optional[DataProvenance] = None
+        override_provenance: Optional[DataProvenance] = None,
+        dataset_id: Optional[str] = None
     ) -> CSVIngestionSummary:
         """Processes and incrementally ingests CSV data into the SafeContain AI graph.
         
@@ -201,14 +235,17 @@ class TelemetryIngestionService:
         - Detailed row-by-row validation error collection.
         """
         upload_id = f"csv-batch-{uuid.uuid4().hex[:10]}"
+        dataset_id = dataset_id or DatasetManager.generate_dataset_id()
         provenance = override_provenance or DataProvenance.CSV
+        created_node_ids: Set[str] = set()
+        created_edge_ids: Set[str] = set()
 
         try:
             records, parse_errors, schema_type, total_file_rows = CSVIngestionParser.parse_and_validate_raw_csv(
                 raw_bytes=raw_bytes,
                 filename=filename
             )
-        except ValueError as ve:
+        except Exception as ve:
             neo4j_status = "CONNECTED" if engine.is_neo4j_live else "OFFLINE_FALLBACK"
             neo4j_details = {
                 "database": getattr(engine, "active_database", None) if engine.is_neo4j_live else None,
@@ -216,6 +253,7 @@ class TelemetryIngestionService:
             }
             return CSVIngestionSummary(
                 upload_id=upload_id,
+                dataset_id=dataset_id,
                 filename=filename,
                 csv_type="UNKNOWN",
                 total_rows=0,
@@ -301,6 +339,8 @@ class TelemetryIngestionService:
                     "description": rec.get("description", ""),
                     "vulnerabilities": rec.get("vulnerabilities", ""),
                     "upload_batch_id": upload_id,
+                    "dataset_id": dataset_id,
+                    "source_file": filename,
                 }
 
                 new_node = GraphNode(
@@ -311,12 +351,18 @@ class TelemetryIngestionService:
                     is_compromised=is_compromised,
                     is_crown_jewel=is_crown,
                     properties=properties,
-                    provenance=provenance
+                    provenance=provenance,
+                    dataset_id=dataset_id,
+                    source_file=filename,
+                    ingestion_batch_id=upload_id,
+                    is_demo=False
                 )
 
                 # Incremental Upsert check (Never clear graph!)
                 existing = engine.get_node(node_id)
                 if existing:
+                    if dataset_id and not existing.dataset_id:
+                        existing.dataset_id = dataset_id
                     # Compare content to identify exact duplicate
                     if (
                         existing.name == new_node.name and
@@ -332,6 +378,7 @@ class TelemetryIngestionService:
                     nodes_created += 1
 
                 engine.add_node(new_node)
+                created_node_ids.add(node_id)
                 accepted_rows += 1
 
                 # Incremental Neo4j persistence via MERGE
@@ -422,8 +469,14 @@ class TelemetryIngestionService:
                         "discovered_by": rec.get("discovered_by", "CSV_INGESTION"),
                         "description": rec.get("description", ""),
                         "upload_batch_id": upload_id,
+                        "dataset_id": dataset_id,
+                        "source_file": filename,
                     },
-                    provenance=provenance
+                    provenance=provenance,
+                    dataset_id=dataset_id,
+                    source_file=filename,
+                    ingestion_batch_id=upload_id,
+                    is_demo=False
                 )
 
                 # Ensure stub nodes exist in graph so edges do not dangle
@@ -433,9 +486,14 @@ class TelemetryIngestionService:
                         name=src,
                         type=NodeType.HOST,
                         criticality=0.5,
-                        provenance=provenance
+                        provenance=provenance,
+                        dataset_id=dataset_id,
+                        source_file=filename,
+                        ingestion_batch_id=upload_id,
+                        is_demo=False
                     )
                     engine.add_node(stub_s)
+                    created_node_ids.add(src)
                     if engine.is_neo4j_live:
                         engine.create_or_update_node_in_neo4j(stub_s)
                     nodes_created += 1
@@ -446,9 +504,14 @@ class TelemetryIngestionService:
                         name=tgt,
                         type=NodeType.HOST,
                         criticality=0.5,
-                        provenance=provenance
+                        provenance=provenance,
+                        dataset_id=dataset_id,
+                        source_file=filename,
+                        ingestion_batch_id=upload_id,
+                        is_demo=False
                     )
                     engine.add_node(stub_t)
+                    created_node_ids.add(tgt)
                     if engine.is_neo4j_live:
                         engine.create_or_update_node_in_neo4j(stub_t)
                     nodes_created += 1
@@ -456,6 +519,8 @@ class TelemetryIngestionService:
                 # Incremental Upsert check
                 existing_edge = engine.get_edge(rel_id)
                 if existing_edge:
+                    if dataset_id and not existing_edge.dataset_id:
+                        existing_edge.dataset_id = dataset_id
                     if (
                         existing_edge.source == edge.source and
                         existing_edge.target == edge.target and
@@ -470,6 +535,7 @@ class TelemetryIngestionService:
                     relationships_created += 1
 
                 engine.add_edge(edge)
+                created_edge_ids.add(rel_id)
                 accepted_rows += 1
 
                 # Incremental Neo4j persistence via MERGE
@@ -484,7 +550,8 @@ class TelemetryIngestionService:
                 upload_id=upload_id,
                 provenance=provenance,
                 total_file_rows=total_file_rows,
-                max_rows=MAX_FLOW_CSV_ROW_COUNT
+                max_rows=MAX_FLOW_CSV_ROW_COUNT,
+                dataset_id=dataset_id
             )
             accepted_rows = adapter_result["accepted_rows"]
             rejected_rows += adapter_result["rejected_rows"]
@@ -496,6 +563,8 @@ class TelemetryIngestionService:
             validation_errors.extend(adapter_result["validation_errors"])
             is_sampled = adapter_result["is_sampled"]
             processing_duration_ms = adapter_result["duration_ms"]
+            created_node_ids.update(adapter_result.get("created_node_ids", []))
+            created_edge_ids.update(adapter_result.get("created_edge_ids", []))
 
         # Sync diagnostic reporting
         neo4j_synced = False
@@ -514,6 +583,23 @@ class TelemetryIngestionService:
                 "message": "Neo4j is not connected or in fallback mode. Upserted to in-memory graph.",
                 "last_error": engine.last_connection_error
             }
+
+        # Dataset lifecycle registration
+        if accepted_rows > 0:
+            dataset_meta = DatasetMetadata(
+                dataset_id=dataset_id,
+                name=filename,
+                filename=filename,
+                csv_type=schema_type,
+                total_rows=total_rows,
+                node_count=len(created_node_ids) if created_node_ids else (nodes_created + nodes_updated),
+                edge_count=len(created_edge_ids) if created_edge_ids else (relationships_created + relationships_updated),
+                is_active=True,
+                created_at=datetime.now(timezone.utc),
+                node_ids=list(created_node_ids),
+                edge_ids=list(created_edge_ids),
+            )
+            dataset_manager.register_dataset(dataset_meta)
 
         # Overall Status
         if rejected_rows == 0:
@@ -538,6 +624,7 @@ class TelemetryIngestionService:
 
         return CSVIngestionSummary(
             upload_id=upload_id,
+            dataset_id=dataset_id,
             filename=filename,
             csv_type=schema_type,
             total_rows=total_rows,

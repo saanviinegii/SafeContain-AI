@@ -9,11 +9,13 @@ import csv
 import json
 import logging
 import os
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 from backend.app.core.config import settings
 from backend.app.graph.engine import GraphEngine
 from backend.app.business.twin import BusinessContinuityTwin
+from backend.app.ingestion.dataset_manager import DatasetMetadata, dataset_manager
 from backend.app.ingestion.dataset_validator import DatasetValidator
 from backend.app.models.domain import (
     BusinessWorkflow,
@@ -174,8 +176,12 @@ class SyntheticEnterpriseLoader:
                     "security_status": r.get("security_status", ""),
                     "tags": r.get("tags", ""),
                     "description": r.get("description", ""),
+                    "dataset_id": f"DEMO-{scenario_id}",
+                    "is_demo": True,
                 },
-                provenance=DataProvenance.SYNTHETIC
+                provenance=DataProvenance.SYNTHETIC,
+                dataset_id=f"DEMO-{scenario_id}",
+                is_demo=True
             )
             engine.add_node(node)
             loaded_nodes += 1
@@ -203,8 +209,12 @@ class SyntheticEnterpriseLoader:
                     "risk_score": risk,
                     "discovered_by": r.get("discovered_by", ""),
                     "description": r.get("description", ""),
+                    "dataset_id": f"DEMO-{scenario_id}",
+                    "is_demo": True,
                 },
-                provenance=DataProvenance.SYNTHETIC
+                provenance=DataProvenance.SYNTHETIC,
+                dataset_id=f"DEMO-{scenario_id}",
+                is_demo=True
             )
             engine.add_edge(edge)
             loaded_edges += 1
@@ -237,6 +247,24 @@ class SyntheticEnterpriseLoader:
 
             # Discover structural dependencies from loaded graph
             twin.discover_dependencies_from_graph(engine)
+
+        # Register demo dataset in dataset manager
+        demo_ds_id = f"DEMO-{scenario_id}"
+        demo_meta = DatasetMetadata(
+            dataset_id=demo_ds_id,
+            name=f"{active_scenario.get('scenario_name', 'Enterprise Scenario')} (Demo)",
+            filename="nodes.csv & relationships.csv",
+            csv_type="DEMO",
+            total_rows=loaded_nodes + loaded_edges,
+            node_count=loaded_nodes,
+            edge_count=loaded_edges,
+            is_active=True,
+            is_demo=True,
+            created_at=datetime.now(timezone.utc),
+            node_ids=[r["node_id"] for r in nodes_raw],
+            edge_ids=[r["relationship_id"] for r in rels_raw],
+        )
+        dataset_manager.register_dataset(demo_meta)
 
         # 7. Sync to Neo4j if live
         neo4j_synced = False

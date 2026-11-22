@@ -184,6 +184,9 @@ class GraphEngine:
 
     def add_node(self, node: GraphNode, persist_to_neo4j: bool = False) -> None:
         """Adds or updates a node in the in-memory graph, optionally persisting to Neo4j."""
+        dataset_id = node.dataset_id or node.properties.get("dataset_id")
+        source_file = node.source_file or node.properties.get("source_file") or node.properties.get("source_dataset")
+        batch_id = node.ingestion_batch_id or node.properties.get("upload_batch_id")
         self._node_store[node.id] = node
         self._nx_graph.add_node(
             node.id,
@@ -194,12 +197,19 @@ class GraphEngine:
             is_crown_jewel=node.is_crown_jewel,
             properties=node.properties,
             provenance=node.provenance.value,
+            dataset_id=dataset_id,
+            source_file=source_file,
+            ingestion_batch_id=batch_id,
+            is_demo=node.is_demo,
         )
         if persist_to_neo4j and self.is_neo4j_live:
             self.create_or_update_node_in_neo4j(node)
 
     def add_edge(self, edge: GraphEdge, persist_to_neo4j: bool = False) -> None:
         """Adds or updates a directed edge in the in-memory graph, optionally persisting to Neo4j."""
+        dataset_id = edge.dataset_id or edge.properties.get("dataset_id")
+        source_file = edge.source_file or edge.properties.get("source_file") or edge.properties.get("source_filename")
+        batch_id = edge.ingestion_batch_id or edge.properties.get("upload_batch_id")
         self._edge_store[edge.id] = edge
         if edge.is_active:
             self._nx_graph.add_edge(
@@ -211,6 +221,10 @@ class GraphEngine:
                 confidence=edge.confidence,
                 weight=edge.weight,
                 provenance=edge.provenance.value,
+                dataset_id=dataset_id,
+                source_file=source_file,
+                ingestion_batch_id=batch_id,
+                is_demo=edge.is_demo,
             )
         if persist_to_neo4j and self.is_neo4j_live:
             self.create_or_update_edge_in_neo4j(edge)
@@ -261,11 +275,42 @@ class GraphEngine:
         from backend.app.graph.algorithms import discover_attack_paths
         return discover_attack_paths(self, max_depth, max_paths_per_pair)
 
-    def export_topology(self) -> Dict[str, Any]:
-        """Exports graph topology as JSON-serializable dictionary."""
+    def export_topology(self, dataset_id: Optional[str] = None) -> Dict[str, Any]:
+        """Exports graph topology as JSON-serializable dictionary.
+        
+        Supports dataset-scoped filtering:
+        - If dataset_id is provided and not 'all': filters nodes and edges strictly belonging to that dataset.
+        - If dataset_id is None or 'all': returns all currently loaded nodes and edges.
+        """
+        all_nodes = self.get_all_nodes()
+        all_edges = self.get_all_edges()
+
+        if dataset_id and dataset_id != "all":
+            filtered_nodes = [
+                n for n in all_nodes
+                if (n.dataset_id == dataset_id or n.properties.get("dataset_id") == dataset_id or n.properties.get("upload_batch_id") == dataset_id)
+            ]
+            node_id_set = {n.id for n in filtered_nodes}
+            filtered_edges = [
+                e for e in all_edges
+                if (
+                    e.dataset_id == dataset_id or
+                    e.properties.get("dataset_id") == dataset_id or
+                    e.properties.get("upload_batch_id") == dataset_id or
+                    (e.source in node_id_set and e.target in node_id_set)
+                )
+            ]
+            return {
+                "nodes": [n.model_dump(mode="json") for n in filtered_nodes],
+                "edges": [e.model_dump(mode="json") for e in filtered_edges],
+                "dataset_id": dataset_id,
+                "backend": "neo4j_live" if self.is_neo4j_live else "in_memory_networkx",
+            }
+
         return {
-            "nodes": [n.model_dump(mode="json") for n in self.get_all_nodes()],
-            "edges": [e.model_dump(mode="json") for e in self.get_all_edges()],
+            "nodes": [n.model_dump(mode="json") for n in all_nodes],
+            "edges": [e.model_dump(mode="json") for e in all_edges],
+            "dataset_id": "all",
             "backend": "neo4j_live" if self.is_neo4j_live else "in_memory_networkx",
         }
 
@@ -297,6 +342,11 @@ class GraphEngine:
             "CREATE INDEX idx_host_compromised IF NOT EXISTS FOR (h:Host) ON (h.is_compromised)",
             "CREATE INDEX idx_server_crown_jewel IF NOT EXISTS FOR (s:Server) ON (s.is_crown_jewel)",
             "CREATE INDEX idx_db_crown_jewel IF NOT EXISTS FOR (d:Database) ON (d.is_crown_jewel)",
+            "CREATE INDEX idx_host_dataset IF NOT EXISTS FOR (h:Host) ON (h.dataset_id)",
+            "CREATE INDEX idx_server_dataset IF NOT EXISTS FOR (s:Server) ON (s.dataset_id)",
+            "CREATE INDEX idx_endpoint_dataset IF NOT EXISTS FOR (e:Endpoint) ON (e.dataset_id)",
+            "CREATE INDEX idx_device_dataset IF NOT EXISTS FOR (d:Device) ON (d.dataset_id)",
+            "CREATE INDEX idx_node_dataset IF NOT EXISTS FOR (n:Node) ON (n.dataset_id)",
         ]
         try:
             with self._get_neo4j_session() as session:
@@ -326,6 +376,9 @@ class GraphEngine:
                     label = node.type.value if hasattr(node.type, "value") else str(node.type)
                     clean_label = "".join(c for c in label if c.isalnum() or c == "_") or "Node"
                     props = _clean_properties_map(node.properties)
+                    did = node.dataset_id or node.properties.get("dataset_id") or ""
+                    src_f = node.source_file or node.properties.get("source_file") or node.properties.get("source_dataset") or ""
+                    bid = node.ingestion_batch_id or node.properties.get("upload_batch_id") or ""
                     cypher = f"""
                     MERGE (n:{clean_label} {{id: $id}})
                     SET n.name = $name,
@@ -333,7 +386,11 @@ class GraphEngine:
                         n.criticality = $criticality,
                         n.is_compromised = $is_compromised,
                         n.is_crown_jewel = $is_crown_jewel,
-                        n.provenance = $provenance
+                        n.provenance = $provenance,
+                        n.dataset_id = $dataset_id,
+                        n.source_file = $source_file,
+                        n.ingestion_batch_id = $batch_id,
+                        n.is_demo = $is_demo
                     SET n += $props
                     """
                     session.run(
@@ -345,6 +402,10 @@ class GraphEngine:
                         is_compromised=node.is_compromised,
                         is_crown_jewel=node.is_crown_jewel,
                         provenance=node.provenance.value if hasattr(node.provenance, "value") else str(node.provenance),
+                        dataset_id=did,
+                        source_file=src_f,
+                        batch_id=bid,
+                        is_demo=bool(node.is_demo),
                         props=props,
                     )
                     synced_nodes += 1
@@ -353,6 +414,9 @@ class GraphEngine:
                     rel_type = edge.type.value if hasattr(edge.type, "value") else str(edge.type)
                     clean_rel = "".join(c for c in rel_type if c.isalnum() or c == "_") or "CONNECTED_TO"
                     props = _clean_properties_map(edge.properties)
+                    did = edge.dataset_id or edge.properties.get("dataset_id") or ""
+                    src_f = edge.source_file or edge.properties.get("source_file") or edge.properties.get("source_filename") or ""
+                    bid = edge.ingestion_batch_id or edge.properties.get("upload_batch_id") or ""
                     cypher = f"""
                     MATCH (s {{id: $source}}), (t {{id: $target}})
                     MERGE (s)-[r:{clean_rel} {{id: $id}}]->(t)
@@ -361,7 +425,11 @@ class GraphEngine:
                         r.confidence = $confidence,
                         r.weight = $weight,
                         r.is_active = $is_active,
-                        r.provenance = $provenance
+                        r.provenance = $provenance,
+                        r.dataset_id = $dataset_id,
+                        r.source_file = $source_file,
+                        r.ingestion_batch_id = $batch_id,
+                        r.is_demo = $is_demo
                     SET r += $props
                     """
                     session.run(
@@ -375,6 +443,10 @@ class GraphEngine:
                         weight=float(edge.weight),
                         is_active=bool(edge.is_active),
                         provenance=edge.provenance.value if hasattr(edge.provenance, "value") else str(edge.provenance),
+                        dataset_id=did,
+                        source_file=src_f,
+                        batch_id=bid,
+                        is_demo=bool(edge.is_demo),
                         props=props,
                     )
                     synced_edges += 1
@@ -458,12 +530,14 @@ class GraphEngine:
             loaded_edges = 0
             with self._get_neo4j_session() as session:
                 self.clear()
-                reserved_node_keys = {"id", "name", "type", "criticality", "is_compromised", "is_crown_jewel", "provenance"}
-                reserved_edge_keys = {"id", "source", "target", "type", "evidence_status", "confidence", "weight", "is_active", "provenance"}
+                reserved_node_keys = {"id", "name", "type", "criticality", "is_compromised", "is_crown_jewel", "provenance", "dataset_id", "source_file", "ingestion_batch_id", "is_demo"}
+                reserved_edge_keys = {"id", "source", "target", "type", "evidence_status", "confidence", "weight", "is_active", "provenance", "dataset_id", "source_file", "ingestion_batch_id", "is_demo"}
                 nodes_res = session.run(
                     "MATCH (n) RETURN n.id as id, n.name as name, n.type as type, "
                     "n.criticality as criticality, n.is_compromised as is_compromised, "
                     "n.is_crown_jewel as is_crown_jewel, n.provenance as provenance, "
+                    "n.dataset_id as dataset_id, n.source_file as source_file, "
+                    "n.ingestion_batch_id as ingestion_batch_id, n.is_demo as is_demo, "
                     "properties(n) as props, labels(n) as labels"
                 )
                 for record in nodes_res:
@@ -492,6 +566,10 @@ class GraphEngine:
                         is_compromised=bool(record["is_compromised"] or False),
                         is_crown_jewel=bool(record["is_crown_jewel"] or False),
                         provenance=prov,
+                        dataset_id=record.get("dataset_id") or ext_props.get("dataset_id"),
+                        source_file=record.get("source_file") or ext_props.get("source_file"),
+                        ingestion_batch_id=record.get("ingestion_batch_id") or ext_props.get("upload_batch_id"),
+                        is_demo=bool(record.get("is_demo") or False),
                         properties=ext_props,
                     )
                     self.add_node(node)
@@ -501,7 +579,9 @@ class GraphEngine:
                     "MATCH (s)-[r]->(t) RETURN r.id as id, s.id as source, t.id as target, "
                     "type(r) as rel_type, r.evidence_status as evidence_status, "
                     "r.confidence as confidence, r.weight as weight, r.is_active as is_active, "
-                    "r.provenance as provenance, properties(r) as props"
+                    "r.provenance as provenance, r.dataset_id as dataset_id, "
+                    "r.source_file as source_file, r.ingestion_batch_id as ingestion_batch_id, "
+                    "r.is_demo as is_demo, properties(r) as props"
                 )
                 for record in edges_res:
                     if not record["source"] or not record["target"]:
@@ -536,6 +616,10 @@ class GraphEngine:
                         weight=float(record["weight"] or 1.0),
                         is_active=bool(record["is_active"] if record["is_active"] is not None else True),
                         provenance=prov,
+                        dataset_id=record.get("dataset_id") or ext_props.get("dataset_id"),
+                        source_file=record.get("source_file") or ext_props.get("source_file"),
+                        ingestion_batch_id=record.get("ingestion_batch_id") or ext_props.get("upload_batch_id"),
+                        is_demo=bool(record.get("is_demo") or False),
                         properties=ext_props,
                     )
                     self.add_edge(edge)
@@ -557,6 +641,10 @@ class GraphEngine:
         label = node.type.value if hasattr(node.type, "value") else str(node.type)
         clean_label = "".join(c for c in label if c.isalnum() or c == "_") or "Node"
         props = _clean_properties_map(node.properties)
+        did = node.dataset_id or node.properties.get("dataset_id") or ""
+        src_f = node.source_file or node.properties.get("source_file") or node.properties.get("source_dataset") or ""
+        bid = node.ingestion_batch_id or node.properties.get("upload_batch_id") or ""
+
         cypher = f"""
         MERGE (n:{clean_label} {{id: $id}})
         SET n.name = $name,
@@ -564,7 +652,11 @@ class GraphEngine:
             n.criticality = $criticality,
             n.is_compromised = $is_compromised,
             n.is_crown_jewel = $is_crown_jewel,
-            n.provenance = $provenance
+            n.provenance = $provenance,
+            n.dataset_id = $dataset_id,
+            n.source_file = $source_file,
+            n.ingestion_batch_id = $batch_id,
+            n.is_demo = $is_demo
         SET n += $props
         """
         try:
@@ -578,6 +670,10 @@ class GraphEngine:
                     is_compromised=node.is_compromised,
                     is_crown_jewel=node.is_crown_jewel,
                     provenance=node.provenance.value if hasattr(node.provenance, "value") else str(node.provenance),
+                    dataset_id=did,
+                    source_file=src_f,
+                    batch_id=bid,
+                    is_demo=bool(node.is_demo),
                     props=props,
                 )
             return True
@@ -643,6 +739,10 @@ class GraphEngine:
         rel_type = edge.type.value if hasattr(edge.type, "value") else str(edge.type)
         clean_rel = "".join(c for c in rel_type if c.isalnum() or c == "_") or "CONNECTED_TO"
         props = _clean_properties_map(edge.properties)
+        did = edge.dataset_id or edge.properties.get("dataset_id") or ""
+        src_f = edge.source_file or edge.properties.get("source_file") or edge.properties.get("source_filename") or ""
+        bid = edge.ingestion_batch_id or edge.properties.get("upload_batch_id") or ""
+
         cypher = f"""
         MATCH (s {{id: $source}}), (t {{id: $target}})
         MERGE (s)-[r:{clean_rel} {{id: $id}}]->(t)
@@ -651,7 +751,11 @@ class GraphEngine:
             r.confidence = $confidence,
             r.weight = $weight,
             r.is_active = $is_active,
-            r.provenance = $provenance
+            r.provenance = $provenance,
+            r.dataset_id = $dataset_id,
+            r.source_file = $source_file,
+            r.ingestion_batch_id = $batch_id,
+            r.is_demo = $is_demo
         SET r += $props
         """
         try:
@@ -667,12 +771,120 @@ class GraphEngine:
                     weight=float(edge.weight),
                     is_active=bool(edge.is_active),
                     provenance=edge.provenance.value if hasattr(edge.provenance, "value") else str(edge.provenance),
+                    dataset_id=did,
+                    source_file=src_f,
+                    batch_id=bid,
+                    is_demo=bool(edge.is_demo),
                     props=props,
                 )
             return True
         except Exception as e:
             logger.error("Failed to persist edge %s to Neo4j: %s", edge.id, str(e))
             return False
+
+    def delete_dataset_scoped(self, dataset_id: str) -> Dict[str, Any]:
+        """Safely and permanently deletes only entities belonging to a specific dataset_id.
+        
+        Strict Safety Contract (Phase 4):
+        1. NEVER executes 'MATCH (n) DETACH DELETE n'!
+        2. Scoped strictly to nodes and relationships tagged with dataset_id = $dataset_id.
+        3. Preserves unrelated datasets and demo scenarios completely.
+        4. Synchronizes both live Neo4j AuraDB and active NetworkX in-memory graph.
+        5. Returns verified counts of deleted nodes and relationships.
+        """
+        if not dataset_id or not dataset_id.strip():
+            raise ValueError("A valid non-empty dataset_id is required for deletion.")
+
+        deleted_nodes = 0
+        deleted_edges = 0
+        neo4j_deleted_nodes = 0
+        neo4j_deleted_edges = 0
+
+        # Step 1: Neo4j Scoped Deletion
+        if self.is_neo4j_live and self._neo4j_driver:
+            try:
+                with self._get_neo4j_session() as session:
+                    # Count before deletion for verification
+                    count_nodes_query = "MATCH (n {dataset_id: $dataset_id}) RETURN count(n) as cnt"
+                    n_cnt_res = session.run(count_nodes_query, dataset_id=dataset_id).single()
+                    n_cnt = n_cnt_res["cnt"] if n_cnt_res else 0
+
+                    count_edges_query = "MATCH ()-[r {dataset_id: $dataset_id}]->() RETURN count(r) as cnt"
+                    e_cnt_res = session.run(count_edges_query, dataset_id=dataset_id).single()
+                    e_cnt = e_cnt_res["cnt"] if e_cnt_res else 0
+                    
+                    # 1. Delete relationships where relationship itself belongs to dataset
+                    del_rel_query = "MATCH ()-[r {dataset_id: $dataset_id}]->() DELETE r"
+                    session.run(del_rel_query, dataset_id=dataset_id)
+                    
+                    # 2. Delete relationships connected to nodes belonging to dataset
+                    del_incident_query = "MATCH (n {dataset_id: $dataset_id})-[r]->() DELETE r"
+                    session.run(del_incident_query, dataset_id=dataset_id)
+                    del_incident_in = "MATCH ()-[r]->(n {dataset_id: $dataset_id}) DELETE r"
+                    session.run(del_incident_in, dataset_id=dataset_id)
+                    
+                    # 3. Delete the nodes belonging to dataset
+                    del_nodes_query = "MATCH (n {dataset_id: $dataset_id}) DELETE n"
+                    session.run(del_nodes_query, dataset_id=dataset_id)
+                    
+                    neo4j_deleted_nodes = n_cnt
+                    neo4j_deleted_edges = e_cnt
+            except Exception as e:
+                logger.error("Error executing Neo4j dataset scoped deletion for %s: %s", dataset_id, str(e))
+
+        # Step 2: NetworkX / In-Memory Scoped Deletion
+        nodes_to_remove = [
+            nid for nid, node in self._node_store.items()
+            if (node.dataset_id == dataset_id or node.properties.get("dataset_id") == dataset_id or node.properties.get("upload_batch_id") == dataset_id)
+        ]
+        
+        edges_to_remove = [
+            eid for eid, edge in self._edge_store.items()
+            if (
+                edge.dataset_id == dataset_id or
+                edge.properties.get("dataset_id") == dataset_id or
+                edge.properties.get("upload_batch_id") == dataset_id or
+                edge.source in nodes_to_remove or
+                edge.target in nodes_to_remove
+            )
+        ]
+
+        for eid in edges_to_remove:
+            edge = self._edge_store.pop(eid, None)
+            if edge and self._nx_graph.has_edge(edge.source, edge.target):
+                try:
+                    self._nx_graph.remove_edge(edge.source, edge.target)
+                except Exception:
+                    pass
+            deleted_edges += 1
+
+        for nid in nodes_to_remove:
+            self._node_store.pop(nid, None)
+            if self._nx_graph.has_node(nid):
+                try:
+                    self._nx_graph.remove_node(nid)
+                except Exception:
+                    pass
+            deleted_nodes += 1
+
+        logger.info(
+            "Scoped deletion completed for dataset %s: In-Memory (%d nodes, %d edges), Neo4j (%d nodes, %d edges). Remaining: %d nodes, %d edges.",
+            dataset_id, deleted_nodes, deleted_edges, neo4j_deleted_nodes, neo4j_deleted_edges, len(self._node_store), len(self._edge_store)
+        )
+
+        return {
+            "dataset_id": dataset_id,
+            "status": "DELETED",
+            "nodes_deleted": deleted_nodes,
+            "edges_deleted": deleted_edges,
+            "in_memory_deleted_nodes": deleted_nodes,
+            "in_memory_deleted_edges": deleted_edges,
+            "neo4j_deleted_nodes": neo4j_deleted_nodes,
+            "neo4j_deleted_edges": neo4j_deleted_edges,
+            "remaining_nodes": len(self._node_store),
+            "remaining_edges": len(self._edge_store),
+            "neo4j_synced": self.is_neo4j_live,
+        }
 
     def get_edge_from_neo4j(self, edge_id: str) -> Optional[GraphEdge]:
         """Retrieves an edge from live Neo4j by ID."""

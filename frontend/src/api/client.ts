@@ -269,11 +269,26 @@ export const api = {
       body: formData,
     });
     if (!response.ok) {
-      const errorBody = await response.text();
+      let errorBody = await response.text();
+      if (response.status === 502 || response.status === 504) {
+        throw new Error(`Upload Failed [${response.status}]: Server gateway timeout or restarting. Please retry in a few moments.`);
+      }
+      if (errorBody && (errorBody.startsWith('<!DOCTYPE') || errorBody.includes('<html'))) {
+        errorBody = `Server returned status ${response.status} (${response.statusText}).`;
+      }
       throw new Error(`Upload Failed [${response.status}] ${response.statusText}: ${errorBody}`);
     }
     return response.json();
   },
+
+  // Dataset Lifecycle (Dynamic Neo4j & Bloom Synchronization)
+  listDatasets: () => fetchApi<DatasetMetadata[]>('/datasets'),
+  getActiveDataset: () => fetchApi<DatasetMetadata | null>('/datasets/active'),
+  activateDataset: (datasetId: string) => fetchApi<any>(`/datasets/${encodeURIComponent(datasetId)}/activate`, { method: 'POST' }),
+  deleteDataset: (datasetId: string, confirm: boolean = true) =>
+    fetchApi<DatasetDeletionResult>(`/datasets/${encodeURIComponent(datasetId)}?confirm=${confirm}`, { method: 'DELETE' }),
+  resetDemoDataset: (scenarioId: string = 'SCEN-001') =>
+    fetchApi<any>(`/datasets/reset-demo?scenario_id=${encodeURIComponent(scenarioId)}`, { method: 'POST' }),
 
   // Machine Learning, Explainability & ML-Powered Containment (Phase 7.2C)
   getMlHealth: () => fetchApi<any>('/ml/health'),
@@ -633,8 +648,36 @@ export interface ThreatIntelSummary {
   last_correlated_at?: string;
 }
 
+export interface DatasetMetadata {
+  dataset_id: string;
+  name: string;
+  filename?: string;
+  csv_type: string;
+  total_rows: number;
+  node_count: number;
+  edge_count: number;
+  is_active: boolean;
+  is_demo: boolean;
+  created_at?: string;
+  updated_at?: string;
+  node_ids?: string[];
+  edge_ids?: string[];
+}
+
+export interface DatasetDeletionResult {
+  status: string;
+  dataset_id: string;
+  nodes_deleted: number;
+  edges_deleted: number;
+  neo4j_nodes_deleted: number;
+  neo4j_edges_deleted: number;
+  neo4j_synced: boolean;
+  message: string;
+}
+
 export interface CSVIngestionSummary {
   upload_id: string;
+  dataset_id?: string;
   filename: string;
   csv_type: string;
   total_rows: number;
@@ -653,6 +696,8 @@ export interface CSVIngestionSummary {
     entity_id?: string;
     field?: string;
     error: string;
+    message?: string;
+    raw_line?: string;
   }>;
   status: string;
   message: string;

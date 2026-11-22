@@ -34,6 +34,7 @@ from backend.app.ingestion.connectors import (
     SyntheticScenarioGenerator,
 )
 from backend.app.ingestion.contracts import IngestionResult
+from backend.app.ingestion.dataset_manager import DatasetManager, DatasetMetadata, dataset_manager
 from backend.app.ingestion.synthetic_enterprise_loader import SyntheticEnterpriseLoader, DEFAULT_DATASET_DIR
 from backend.app.ingestion.dataset_validator import DatasetValidator
 from backend.app.ingestion.service import CSVIngestionSummary, TelemetryIngestionService
@@ -579,6 +580,121 @@ def upload_and_ingest_csv(
     return summary
 
 
+# =====================================================================
+# DATASET LIFECYCLE & PERSISTENCE ENDPOINTS
+# =====================================================================
+
+@api_router.get("/datasets", tags=["Dataset Lifecycle"])
+def list_all_datasets(
+    current_user: UserRecord = Depends(require_viewer),
+) -> List[Dict[str, Any]]:
+    """Returns metadata for all registered datasets and their active status."""
+    datasets = dataset_manager.list_datasets()
+    return [d.model_dump() for d in datasets]
+
+
+@api_router.get("/datasets/active", tags=["Dataset Lifecycle"])
+def get_active_dataset_metadata(
+    current_user: UserRecord = Depends(require_viewer),
+) -> Optional[Dict[str, Any]]:
+    """Returns metadata for the currently active dataset or null if no dataset is loaded."""
+    active = dataset_manager.get_active_dataset()
+    return active.model_dump() if active else None
+
+
+@api_router.post("/datasets/{dataset_id}/activate", tags=["Dataset Lifecycle"])
+def set_active_dataset(
+    dataset_id: str,
+    current_user: UserRecord = Depends(require_analyst),
+) -> Dict[str, Any]:
+    """Switches the active dataset for topology and risk analysis."""
+    ok = dataset_manager.set_active_dataset(dataset_id)
+    if not ok:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Dataset '{dataset_id}' not found in registry."
+        )
+    active = dataset_manager.get_active_dataset()
+    return {"status": "SUCCESS", "active_dataset": active.model_dump() if active else None}
+
+
+@api_router.delete("/datasets/{dataset_id}", tags=["Dataset Lifecycle"])
+def delete_dataset(
+    dataset_id: str,
+    confirm: bool = Query(False, description="Must be true to confirm deletion"),
+    current_user: UserRecord = Depends(require_admin),
+) -> Dict[str, Any]:
+    """Permanently deletes a dataset from SafeContain AI graph engine and Neo4j Aura.
+    
+    Executes scoped Cypher deletion targeting ONLY nodes and relationships associated with
+    this dataset_id. NEVER executes global DETACH DELETE.
+    """
+    if not confirm:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Confirmation required. Set query parameter confirm=true to delete dataset '{dataset_id}'."
+        )
+
+    # Scoped deletion on graph engine (purges both NetworkX and live Neo4j Aura)
+    stats = platform_ctx.engine.delete_dataset_scoped(dataset_id)
+
+    # Remove from dataset manager registry
+    deleted_meta = dataset_manager.delete_dataset(dataset_id)
+
+    # Refresh digital twin dependencies from remaining graph
+    platform_ctx.twin.discover_dependencies_from_graph(platform_ctx.engine)
+
+    # Cryptographic ledger audit event
+    actor_id = current_user.username if isinstance(current_user, UserRecord) else "admin"
+    platform_ctx.ledger.record_event(
+        actor_id=actor_id,
+        actor_role=UserRole.PLATFORM_ADMIN,
+        action="DATASET_DELETED",
+        resource_type="Dataset",
+        resource_id=dataset_id,
+        metadata=stats
+    )
+
+    return {
+        "status": "DELETED",
+        "dataset_id": dataset_id,
+        "nodes_deleted": stats.get("nodes_deleted", 0),
+        "edges_deleted": stats.get("edges_deleted", 0),
+        "neo4j_nodes_deleted": stats.get("neo4j_nodes_deleted", 0),
+        "neo4j_edges_deleted": stats.get("neo4j_edges_deleted", 0),
+        "neo4j_synced": stats.get("neo4j_synced", False),
+        "message": f"Dataset '{dataset_id}' successfully removed from memory and Neo4j Aura."
+    }
+
+
+@api_router.post("/datasets/reset-demo", tags=["Dataset Lifecycle"])
+def reset_demo_scenario(
+    scenario_id: str = "SCEN-001",
+    current_user: UserRecord = Depends(require_admin),
+) -> Dict[str, Any]:
+    """Restores the baseline demo scenario (SCEN-001) into graph and Neo4j."""
+    res = platform_ctx.enterprise_loader.load_scenario_into_platform(
+        platform_ctx.engine,
+        platform_ctx.twin,
+        scenario_id=scenario_id
+    )
+    platform_ctx.active_scenario_name = f"{res['scenario_name']} ({res['scenario_id']})"
+    platform_ctx.last_ingestion_timestamp = datetime.now(timezone.utc).isoformat()
+    if platform_ctx.engine.is_neo4j_live:
+        platform_ctx.engine.sync_to_neo4j()
+
+    actor_id = current_user.username if isinstance(current_user, UserRecord) else "admin"
+    platform_ctx.ledger.record_event(
+        actor_id=actor_id,
+        actor_role=UserRole.PLATFORM_ADMIN,
+        action="DEMO_SCENARIO_RESET",
+        resource_type="Scenario",
+        resource_id=scenario_id,
+        metadata=res
+    )
+    return res
+
+
 @api_router.post("/scenario/load-synthetic", tags=["Ingestion"])
 def load_synthetic_scenario(
     scenario_name: str = "Operation Sovereign Gateway",
@@ -889,10 +1005,30 @@ def get_dataset_business_impact(
 
 @api_router.get("/graph/topology", tags=["Graph Intelligence"])
 def get_graph_topology(
+    dataset_id: Optional[str] = Query(None, description="Optional dataset ID filter"),
     current_user: UserRecord = Depends(require_viewer),
 ) -> Dict[str, Any]:
-    """Returns normalized infrastructure graph topology."""
-    return platform_ctx.engine.export_topology()
+    """Returns normalized infrastructure graph topology scoped to active or specified dataset."""
+    target_dataset = dataset_id
+    if target_dataset is None:
+        active = dataset_manager.get_active_dataset()
+        if active:
+            target_dataset = active.dataset_id
+        else:
+            all_datasets = dataset_manager.list_datasets()
+            if not all_datasets:
+                return {
+                    "nodes": [],
+                    "edges": [],
+                    "directed": True,
+                    "multigraph": False,
+                    "graph": {},
+                    "active_dataset": None
+                }
+
+    topo = platform_ctx.engine.export_topology(dataset_id=target_dataset)
+    topo["active_dataset"] = target_dataset
+    return topo
 
 
 @api_router.get("/graph/attack-paths", response_model=List[AttackPath], tags=["Graph Intelligence"])
