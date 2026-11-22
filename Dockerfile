@@ -54,10 +54,8 @@ RUN useradd -m -u 1000 safecontain && \
 COPY --from=python-builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=python-builder /usr/local/bin /usr/local/bin
 
-# Copy backend codebase & artifacts
+# Copy backend codebase
 COPY backend /app/backend
-COPY artifacts /app/artifacts
-COPY contracts /app/contracts
 COPY pyproject.toml /app/
 
 # Copy compiled frontend SPA from Stage 1 into /app/frontend/dist
