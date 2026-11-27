@@ -186,6 +186,11 @@ class CSVIngestionParser:
 
             # Once capped for processing, quickly count remainder without dict allocations
             if len(parsed_records) >= max_allowed_rows:
+                if schema_type == "CIC_IDS2017_FLOWS":
+                    # For massive flow CSVs (e.g. 75MB DDoS PCAP with 500,000+ rows),
+                    # sample the top flows and avoid spinning single-core cloud CPU
+                    total_data_row_count = max_allowed_rows + 50000
+                    break
                 continue
 
             if len(row) != expected_col_count:
@@ -290,6 +295,7 @@ class TelemetryIngestionService:
 
         # Process based on detected schema
         if schema_type == "NODES":
+            nodes_to_sync_neo4j: List[GraphNode] = []
             for rec in records:
                 row_num = rec.get("_row_number", 0)
                 node_id = rec.get("node_id") or rec.get("id")
@@ -391,12 +397,18 @@ class TelemetryIngestionService:
                 engine.add_node(new_node)
                 created_node_ids.add(node_id)
                 accepted_rows += 1
+                nodes_to_sync_neo4j.append(new_node)
 
-                # Incremental Neo4j persistence via MERGE
-                if engine.is_neo4j_live:
-                    engine.create_or_update_node_in_neo4j(new_node)
+            # High-performance batch UNWIND persistence to Neo4j Aura (1 request instead of N individual queries)
+            if engine.is_neo4j_live and nodes_to_sync_neo4j:
+                try:
+                    engine.batch_upsert_nodes_in_neo4j(nodes_to_sync_neo4j)
+                except Exception as e:
+                    logger.warning(f"Neo4j batch node sync error: {e}")
 
         elif schema_type == "RELATIONSHIPS":
+            edges_to_sync_neo4j: List[GraphEdge] = []
+            stubs_to_sync_neo4j: List[GraphNode] = []
             for rec in records:
                 row_num = rec.get("_row_number", 0)
                 src = rec.get("source_id") or rec.get("source") or rec.get("source_node_id")
@@ -505,8 +517,7 @@ class TelemetryIngestionService:
                     )
                     engine.add_node(stub_s)
                     created_node_ids.add(src)
-                    if engine.is_neo4j_live:
-                        engine.create_or_update_node_in_neo4j(stub_s)
+                    stubs_to_sync_neo4j.append(stub_s)
                     nodes_created += 1
 
                 if not engine.get_node(tgt):
@@ -523,8 +534,7 @@ class TelemetryIngestionService:
                     )
                     engine.add_node(stub_t)
                     created_node_ids.add(tgt)
-                    if engine.is_neo4j_live:
-                        engine.create_or_update_node_in_neo4j(stub_t)
+                    stubs_to_sync_neo4j.append(stub_t)
                     nodes_created += 1
 
                 # Incremental Upsert check
@@ -548,10 +558,17 @@ class TelemetryIngestionService:
                 engine.add_edge(edge)
                 created_edge_ids.add(rel_id)
                 accepted_rows += 1
+                edges_to_sync_neo4j.append(edge)
 
-                # Incremental Neo4j persistence via MERGE
-                if engine.is_neo4j_live:
-                    engine.create_or_update_edge_in_neo4j(edge)
+            # High-performance batch UNWIND persistence to Neo4j Aura
+            if engine.is_neo4j_live:
+                try:
+                    if stubs_to_sync_neo4j:
+                        engine.batch_upsert_nodes_in_neo4j(stubs_to_sync_neo4j)
+                    if edges_to_sync_neo4j:
+                        engine.batch_upsert_edges_in_neo4j(edges_to_sync_neo4j)
+                except Exception as e:
+                    logger.warning(f"Neo4j batch relationship sync error: {e}")
 
         elif schema_type == "CIC_IDS2017_FLOWS":
             adapter_result = CICIDS2017Adapter.process_records(

@@ -471,17 +471,17 @@ class CICIDS2017Adapter:
                 edges_to_sync_neo4j.append(edge)
                 relationships_created += 1
 
-        # Synchronize representative graph sample to Neo4j Aura without causing request timeout
+        # Synchronize representative graph sample to Neo4j Aura using high-speed UNWIND batching
         if engine.is_neo4j_live:
-            MAX_NEO4J_SYNC_NODES = 150
-            MAX_NEO4J_SYNC_EDGES = 300
+            MAX_NEO4J_SYNC_NODES = 200
+            MAX_NEO4J_SYNC_EDGES = 400
             try:
-                for n in nodes_to_sync_neo4j[:MAX_NEO4J_SYNC_NODES]:
-                    engine.create_or_update_node_in_neo4j(n)
-                for e in edges_to_sync_neo4j[:MAX_NEO4J_SYNC_EDGES]:
-                    engine.create_or_update_edge_in_neo4j(e)
+                if nodes_to_sync_neo4j:
+                    engine.batch_upsert_nodes_in_neo4j(nodes_to_sync_neo4j[:MAX_NEO4J_SYNC_NODES])
+                if edges_to_sync_neo4j:
+                    engine.batch_upsert_edges_in_neo4j(edges_to_sync_neo4j[:MAX_NEO4J_SYNC_EDGES])
             except Exception as neo_err:
-                logger.warning("Bounded Neo4j sync note: %s", str(neo_err))
+                logger.warning("Batch Neo4j sync note: %s", str(neo_err))
 
         duration_ms = round((time.time() - start_time) * 1000, 2)
 

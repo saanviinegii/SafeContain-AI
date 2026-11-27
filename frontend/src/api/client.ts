@@ -111,9 +111,20 @@ export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): 
   });
 
   if (!response.ok) {
-    const errorBody = await response.text();
+    let errorBody = await response.text();
     if (response.status === 401 && typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('safecontain:unauthorized'));
+    }
+    if (response.status === 502 || response.status === 504 || response.status === 503) {
+      throw new Error(`Server Waking Up [${response.status}]: Cloud container is spinning up or restarting after inactivity. Please retry in a few moments.`);
+    }
+    if (errorBody && (errorBody.startsWith('<!DOCTYPE') || errorBody.includes('<html') || errorBody.includes('502 Bad Gateway'))) {
+      errorBody = `Server temporarily unavailable (${response.status} ${response.statusText}).`;
+    } else {
+      try {
+        const parsed = JSON.parse(errorBody);
+        errorBody = parsed.detail || parsed.message || errorBody;
+      } catch (_) {}
     }
     throw new Error(`API Error [${response.status}] ${response.statusText}: ${errorBody}`);
   }
@@ -270,12 +281,16 @@ export const api = {
     });
     if (!response.ok) {
       let errorBody = await response.text();
-      if (response.status === 502 || response.status === 504) {
+      if (response.status === 502 || response.status === 504 || response.status === 503) {
+        throw new Error(`Cloud Server Waking Up [${response.status}]: The container was spinning up or restarting after inactivity. Please wait 10-15 seconds and click "Upload & Ingest" again.`);
+      }
+      if (errorBody && (errorBody.startsWith('<!DOCTYPE') || errorBody.includes('<html') || errorBody.includes('502 Bad Gateway'))) {
         throw new Error(`Upload Failed [${response.status}]: Server gateway timeout or restarting. Please retry in a few moments.`);
       }
-      if (errorBody && (errorBody.startsWith('<!DOCTYPE') || errorBody.includes('<html'))) {
-        errorBody = `Server returned status ${response.status} (${response.statusText}).`;
-      }
+      try {
+        const parsed = JSON.parse(errorBody);
+        errorBody = parsed.detail || parsed.message || errorBody;
+      } catch (_) {}
       throw new Error(`Upload Failed [${response.status}] ${response.statusText}: ${errorBody}`);
     }
     return response.json();

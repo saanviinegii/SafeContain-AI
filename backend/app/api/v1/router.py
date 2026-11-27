@@ -1717,5 +1717,26 @@ api_router.include_router(calibration_router)
 from backend.app.early_warning.router import router as early_warning_router
 api_router.include_router(early_warning_router)
 
+# =====================================================================
+# AUTONOMOUS INFRASTRUCTURE CONNECTORS & LIVE TELEMETRY (SAFE CONTAIN 2.0)
+# =====================================================================
+from backend.app.connectors.router import router as infrastructure_router
+api_router.include_router(infrastructure_router)
+
+# =====================================================================
+# AUTONOMOUS SECURITY TESTING SUBROUTER (SAFE CONTAIN 2.0)
+# =====================================================================
+from backend.app.security_testing.router import router as security_testing_router
+api_router.include_router(security_testing_router)
+
+# =====================================================================
+# AUTONOMOUS PLATFORM SELF-TESTING SUBROUTER (SAFE CONTAIN 2.0)
+# =====================================================================
+from backend.app.self_test.router import router as self_test_router
+api_router.include_router(self_test_router)
+
+
+
+
 
 

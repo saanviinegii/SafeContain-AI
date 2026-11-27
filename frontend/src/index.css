@@ -1,10 +1,15 @@
 /* SafeContain AI — Reference-Driven Enterprise UI/UX Design System
-   References:
-     1. Security Command Center (Deep Navy Sidebar #10233F, Light Analytical Workspace #F4F7FB)
-     2. Modern Threat Center (Clean White Surfaces #FFFFFF, Sky Blue Accents #3B82F6, #0284C7)
-     3. Interactive Cyber Attack Graph (Light Canvas #FFFFFF, Clear Labels #10233F, Real IP Monospace Tooltip)
-     4. Professional AI Explainability (White Cards, Deep Navy Typography, SHAP Attribution Bars)
-     5. Predictive Risk Dashboard (Clean Forecasting, Sky Blue Accents, Trajectory Confidence Bands)
+   Visual Direction:
+     - Professional cybersecurity SaaS dashboard
+     - Deep navy sidebar (#071B36)
+     - Clean light workspace (#F4F7FB)
+     - Crisp white cards (#FFFFFF)
+     - Primary blue accents (#1769D2)
+     - Green live-status indicators (#16A36A)
+     - Orange warning indicators (#E99A26)
+     - Red critical-risk indicators (#DC4545)
+     - Subtle borders (#E3EAF2)
+     - Compact enterprise spacing & clear typography
 */
 
 :root {
@@ -14,63 +19,63 @@
   --bg-secondary: #ffffff;
   --bg-card: #ffffff;
   --bg-card-hover: #f8fafc;
-  --bg-tertiary: #edf3f9;
+  --bg-tertiary: #f0f4f9;
   --bg-elevated: #ffffff;
   --bg-input: #ffffff;
   --bg-topbar: #ffffff;
   
-  /* Deep Navy Sidebar (#10233F Reference 1) */
-  --bg-sidebar: #10233f;
-  --bg-sidebar-header: #0b1a30;
-  --bg-sidebar-hover: #173253;
-  --bg-sidebar-active: #244c7a;
-  --bg-sidebar-footer: #0b1a30;
+  /* Deep Navy Sidebar (#071B36 Reference Design) */
+  --bg-sidebar: #071b36;
+  --bg-sidebar-header: #051429;
+  --bg-sidebar-hover: #0f2c52;
+  --bg-sidebar-active: #1769d2;
+  --bg-sidebar-footer: #051429;
   --sidebar-text-primary: #ffffff;
-  --sidebar-text-secondary: #d8e5f4;
+  --sidebar-text-secondary: #cbd5e1;
   --sidebar-text-muted: #8da4c4;
-  --sidebar-border: #1a355d;
+  --sidebar-border: #132d54;
   
   /* Borders & Dividers */
-  --border-subtle: #e2e8f0;
-  --border-color: #dce5ef;
+  --border-subtle: #e3eaf2;
+  --border-color: #e3eaf2;
   --border-elevated: #cbd5e1;
-  --border-focus: #3b82f6;
+  --border-focus: #1769d2;
   
   /* Typography & Text */
-  --text-primary: #10233f;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
-  --text-dim: #94a3b8;
+  --text-primary: #172b45;
+  --text-secondary: #718096;
+  --text-muted: #a0aec0;
+  --text-dim: #cbd5e1;
   
   /* Core Cybersecurity & AI Accents */
-  --accent-primary: #3b82f6;
-  --accent-blue: #3b82f6;
+  --accent-primary: #1769d2;
+  --accent-blue: #1769d2;
   --accent-cyan: #0284c7;
   --accent-cyan-dim: #e7f3ff;
   --accent-purple: #7c3aed;
   --accent-purple-dim: #f5f3ff;
-  --accent-emerald: #16a34a;
+  --accent-emerald: #16a36a;
   --accent-emerald-dim: #f0fdf4;
-  --accent-amber: #d97706;
+  --accent-amber: #e99a26;
   --accent-amber-dim: #fffbeb;
-  --accent-crimson: #dc2626;
+  --accent-crimson: #dc4545;
   --accent-crimson-dim: #fef2f2;
-  --accent-danger: #dc2626;
+  --accent-danger: #dc4545;
   
   /* AI Highlighting Surfaces */
-  --ai-surface: #e7f3ff;
+  --ai-surface: #eef6ff;
   --ai-border: #cde7ff;
-  --ai-accent: #0284c7;
+  --ai-accent: #1769d2;
 
   /* Font Families */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Roboto Mono', monospace;
 
   /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(16, 35, 63, 0.05), 0 1px 2px rgba(16, 35, 63, 0.03);
-  --shadow-md: 0 4px 12px rgba(16, 35, 63, 0.07), 0 2px 4px rgba(16, 35, 63, 0.04);
-  --shadow-lg: 0 10px 25px rgba(16, 35, 63, 0.1), 0 4px 10px rgba(16, 35, 63, 0.05);
-  --shadow-floating: 0 12px 32px rgba(16, 35, 63, 0.16), 0 4px 8px rgba(16, 35, 63, 0.08);
+  --shadow-sm: 0 1px 3px rgba(23, 43, 69, 0.05), 0 1px 2px rgba(23, 43, 69, 0.03);
+  --shadow-md: 0 4px 12px rgba(23, 43, 69, 0.07), 0 2px 4px rgba(23, 43, 69, 0.04);
+  --shadow-lg: 0 10px 25px rgba(23, 43, 69, 0.1), 0 4px 10px rgba(23, 43, 69, 0.05);
+  --shadow-floating: 0 12px 32px rgba(23, 43, 69, 0.16), 0 4px 8px rgba(23, 43, 69, 0.08);
 }
 
 /* Reset & Box Sizing */
@@ -279,31 +284,31 @@ html, body {
 .nav-item.active {
   background-color: var(--bg-sidebar-active);
   color: #ffffff;
-  border-color: rgba(56, 189, 248, 0.4);
+  border-color: rgba(255, 255, 255, 0.2);
   font-weight: 600;
+  box-shadow: 0 2px 8px rgba(23, 105, 210, 0.35);
 }
 
 .nav-item.active::before {
   content: '';
   position: absolute;
-  left: -2px;
+  left: 0;
   top: 6px;
   bottom: 6px;
   width: 3px;
   border-radius: 2px;
-  background-color: #38bdf8;
-  box-shadow: 0 0 8px #38bdf8;
+  background-color: #ffffff;
 }
 
 /* Sidebar Footer */
 .sidebar-footer {
   margin-top: auto;
-  padding: 14px 16px;
+  padding: 12px 14px;
   border-top: 1px solid var(--sidebar-border);
   background: var(--bg-sidebar-footer);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .sidebar-status-indicator {
@@ -327,22 +332,24 @@ html, body {
 
 /* Top Operational Banner */
 .app-topbar {
-  height: 64px;
+  min-height: 56px;
+  height: auto;
   background: var(--bg-topbar);
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 8px 20px;
   flex-shrink: 0;
   z-index: 10;
-  box-shadow: 0 1px 2px rgba(16, 35, 63, 0.04);
+  box-shadow: 0 1px 2px rgba(23, 43, 69, 0.04);
+  gap: 14px;
 }
 
 .topbar-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .view-heading {
@@ -806,9 +813,14 @@ html, body {
   padding: 14px 16px;
   min-width: 290px;
   max-width: 360px;
-  pointer-events: auto;
+  pointer-events: none; /* Allows grabbing and clicking nodes behind/under the tooltip without interference */
   transition: opacity 0.15s ease-out;
   animation: fadeIn 0.15s ease-out forwards;
+}
+
+.graph-tooltip-card button,
+.graph-tooltip-card a {
+  pointer-events: auto; /* Interactive buttons like Copy IP remain clickable */
 }
 
 .graph-controls-overlay {

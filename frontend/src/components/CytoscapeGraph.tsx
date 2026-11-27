@@ -47,6 +47,7 @@ export const CytoscapeGraph: React.FC<CytoscapeGraphProps> = ({
   const [hoveredNode, setHoveredNode] = useState<HoveredNodeData | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
   const [copiedIp, setCopiedIp] = useState<string | null>(null);
+  const [layoutMode, setLayoutMode] = useState<'breadthfirst' | 'cose'>('breadthfirst');
 
   useEffect(() => {
     if (!containerRef.current || nodes.length === 0) return;
@@ -147,6 +148,41 @@ export const CytoscapeGraph: React.FC<CytoscapeGraphProps> = ({
         width = 44;
         height = 44;
         prefix = '🖥️ ';
+      } else if (n.type === 'Firewall' || n.type === 'FIREWALL') {
+        bgColor = '#c2410c'; // Burnt Orange
+        borderColor = '#f97316';
+        shape = 'round-diamond';
+        width = 50;
+        height = 50;
+        prefix = '🛡️ ';
+      } else if (n.type === 'Router' || n.type === 'ROUTER') {
+        bgColor = '#0e7490'; // Deep Cyan
+        borderColor = '#06b6d4';
+        shape = 'octagon';
+        width = 46;
+        height = 46;
+        prefix = '🔄 ';
+      } else if (n.type === 'Switch' || n.type === 'SWITCH') {
+        bgColor = '#0f766e'; // Deep Teal
+        borderColor = '#14b8a6';
+        shape = 'round-rectangle';
+        width = 46;
+        height = 40;
+        prefix = '🔀 ';
+      } else if (n.type === 'Subnet' || n.type === 'SUBNET') {
+        bgColor = '#475569'; // Muted Slate
+        borderColor = '#94a3b8';
+        shape = 'round-rectangle';
+        width = 56;
+        height = 36;
+        prefix = '🌐 ';
+      } else if (n.type === 'Vulnerability' || n.type === 'VULNERABILITY') {
+        bgColor = '#b91c1c'; // Red Alert
+        borderColor = '#ef4444';
+        shape = 'triangle';
+        width = 40;
+        height = 40;
+        prefix = '⚠️ ';
       }
 
       const displayName = n.name || n.id;
@@ -217,6 +253,19 @@ export const CytoscapeGraph: React.FC<CytoscapeGraphProps> = ({
       } else if (e.type === 'HAS_ACCESS_TO' || e.type === 'CAN_ACCESS') {
         lineColor = '#2563eb'; // Blue for credential access
         width = 2;
+      } else if (e.type === 'COMMUNICATES_WITH') {
+        lineColor = '#0284c7'; // Cyan blue for active network flow
+        width = 2.5;
+      } else if (e.type === 'PROTECTED_BY') {
+        lineColor = '#ea580c'; // Orange for firewall shield
+        width = 2.5;
+        lineStyle = 'dashed';
+      } else if (e.type === 'ROUTES_TO') {
+        lineColor = '#0d9488'; // Teal for routing hop
+        width = 2;
+      } else if (e.type === 'RUNS_SERVICE') {
+        lineColor = '#4f46e5'; // Indigo for host service daemon
+        width = 1.8;
       }
 
       elements.push({
@@ -291,11 +340,18 @@ export const CytoscapeGraph: React.FC<CytoscapeGraphProps> = ({
         },
       ],
       layout: {
-        name: 'breadthfirst',
-        directed: true,
+        name: layoutMode,
+        directed: layoutMode === 'breadthfirst',
         padding: 40,
         spacingFactor: 1.4,
-      },
+        animate: true,
+        animationDuration: 600,
+      } as any,
+      userPanningEnabled: true,
+      userZoomingEnabled: true,
+      boxSelectionEnabled: false,
+      autoungrabify: false,
+      autounselectify: false,
     });
 
     // Node click selection handler
@@ -304,6 +360,17 @@ export const CytoscapeGraph: React.FC<CytoscapeGraphProps> = ({
       if (onSelectNode) {
         onSelectNode(nodeData);
       }
+    });
+
+    // Node grab & drag handlers - dismiss hover tooltip on drag start to prevent jitter & allow free repositioning
+    cy.on('grab', 'node', () => {
+      setHoveredNode(null);
+      setTooltipPos(null);
+    });
+
+    cy.on('drag', 'node', () => {
+      setHoveredNode(null);
+      setTooltipPos(null);
     });
 
     // Node hover event listeners for rich real-time tooltip with IP
@@ -355,6 +422,44 @@ export const CytoscapeGraph: React.FC<CytoscapeGraphProps> = ({
   }, [nodes, edges, highlightPathNodeIds, blockedEdgeIds, residualPathEdgeIds, mlRiskMap]);
 
   // Graph canvas controls
+  const handleToggleLayout = (mode: 'breadthfirst' | 'cose') => {
+    if (!cyRef.current) return;
+    setLayoutMode(mode);
+    setHoveredNode(null);
+    setTooltipPos(null);
+
+    if (mode === 'cose') {
+      const coseLayout = cyRef.current.layout({
+        name: 'cose',
+        animate: true,
+        animationDuration: 800,
+        refresh: 20,
+        componentSpacing: 80,
+        nodeRepulsion: 400000,
+        idealEdgeLength: 80,
+        edgeElasticity: 100,
+        nestingFactor: 5,
+        gravity: 80,
+        numIter: 1000,
+        initialTemp: 200,
+        coolingFactor: 0.95,
+        padding: 40,
+        randomize: false,
+      } as any);
+      coseLayout.run();
+    } else {
+      const bfLayout = cyRef.current.layout({
+        name: 'breadthfirst',
+        directed: true,
+        padding: 40,
+        spacingFactor: 1.4,
+        animate: true,
+        animationDuration: 500,
+      } as any);
+      bfLayout.run();
+    }
+  };
+
   const handleZoomIn = () => {
     if (cyRef.current) {
       cyRef.current.zoom({
@@ -448,6 +553,25 @@ export const CytoscapeGraph: React.FC<CytoscapeGraphProps> = ({
           onClick={handleReset}
         >
           ↺
+        </button>
+        <div style={{ height: '18px', width: '1px', background: 'var(--border-color)', margin: '0 2px' }} />
+        <button
+          type="button"
+          className={`graph-control-btn ${layoutMode === 'breadthfirst' ? 'active' : ''}`}
+          style={{ width: 'auto', padding: '0 8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}
+          title="Hierarchical Tiered Layout"
+          onClick={() => handleToggleLayout('breadthfirst')}
+        >
+          📐 Hierarchy
+        </button>
+        <button
+          type="button"
+          className={`graph-control-btn ${layoutMode === 'cose' ? 'active' : ''}`}
+          style={{ width: 'auto', padding: '0 8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}
+          title="Force-Directed Physics Simulation Layout"
+          onClick={() => handleToggleLayout('cose')}
+        >
+          ⚡ Force Dynamics
         </button>
       </div>
 

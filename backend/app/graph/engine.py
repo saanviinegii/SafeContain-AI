@@ -784,6 +784,115 @@ class GraphEngine:
             logger.error("Failed to persist edge %s to Neo4j: %s", edge.id, str(e))
             return False
 
+    def batch_upsert_nodes_in_neo4j(self, nodes: List[GraphNode], chunk_size: int = 200) -> int:
+        """Persists or updates a list of nodes in live Neo4j using UNWIND batching."""
+        if not self.is_neo4j_live or not self._neo4j_driver or not nodes:
+            return 0
+        total_synced = 0
+        try:
+            with self._get_neo4j_session() as session:
+                for i in range(0, len(nodes), chunk_size):
+                    chunk = nodes[i:i + chunk_size]
+                    batch_params = []
+                    for n in chunk:
+                        label = n.type.value if hasattr(n.type, "value") else str(n.type)
+                        clean_label = "".join(c for c in label if c.isalnum() or c == "_") or "Node"
+                        props = _clean_properties_map(n.properties)
+                        did = n.dataset_id or n.properties.get("dataset_id") or ""
+                        src_f = n.source_file or n.properties.get("source_file") or n.properties.get("source_dataset") or ""
+                        bid = n.ingestion_batch_id or n.properties.get("upload_batch_id") or ""
+                        batch_params.append({
+                            "id": n.id,
+                            "name": n.name,
+                            "type": clean_label,
+                            "criticality": float(n.criticality),
+                            "is_compromised": bool(n.is_compromised),
+                            "is_crown_jewel": bool(n.is_crown_jewel),
+                            "provenance": n.provenance.value if hasattr(n.provenance, "value") else str(n.provenance),
+                            "dataset_id": did,
+                            "source_file": src_f,
+                            "batch_id": bid,
+                            "is_demo": bool(n.is_demo),
+                            "props": props
+                        })
+                    cypher = """
+                    UNWIND $batch AS item
+                    MERGE (n:Node {id: item.id})
+                    SET n.name = item.name,
+                        n.type = item.type,
+                        n.criticality = item.criticality,
+                        n.is_compromised = item.is_compromised,
+                        n.is_crown_jewel = item.is_crown_jewel,
+                        n.provenance = item.provenance,
+                        n.dataset_id = item.dataset_id,
+                        n.source_file = item.source_file,
+                        n.ingestion_batch_id = item.batch_id,
+                        n.is_demo = item.is_demo
+                    SET n += item.props
+                    """
+                    session.run(cypher, batch=batch_params)
+                    total_synced += len(chunk)
+            return total_synced
+        except Exception as e:
+            logger.error("Failed to batch upsert nodes to Neo4j: %s", str(e))
+            return total_synced
+
+    def batch_upsert_edges_in_neo4j(self, edges: List[GraphEdge], chunk_size: int = 200) -> int:
+        """Persists or updates a list of edges in live Neo4j using UNWIND batching."""
+        if not self.is_neo4j_live or not self._neo4j_driver or not edges:
+            return 0
+        total_synced = 0
+        try:
+            with self._get_neo4j_session() as session:
+                for i in range(0, len(edges), chunk_size):
+                    chunk = edges[i:i + chunk_size]
+                    batch_params = []
+                    for e in chunk:
+                        rel_type = e.type.value if hasattr(e.type, "value") else str(e.type)
+                        clean_rel = "".join(c for c in rel_type if c.isalnum() or c == "_") or "CONNECTED_TO"
+                        props = _clean_properties_map(e.properties)
+                        did = e.dataset_id or e.properties.get("dataset_id") or ""
+                        src_f = e.source_file or e.properties.get("source_file") or e.properties.get("source_filename") or ""
+                        bid = e.ingestion_batch_id or e.properties.get("upload_batch_id") or ""
+                        batch_params.append({
+                            "id": e.id,
+                            "source": e.source,
+                            "target": e.target,
+                            "rel_type": clean_rel,
+                            "evidence_status": e.evidence_status.value if hasattr(e.evidence_status, "value") else str(e.evidence_status),
+                            "confidence": float(e.confidence),
+                            "weight": float(e.weight),
+                            "is_active": bool(e.is_active),
+                            "provenance": e.provenance.value if hasattr(e.provenance, "value") else str(e.provenance),
+                            "dataset_id": did,
+                            "source_file": src_f,
+                            "batch_id": bid,
+                            "is_demo": bool(e.is_demo),
+                            "props": props
+                        })
+                    cypher = """
+                    UNWIND $batch AS item
+                    MATCH (s {id: item.source}), (t {id: item.target})
+                    MERGE (s)-[r:CONNECTED_TO {id: item.id}]->(t)
+                    SET r.type = item.rel_type,
+                        r.evidence_status = item.evidence_status,
+                        r.confidence = item.confidence,
+                        r.weight = item.weight,
+                        r.is_active = item.is_active,
+                        r.provenance = item.provenance,
+                        r.dataset_id = item.dataset_id,
+                        r.source_file = item.source_file,
+                        r.ingestion_batch_id = item.batch_id,
+                        r.is_demo = item.is_demo
+                    SET r += item.props
+                    """
+                    session.run(cypher, batch=batch_params)
+                    total_synced += len(chunk)
+            return total_synced
+        except Exception as e:
+            logger.error("Failed to batch upsert edges to Neo4j: %s", str(e))
+            return total_synced
+
     def delete_dataset_scoped(self, dataset_id: str) -> Dict[str, Any]:
         """Safely and permanently deletes only entities belonging to a specific dataset_id.
         

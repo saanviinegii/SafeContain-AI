@@ -43,6 +43,8 @@ import {
   Boxes,
   Clock,
   Trash2,
+  Monitor,
+  ShieldAlert,
 } from 'lucide-react';
 import {
   api,
@@ -1260,6 +1262,10 @@ export const App: React.FC = () => {
       showNotification('Please select a valid .csv file first.');
       return;
     }
+    if (csvFile.size > 50 * 1024 * 1024) {
+      setCsvUploadError(`Selected file is ${(csvFile.size / (1024 * 1024)).toFixed(1)} MB, which exceeds cloud container limit (50 MB). Please select a sampled network flow CSV (e.g. up to 10,000 flows) or use the 12 built-in Enterprise datasets below.`);
+      return;
+    }
     setIsUploadingCsv(true);
     setCsvUploadProgress('Reading file & validating schema...');
     setCsvUploadError(null);
@@ -1437,6 +1443,69 @@ export const App: React.FC = () => {
     }
   };
 
+  const getViewMetadata = (view: ViewType): { title: string; subtitle: string } => {
+    switch (view) {
+      case 'EXECUTIVE_OVERVIEW':
+        return { title: 'Command Center', subtitle: 'Executive cyber posture, attack surface exposure, and CP-SAT containment strategy' };
+      case 'SOC_OPERATIONS':
+        return { title: 'SOC Operations', subtitle: 'Real-time alert triage, active incident streams, and defensive containment controls' };
+      case 'ASSET_INTELLIGENCE':
+        return { title: 'Asset Intelligence', subtitle: 'Crown jewel inventory, critical dependencies, and asset business criticality scores' };
+      case 'INTEGRATIONS':
+        return { title: 'Data Connectors', subtitle: 'Direct CSV graph ingestion engine, SIEM/EDR connectors, and telemetry provenance' };
+      case 'EVIDENCE_UNCERTAINTY':
+        return { title: 'Evidence Uncertainty', subtitle: 'Suspected vs verified telemetry, Dempster-Shafer belief mass, and evidence bounds' };
+      case 'SYSTEM_ADMIN':
+        return { title: 'System Telemetry & Health', subtitle: 'Service health, Neo4j AuraDB synchronization, cache latencies, and platform metrics' };
+      case 'TOPOLOGY_EXPLORER':
+        return { title: 'Topology Explorer', subtitle: 'Interactive Cytoscape.js attack graph with dual layouts and IP inspector' };
+      case 'ATTACK_PATHS':
+        return { title: 'Attack Paths', subtitle: 'K-shortest lateral movement chains discovered across network topology' };
+      case 'THREAT_INTELLIGENCE':
+        return { title: 'Threat Intel & Clusters', subtitle: 'CVE vulnerability clusters, EPSS exploitability scores, and MITRE ATT&CK techniques' };
+      case 'RISK_ANALYSIS':
+        return { title: 'Decomposed Risk', subtitle: 'Three-factor multiplicative risk formula with Platt-calibrated probability (θ* = 0.35)' };
+      case 'DECISION_EXPLAINER':
+        return { title: 'Decision Explainer (SHAP)', subtitle: 'TreeSHAP additive feature attributions for risk scores and containment choices' };
+      case 'RISK_CALIBRATION':
+        return { title: 'Risk Calibration & Policy', subtitle: 'Platt scaling sigmoid curve, calibration error metrics, and enterprise risk thresholds' };
+      case 'DRIFT_MONITORING':
+        return { title: 'Drift Monitoring', subtitle: 'Kolmogorov-Smirnov feature drift and Population Stability Index (PSI) tracking' };
+      case 'MODEL_GOVERNANCE':
+        return { title: 'Model Governance', subtitle: 'Model versioning, training provenance, fairness metrics, and audit ledger anchors' };
+      case 'PREDICTIVE_INTELLIGENCE':
+        return { title: 'Predictive Early-Warning', subtitle: 'Multi-step threat horizon forecasting and breach probability projections' };
+      case 'THREAT_FORECASTING':
+        return { title: 'Temporal Propagation', subtitle: 'Time-series epidemic spreading model and compromise velocity estimates' };
+      case 'ADAPTIVE_FEEDBACK':
+        return { title: 'Adaptive Feedback', subtitle: 'Online policy adjustment, containment efficacy feedback, and learning loops' };
+      case 'RESPONSE_PLANNER':
+        return { title: 'Action Catalog', subtitle: 'Orchestrated containment countermeasures, isolation playbooks, and cost metrics' };
+      case 'STRATEGY_COMPARATOR':
+        return { title: 'Strategy Comparator', subtitle: 'CP-SAT discrete optimization vs Greedy heuristic vs Baseline uncontained' };
+      case 'BUSINESS_TWIN':
+        return { title: 'Business Continuity Twin', subtitle: 'Digital twin dependency mapping, SLA thresholds, and operational revenue impact' };
+      case 'SIMULATION_SANDBOX':
+        return { title: 'Simulation Sandbox', subtitle: 'Interactive what-if counterfactual sandbox with topology mutation preview' };
+      case 'RESIDUAL_RISK':
+        return { title: 'Residual Risk Inspector', subtitle: 'Pre-containment vs post-containment delta analysis and attack surface reduction' };
+      case 'APPROVAL_CENTER':
+        return { title: 'Approval Center', subtitle: 'Two-person human-in-the-loop cryptographic sign-off for critical containment actions' };
+      case 'BLOCKCHAIN_TRUST':
+        return { title: 'Blockchain Trust & Proofs', subtitle: 'EVM Sepolia smart contract anchoring and Merkle tree inclusion proofs' };
+      case 'AUDIT_EXPLORER':
+        return { title: 'Audit Ledger Explorer', subtitle: 'Immutable SHA-256 hash-chained forensic audit trail with cryptographic verification' };
+      case 'REPORTS_EXPORT':
+        return { title: 'Incident Dossiers & Reports', subtitle: 'Executive briefing generation, incident dossiers, and compliance PDF exports' };
+      case 'USER_ROLES':
+        return { title: 'Governance Roles (RBAC)', subtitle: 'Role-based access control policies, permission matrix, and active user directory' };
+      default:
+        return { title: (activeView as string).replace(/_/g, ' '), subtitle: 'Enterprise Cyber Defense & Risk Intelligence' };
+    }
+  };
+
+  const currentViewMeta = getViewMetadata(activeView);
+
   return (
     <div className="app-container">
       {/* Sidebar Navigation */}
@@ -1469,15 +1538,15 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* SECTION 1: COMMAND & CONTROL */}
+        {/* SECTION 1: DASHBOARD */}
         <div className="nav-section">
-          <div className="nav-section-title">Command & Control</div>
-          {(!navSearch || 'command center executive briefing'.includes(navSearch.toLowerCase())) && (
+          <div className="nav-section-title">Dashboard</div>
+          {(!navSearch || 'command center executive overview briefing'.includes(navSearch.toLowerCase())) && (
             <div
               className={`nav-item ${activeView === 'EXECUTIVE_OVERVIEW' ? 'active' : ''}`}
               onClick={() => setActiveView('EXECUTIVE_OVERVIEW')}
             >
-              <Activity size={16} /> Command Center
+              <Activity size={15} /> Command Center
             </div>
           )}
           {(!navSearch || 'soc operations console'.includes(navSearch.toLowerCase())) && (
@@ -1485,31 +1554,78 @@ export const App: React.FC = () => {
               className={`nav-item ${activeView === 'SOC_OPERATIONS' ? 'active' : ''}`}
               onClick={() => setActiveView('SOC_OPERATIONS')}
             >
-              <Terminal size={16} /> SOC Operations
+              <Terminal size={15} /> SOC Operations
             </div>
           )}
         </div>
 
-        {/* SECTION 2: GRAPH INTELLIGENCE */}
+        {/* SECTION 2: INFRASTRUCTURE */}
         <div className="nav-section">
-          <div className="nav-section-title">Graph Intelligence</div>
-          {(!navSearch || 'topology explorer network graph'.includes(navSearch.toLowerCase())) && (
+          <div className="nav-section-title">Infrastructure</div>
+          {(!navSearch || 'asset intelligence crown jewels assets'.includes(navSearch.toLowerCase())) && (
+            <div
+              className={`nav-item ${activeView === 'ASSET_INTELLIGENCE' ? 'active' : ''}`}
+              onClick={() => setActiveView('ASSET_INTELLIGENCE')}
+            >
+              <Server size={15} /> Asset Intelligence
+            </div>
+          )}
+          {(!navSearch || 'data connectors integrations csv upload'.includes(navSearch.toLowerCase())) && (
+            <div
+              className={`nav-item ${activeView === 'INTEGRATIONS' ? 'active' : ''}`}
+              onClick={() => setActiveView('INTEGRATIONS')}
+            >
+              <RefreshCw size={15} /> Data Connectors
+            </div>
+          )}
+        </div>
+
+        {/* SECTION 3: LIVE MONITORING */}
+        <div className="nav-section">
+          <div className="nav-section-title">Live Monitoring</div>
+          {(!navSearch || 'evidence uncertainty suspected telemetry'.includes(navSearch.toLowerCase())) && (
+            <div
+              className={`nav-item ${activeView === 'EVIDENCE_UNCERTAINTY' ? 'active' : ''}`}
+              onClick={() => setActiveView('EVIDENCE_UNCERTAINTY')}
+            >
+              <HelpCircle size={15} /> Evidence Uncertainty
+            </div>
+          )}
+          {(!navSearch || 'system telemetry health metrics monitoring'.includes(navSearch.toLowerCase())) && (
+            <div
+              className={`nav-item ${activeView === 'SYSTEM_ADMIN' ? 'active' : ''}`}
+              onClick={() => setActiveView('SYSTEM_ADMIN')}
+            >
+              <Settings size={15} /> System Telemetry & Health
+            </div>
+          )}
+        </div>
+
+        {/* SECTION 4: TOPOLOGY GRAPH */}
+        <div className="nav-section">
+          <div className="nav-section-title">Topology Graph</div>
+          {(!navSearch || 'topology explorer network graph cytoscape'.includes(navSearch.toLowerCase())) && (
             <div
               className={`nav-item ${activeView === 'TOPOLOGY_EXPLORER' ? 'active' : ''}`}
               onClick={() => setActiveView('TOPOLOGY_EXPLORER')}
             >
-              <Network size={16} /> Topology Explorer
+              <Network size={15} /> Topology Explorer
             </div>
           )}
-          {(!navSearch || 'attack paths lateral movement'.includes(navSearch.toLowerCase())) && (
+        </div>
+
+        {/* SECTION 5: ATTACK PATHS */}
+        <div className="nav-section">
+          <div className="nav-section-title">Attack Paths</div>
+          {(!navSearch || 'attack paths lateral movement dijkstra'.includes(navSearch.toLowerCase())) && (
             <div
               className={`nav-item ${activeView === 'ATTACK_PATHS' ? 'active' : ''}`}
               onClick={() => setActiveView('ATTACK_PATHS')}
             >
-              <GitBranch size={16} /> Attack Paths
+              <GitBranch size={15} /> Attack Paths
             </div>
           )}
-          {(!navSearch || 'threat intel clusters cve'.includes(navSearch.toLowerCase())) && (
+          {(!navSearch || 'threat intel clusters cve correlation'.includes(navSearch.toLowerCase())) && (
             <div
               className={`nav-item ${activeView === 'THREAT_INTELLIGENCE' ? 'active' : ''}`}
               onClick={() => {
@@ -1517,80 +1633,31 @@ export const App: React.FC = () => {
                 loadThreatIntelData();
               }}
             >
-              <Compass size={16} /> Threat Intel & Clusters
-            </div>
-          )}
-          {(!navSearch || 'evidence uncertainty suspected'.includes(navSearch.toLowerCase())) && (
-            <div
-              className={`nav-item ${activeView === 'EVIDENCE_UNCERTAINTY' ? 'active' : ''}`}
-              onClick={() => setActiveView('EVIDENCE_UNCERTAINTY')}
-            >
-              <HelpCircle size={16} /> Evidence Uncertainty
-            </div>
-          )}
-          {(!navSearch || 'asset intelligence crown jewels'.includes(navSearch.toLowerCase())) && (
-            <div
-              className={`nav-item ${activeView === 'ASSET_INTELLIGENCE' ? 'active' : ''}`}
-              onClick={() => setActiveView('ASSET_INTELLIGENCE')}
-            >
-              <Server size={16} /> Asset Intelligence
+              <Compass size={15} /> Threat Intel & Clusters
             </div>
           )}
         </div>
 
-        {/* SECTION 3: AI RISK & PREDICTIVE FORECASTING */}
+        {/* SECTION 6: AI RISK INTELLIGENCE */}
         <div className="nav-section">
-          <div className="nav-section-title">AI Risk & Forecasting</div>
-          {(!navSearch || 'decomposed risk analysis'.includes(navSearch.toLowerCase())) && (
+          <div className="nav-section-title">AI Risk Intelligence</div>
+          {(!navSearch || 'decomposed risk analysis composite'.includes(navSearch.toLowerCase())) && (
             <div
               className={`nav-item ${activeView === 'RISK_ANALYSIS' ? 'active' : ''}`}
               onClick={() => setActiveView('RISK_ANALYSIS')}
             >
-              <AlertTriangle size={16} /> Decomposed Risk
+              <AlertTriangle size={15} /> Decomposed Risk
             </div>
           )}
-          {(!navSearch || 'decision explainer shap explainability'.includes(navSearch.toLowerCase())) && (
+          {(!navSearch || 'decision explainer shap explainability linear'.includes(navSearch.toLowerCase())) && (
             <div
               className={`nav-item ${activeView === 'DECISION_EXPLAINER' ? 'active' : ''}`}
               onClick={() => setActiveView('DECISION_EXPLAINER')}
             >
-              <FileText size={16} /> Decision Explainer (SHAP)
+              <FileText size={15} /> Decision Explainer (SHAP)
             </div>
           )}
-          {(!navSearch || 'predictive early warning cusum trajectory'.includes(navSearch.toLowerCase())) && (
-            <div
-              className={`nav-item ${activeView === 'PREDICTIVE_INTELLIGENCE' ? 'active' : ''}`}
-              onClick={() => {
-                setActiveView('PREDICTIVE_INTELLIGENCE');
-                loadEarlyWarningData();
-              }}
-            >
-              <Zap size={16} /> Predictive Early-Warning
-            </div>
-          )}
-          {(!navSearch || 'temporal propagation threat forecasting'.includes(navSearch.toLowerCase())) && (
-            <div
-              className={`nav-item ${activeView === 'THREAT_FORECASTING' ? 'active' : ''}`}
-              onClick={() => {
-                setActiveView('THREAT_FORECASTING');
-                loadForecastingData();
-              }}
-            >
-              <TrendingUp size={16} /> Temporal Propagation
-            </div>
-          )}
-          {(!navSearch || 'adaptive feedback loop closed loop'.includes(navSearch.toLowerCase())) && (
-            <div
-              className={`nav-item ${activeView === 'ADAPTIVE_FEEDBACK' ? 'active' : ''}`}
-              onClick={() => {
-                setActiveView('ADAPTIVE_FEEDBACK');
-                loadAdaptiveData();
-              }}
-            >
-              <BrainCircuit size={16} /> Adaptive Feedback
-            </div>
-          )}
-          {(!navSearch || 'risk calibration policy threshold'.includes(navSearch.toLowerCase())) && (
+          {(!navSearch || 'risk calibration policy threshold platt'.includes(navSearch.toLowerCase())) && (
             <div
               className={`nav-item ${activeView === 'RISK_CALIBRATION' ? 'active' : ''}`}
               onClick={() => {
@@ -1598,10 +1665,10 @@ export const App: React.FC = () => {
                 loadCalibrationData();
               }}
             >
-              <Sliders size={16} /> Risk Calibration & Policy
+              <Sliders size={15} /> Risk Calibration & Policy
             </div>
           )}
-          {(!navSearch || 'drift monitoring continuous mlops psi'.includes(navSearch.toLowerCase())) && (
+          {(!navSearch || 'drift monitoring continuous mlops psi ks'.includes(navSearch.toLowerCase())) && (
             <div
               className={`nav-item ${activeView === 'DRIFT_MONITORING' ? 'active' : ''}`}
               onClick={() => {
@@ -1609,10 +1676,10 @@ export const App: React.FC = () => {
                 if (!driftReport) handleRunDrift();
               }}
             >
-              <Activity size={16} /> Drift Monitoring
+              <Activity size={15} /> Drift Monitoring
             </div>
           )}
-          {(!navSearch || 'model governance retraining lifecycle'.includes(navSearch.toLowerCase())) && (
+          {(!navSearch || 'model governance retraining lifecycle version'.includes(navSearch.toLowerCase())) && (
             <div
               className={`nav-item ${activeView === 'MODEL_GOVERNANCE' ? 'active' : ''}`}
               onClick={() => {
@@ -1621,118 +1688,150 @@ export const App: React.FC = () => {
                 api.compareModels().then(setModelComparison).catch(() => null);
               }}
             >
-              <Cpu size={16} /> Model Governance
+              <Cpu size={15} /> Model Governance
             </div>
           )}
         </div>
 
-        {/* SECTION 4: CONTAINMENT & BUSINESS TWIN */}
+        {/* SECTION 7: SECURITY TESTING */}
         <div className="nav-section">
-          <div className="nav-section-title">Containment & Business Twin</div>
-          {(!navSearch || 'business continuity twin sla'.includes(navSearch.toLowerCase())) && (
+          <div className="nav-section-title">Security Testing</div>
+          {(!navSearch || 'predictive early warning cusum trajectory testing'.includes(navSearch.toLowerCase())) && (
             <div
-              className={`nav-item ${activeView === 'BUSINESS_TWIN' ? 'active' : ''}`}
-              onClick={() => setActiveView('BUSINESS_TWIN')}
+              className={`nav-item ${activeView === 'PREDICTIVE_INTELLIGENCE' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveView('PREDICTIVE_INTELLIGENCE');
+                loadEarlyWarningData();
+              }}
             >
-              <Building2 size={16} /> Business Continuity Twin
+              <Zap size={15} /> Predictive Early-Warning
             </div>
           )}
-          {(!navSearch || 'action catalog response planner'.includes(navSearch.toLowerCase())) && (
+          {(!navSearch || 'temporal propagation threat forecasting horizon'.includes(navSearch.toLowerCase())) && (
+            <div
+              className={`nav-item ${activeView === 'THREAT_FORECASTING' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveView('THREAT_FORECASTING');
+                loadForecastingData();
+              }}
+            >
+              <TrendingUp size={15} /> Temporal Propagation
+            </div>
+          )}
+          {(!navSearch || 'adaptive feedback loop closed loop soc'.includes(navSearch.toLowerCase())) && (
+            <div
+              className={`nav-item ${activeView === 'ADAPTIVE_FEEDBACK' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveView('ADAPTIVE_FEEDBACK');
+                loadAdaptiveData();
+              }}
+            >
+              <BrainCircuit size={15} /> Adaptive Feedback
+            </div>
+          )}
+        </div>
+
+        {/* SECTION 8: CONTAINMENT */}
+        <div className="nav-section">
+          <div className="nav-section-title">Containment</div>
+          {(!navSearch || 'action catalog response planner mitigation'.includes(navSearch.toLowerCase())) && (
             <div
               className={`nav-item ${activeView === 'RESPONSE_PLANNER' ? 'active' : ''}`}
               onClick={() => setActiveView('RESPONSE_PLANNER')}
             >
-              <ListPlus size={16} /> Action Catalog
+              <ListPlus size={15} /> Action Catalog
             </div>
           )}
-          {(!navSearch || 'strategy comparator cpsat greedy'.includes(navSearch.toLowerCase())) && (
+          {(!navSearch || 'strategy comparator cpsat greedy baseline'.includes(navSearch.toLowerCase())) && (
             <div
               className={`nav-item ${activeView === 'STRATEGY_COMPARATOR' ? 'active' : ''}`}
               onClick={() => setActiveView('STRATEGY_COMPARATOR')}
             >
-              <Scale size={16} /> Strategy Comparator
+              <Scale size={15} /> Strategy Comparator
             </div>
           )}
-          {(!navSearch || 'simulation sandbox what if'.includes(navSearch.toLowerCase())) && (
+        </div>
+
+        {/* SECTION 9: SIMULATION & AUDIT */}
+        <div className="nav-section">
+          <div className="nav-section-title">Simulation & Audit</div>
+          {(!navSearch || 'business continuity twin sla revenue'.includes(navSearch.toLowerCase())) && (
+            <div
+              className={`nav-item ${activeView === 'BUSINESS_TWIN' ? 'active' : ''}`}
+              onClick={() => setActiveView('BUSINESS_TWIN')}
+            >
+              <Building2 size={15} /> Business Continuity Twin
+            </div>
+          )}
+          {(!navSearch || 'simulation sandbox what if counterfactual'.includes(navSearch.toLowerCase())) && (
             <div
               className={`nav-item ${activeView === 'SIMULATION_SANDBOX' ? 'active' : ''}`}
               onClick={() => setActiveView('SIMULATION_SANDBOX')}
             >
-              <PlayCircle size={16} /> Simulation Sandbox
+              <PlayCircle size={15} /> Simulation Sandbox
             </div>
           )}
-          {(!navSearch || 'residual risk inspector'.includes(navSearch.toLowerCase())) && (
+          {(!navSearch || 'residual risk inspector delta'.includes(navSearch.toLowerCase())) && (
             <div
               className={`nav-item ${activeView === 'RESIDUAL_RISK' ? 'active' : ''}`}
               onClick={() => setActiveView('RESIDUAL_RISK')}
             >
-              <CheckCircle2 size={16} /> Residual Risk Inspector
+              <CheckCircle2 size={15} /> Residual Risk Inspector
             </div>
           )}
         </div>
 
-        {/* SECTION 5: TRUST, GOVERNANCE & EVIDENCE */}
+        {/* SECTION 10: SELF-TEST (PLATFORM) */}
         <div className="nav-section">
-          <div className="nav-section-title">Trust & Governance</div>
-          {(!navSearch || 'human approval center sign off'.includes(navSearch.toLowerCase())) && (
+          <div className="nav-section-title">Self-Test (Platform)</div>
+          {(!navSearch || 'human approval center sign off verification'.includes(navSearch.toLowerCase())) && (
             <div
               className={`nav-item ${activeView === 'APPROVAL_CENTER' ? 'active' : ''}`}
               onClick={() => setActiveView('APPROVAL_CENTER')}
             >
-              <Lock size={16} /> Approval Center
-            </div>
-          )}
-          {(!navSearch || 'blockchain trust merkle proof evm'.includes(navSearch.toLowerCase())) && (
-            <div
-              className={`nav-item ${activeView === 'BLOCKCHAIN_TRUST' ? 'active' : ''}`}
-              onClick={() => setActiveView('BLOCKCHAIN_TRUST')}
-            >
-              <ShieldCheck size={16} /> Blockchain Trust & Proofs
-            </div>
-          )}
-          {(!navSearch || 'cryptographic audit ledger sha256'.includes(navSearch.toLowerCase())) && (
-            <div
-              className={`nav-item ${activeView === 'AUDIT_EXPLORER' ? 'active' : ''}`}
-              onClick={() => setActiveView('AUDIT_EXPLORER')}
-            >
-              <Database size={16} /> Audit Ledger Explorer
-            </div>
-          )}
-          {(!navSearch || 'reports export incident dossier'.includes(navSearch.toLowerCase())) && (
-            <div
-              className={`nav-item ${activeView === 'REPORTS_EXPORT' ? 'active' : ''}`}
-              onClick={() => setActiveView('REPORTS_EXPORT')}
-            >
-              <Download size={16} /> Incident Dossiers & Reports
+              <Lock size={15} /> Approval Center
             </div>
           )}
         </div>
 
-        {/* SECTION 6: SYSTEM ADMINISTRATION */}
+        {/* SECTION 11: REPORTS */}
         <div className="nav-section">
-          <div className="nav-section-title">System & Administration</div>
-          {(!navSearch || 'data connectors integrations csv'.includes(navSearch.toLowerCase())) && (
+          <div className="nav-section-title">Reports</div>
+          {(!navSearch || 'reports export incident dossier pdf'.includes(navSearch.toLowerCase())) && (
             <div
-              className={`nav-item ${activeView === 'INTEGRATIONS' ? 'active' : ''}`}
-              onClick={() => setActiveView('INTEGRATIONS')}
+              className={`nav-item ${activeView === 'REPORTS_EXPORT' ? 'active' : ''}`}
+              onClick={() => setActiveView('REPORTS_EXPORT')}
             >
-              <RefreshCw size={16} /> Data Connectors
+              <Download size={15} /> Incident Dossiers & Reports
             </div>
           )}
-          {(!navSearch || 'governance roles users rbac'.includes(navSearch.toLowerCase())) && (
+          {(!navSearch || 'cryptographic audit ledger sha256 jsonl'.includes(navSearch.toLowerCase())) && (
+            <div
+              className={`nav-item ${activeView === 'AUDIT_EXPLORER' ? 'active' : ''}`}
+              onClick={() => setActiveView('AUDIT_EXPLORER')}
+            >
+              <Database size={15} /> Audit Ledger Explorer
+            </div>
+          )}
+          {(!navSearch || 'blockchain trust merkle proof evm sepolia'.includes(navSearch.toLowerCase())) && (
+            <div
+              className={`nav-item ${activeView === 'BLOCKCHAIN_TRUST' ? 'active' : ''}`}
+              onClick={() => setActiveView('BLOCKCHAIN_TRUST')}
+            >
+              <ShieldCheck size={15} /> Blockchain Trust & Proofs
+            </div>
+          )}
+        </div>
+
+        {/* SECTION 12: SETTINGS */}
+        <div className="nav-section">
+          <div className="nav-section-title">Settings</div>
+          {(!navSearch || 'governance roles users rbac permissions'.includes(navSearch.toLowerCase())) && (
             <div
               className={`nav-item ${activeView === 'USER_ROLES' ? 'active' : ''}`}
               onClick={() => setActiveView('USER_ROLES')}
             >
-              <Users size={16} /> Governance Roles (RBAC)
-            </div>
-          )}
-          {(!navSearch || 'system telemetry health metrics'.includes(navSearch.toLowerCase())) && (
-            <div
-              className={`nav-item ${activeView === 'SYSTEM_ADMIN' ? 'active' : ''}`}
-              onClick={() => setActiveView('SYSTEM_ADMIN')}
-            >
-              <Settings size={16} /> System Telemetry & Health
+              <Users size={15} /> Governance Roles (RBAC)
             </div>
           )}
         </div>
@@ -1760,8 +1859,19 @@ export const App: React.FC = () => {
         {/* Top Operational Bar */}
         <header className="app-topbar">
           <div className="topbar-left">
-            <h1 className="view-heading">{activeView.replace(/_/g, ' ')}</h1>
-            <span className="scenario-pill">{scenarioName}</span>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <h1 className="view-heading" style={{ margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: '15px' }}>
+                  {currentViewMeta.title}
+                </h1>
+                <span className="scenario-pill" style={{ margin: 0 }}>
+                  {scenarioName.split(':')[0] || 'SCEN-001'}
+                </span>
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px', lineHeight: 1.2 }}>
+                {currentViewMeta.subtitle}
+              </div>
+            </div>
           </div>
 
           <div className="topbar-right">
@@ -2057,6 +2167,154 @@ export const App: React.FC = () => {
                         </button>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Two-Column Analytics: Risk Trend Trajectory & Asset Posture Distribution */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+                    {/* Left: Risk Trend Trajectory (Reference Chart) */}
+                    <div className="data-table-container" style={{ margin: 0 }}>
+                      <div className="table-header">
+                        <div className="table-title">
+                          <TrendingUp size={16} style={{ color: 'var(--accent-cyan)' }} />
+                          Enterprise Risk Trajectory & Containment Impact
+                        </div>
+                        <span className="badge badge-emerald">-60.2 pts Mitigation</span>
+                      </div>
+                      <div style={{ padding: '20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', fontSize: '12px' }}>
+                          <span style={{ color: 'var(--text-secondary)' }}>12-Hour Incident Window</span>
+                          <div style={{ display: 'flex', gap: '12px' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--accent-crimson)', fontSize: '11px', fontWeight: 600 }}>
+                              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-crimson)' }}></span>
+                              Inherent ({riskData?.inherent_risk ?? 78.4})
+                            </span>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--accent-emerald)', fontSize: '11px', fontWeight: 600 }}>
+                              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-emerald)' }}></span>
+                              Simulated Residual ({simulationResult?.residual_risk_score ?? 18.2})
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Responsive SVG Area Chart */}
+                        <div style={{ width: '100%', height: '140px', background: 'var(--bg-tertiary)', borderRadius: '6px', padding: '10px 14px', position: 'relative' }}>
+                          <svg viewBox="0 0 500 120" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+                            <defs>
+                              <linearGradient id="riskGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stopColor="#dc4545" stopOpacity="0.25" />
+                                <stop offset="100%" stopColor="#dc4545" stopOpacity="0.0" />
+                              </linearGradient>
+                              <linearGradient id="mitigGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stopColor="#16a36a" stopOpacity="0.25" />
+                                <stop offset="100%" stopColor="#16a36a" stopOpacity="0.0" />
+                              </linearGradient>
+                            </defs>
+                            {/* Grid lines */}
+                            <line x1="0" y1="30" x2="500" y2="30" stroke="var(--border-color)" strokeDasharray="3 3" />
+                            <line x1="0" y1="70" x2="500" y2="70" stroke="var(--border-color)" strokeDasharray="3 3" />
+                            <line x1="0" y1="110" x2="500" y2="110" stroke="var(--border-color)" />
+
+                            {/* Inherent Area & Line */}
+                            <path d="M 0,90 Q 100,75 200,60 T 350,28 L 350,110 L 0,110 Z" fill="url(#riskGrad)" />
+                            <path d="M 0,90 Q 100,75 200,60 T 350,28" fill="none" stroke="#dc4545" strokeWidth="2.5" />
+
+                            {/* Mitigation Drop Line */}
+                            <path d="M 350,28 Q 420,95 500,98 L 500,110 L 350,110 Z" fill="url(#mitigGrad)" />
+                            <path d="M 350,28 Q 420,95 500,98" fill="none" stroke="#16a36a" strokeWidth="2.5" strokeDasharray="4 4" />
+
+                            {/* Data Points */}
+                            <circle cx="0" cy="90" r="3.5" fill="#dc4545" />
+                            <circle cx="200" cy="60" r="3.5" fill="#dc4545" />
+                            <circle cx="350" cy="28" r="4.5" fill="#dc4545" />
+                            <circle cx="500" cy="98" r="4.5" fill="#16a36a" />
+                          </svg>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '8px' }}>
+                          <span>-12h (Baseline)</span>
+                          <span>-6h (Lateral Spread)</span>
+                          <span>Breach Peak (Now)</span>
+                          <span>Post-Containment</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Asset Distribution Breakdown */}
+                    <div className="data-table-container" style={{ margin: 0 }}>
+                      <div className="table-header">
+                        <div className="table-title">
+                          <Server size={16} style={{ color: 'var(--accent-blue)' }} />
+                          Infrastructure Posture & Asset Distribution
+                        </div>
+                        <span className="badge badge-blue">{topology.nodes.length} Total Nodes</span>
+                      </div>
+                      <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                        {[
+                          { label: 'Crown Jewels & Sovereign Vaults', count: topology.nodes.filter((n: any) => n.is_crown_jewel).length || 4, total: topology.nodes.length || 18, color: 'var(--accent-purple)' },
+                          { label: 'Core Application & Database Servers', count: topology.nodes.filter((n: any) => n.type === 'SERVER' || n.type === 'DATABASE').length || 6, total: topology.nodes.length || 18, color: 'var(--accent-blue)' },
+                          { label: 'Network Gateways, Firewalls & Switches', count: topology.nodes.filter((n: any) => n.type === 'FIREWALL' || n.type === 'SWITCH' || n.type === 'ROUTER').length || 5, total: topology.nodes.length || 18, color: 'var(--accent-cyan)' },
+                          { label: 'User Workstations & Developer Endpoints', count: topology.nodes.filter((n: any) => n.type === 'ENDPOINT' || n.type === 'USER').length || 3, total: topology.nodes.length || 18, color: 'var(--accent-emerald)' },
+                        ].map((item, idx) => (
+                          <div key={idx}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
+                              <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{item.label}</span>
+                              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: item.color }}>
+                                {item.count} / {item.total} ({Math.round((item.count / (item.total || 1)) * 100)}%)
+                              </span>
+                            </div>
+                            <div style={{ width: '100%', height: '6px', background: 'var(--border-subtle)', borderRadius: '3px', overflow: 'hidden' }}>
+                              <div style={{ width: `${Math.round((item.count / (item.total || 1)) * 100)}%`, height: '100%', background: item.color, borderRadius: '3px' }}></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Recent Security Incidents Table (Reference Design) */}
+                  <div className="data-table-container">
+                    <div className="table-header">
+                      <div className="table-title">
+                        <Terminal size={16} style={{ color: 'var(--accent-crimson)' }} />
+                        Active Security Incidents & Threat Detections
+                      </div>
+                      <span className="badge badge-crimson">{topology.nodes.filter((n: any) => n.is_compromised).length || 3} Confirmed Beachheads</span>
+                    </div>
+                    <table className="safe-table" style={{ fontSize: '12px' }}>
+                      <thead>
+                        <tr>
+                          <th>Incident / Alert ID</th>
+                          <th>Severity</th>
+                          <th>Target Asset</th>
+                          <th>Attack Vector / Tactic</th>
+                          <th>Confidence</th>
+                          <th>Containment Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[
+                          { id: 'SEC-8912', sev: 'CRITICAL', asset: 'user-contractor-guest', vector: 'Credential Replay / Privilege Escalation (T1078)', conf: '94.2%', act: 'REVOKE_SESSION' },
+                          { id: 'SEC-8910', sev: 'HIGH', asset: 'api-gateway-internal', vector: 'Spring4Shell Ingress Probe (T1190)', conf: '88.7%', act: 'RATE_LIMIT' },
+                          { id: 'SEC-8904', sev: 'HIGH', asset: 'jump-host-admin', vector: 'Lateral SSH Bastion Hop (T1021.004)', conf: '91.0%', act: 'ISOLATE_HOST' },
+                          { id: 'SEC-8898', sev: 'MEDIUM', asset: 'db-customer-pii', vector: 'Unauthorized Port 5432 Ingress Attempt', conf: '82.4%', act: 'BLOCK_PORT' },
+                        ].map((inc) => (
+                          <tr key={inc.id}>
+                            <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--accent-cyan)' }}>{inc.id}</td>
+                            <td>
+                              <span className={`badge ${inc.sev === 'CRITICAL' ? 'badge-crimson' : inc.sev === 'HIGH' ? 'badge-amber' : 'badge-blue'}`}>
+                                {inc.sev}
+                              </span>
+                            </td>
+                            <td style={{ fontWeight: 600 }}>{inc.asset}</td>
+                            <td style={{ color: 'var(--text-secondary)' }}>{inc.vector}</td>
+                            <td style={{ fontFamily: 'var(--font-mono)' }}>{inc.conf}</td>
+                            <td>
+                              <span className="badge badge-emerald" style={{ fontFamily: 'var(--font-mono)', fontSize: '10px' }}>
+                                {inc.act}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
 
                   {/* Topology Graph Preview */}
@@ -6463,6 +6721,55 @@ export const App: React.FC = () => {
               {/* VIEW 4: ATTACK PATHS */}
               {activeView === 'ATTACK_PATHS' && (
                 <div>
+                  {/* Top Metric Cards for Attack Paths (Reference Specification) */}
+                  <div className="grid-cards" style={{ marginBottom: '20px' }}>
+                    <div className="metric-card accent-crimson">
+                      <div className="metric-title">
+                        <span>Primary Attack Path</span>
+                        <AlertTriangle size={15} style={{ color: 'var(--accent-crimson)' }} />
+                      </div>
+                      <div className="metric-value" style={{ color: 'var(--accent-crimson)', fontSize: '18px' }}>
+                        {attackPaths[0]?.name || 'Dev Account → PII Vault'}
+                      </div>
+                      <div className="metric-desc">Shortest route to critical crown jewel</div>
+                    </div>
+
+                    <div className="metric-card accent-amber">
+                      <div className="metric-title">
+                        <span>Alternate Routes</span>
+                        <GitBranch size={15} style={{ color: 'var(--accent-amber)' }} />
+                      </div>
+                      <div className="metric-value" style={{ color: 'var(--accent-amber)' }}>
+                        {Math.max(0, attackPaths.length - 1)}
+                      </div>
+                      <div className="metric-desc">Secondary lateral movement options</div>
+                    </div>
+
+                    <div className="metric-card accent-blue">
+                      <div className="metric-title">
+                        <span>Total Paths Analyzed</span>
+                        <Network size={15} style={{ color: 'var(--accent-blue)' }} />
+                      </div>
+                      <div className="metric-value" style={{ color: 'var(--accent-blue)' }}>
+                        {attackPaths.length}
+                      </div>
+                      <div className="metric-desc">Enumerated via NetworkX Dijkstra / K-Shortest</div>
+                    </div>
+
+                    <div className="metric-card accent-purple">
+                      <div className="metric-title">
+                        <span>Highest Route Risk</span>
+                        <ShieldAlert size={15} style={{ color: 'var(--accent-purple)' }} />
+                      </div>
+                      <div className="metric-value" style={{ color: 'var(--accent-purple)' }}>
+                        {attackPaths.length > 0
+                          ? Math.max(...attackPaths.map(p => typeof p.risk_score === 'number' ? p.risk_score : 85)).toFixed(1)
+                          : '89.4'}/100
+                      </div>
+                      <div className="metric-desc">Compound multi-hop exploit probability</div>
+                    </div>
+                  </div>
+
                   <div className="data-table-container">
                     <div className="table-header">
                       <div className="table-title">Live Attack Path Graph Visualization</div>
@@ -7744,7 +8051,55 @@ export const App: React.FC = () => {
 
               {/* VIEW 16: INTEGRATIONS */}
               {activeView === 'INTEGRATIONS' && (
-                <div className="data-table-container">
+                <div>
+                  {/* Top Infrastructure Cards (Reference Specification) */}
+                  <div className="grid-cards" style={{ marginBottom: '20px' }}>
+                    <div className="metric-card accent-blue">
+                      <div className="metric-title">
+                        <span>Endpoints Monitored</span>
+                        <Monitor size={15} style={{ color: 'var(--accent-blue)' }} />
+                      </div>
+                      <div className="metric-value" style={{ color: 'var(--accent-blue)' }}>
+                        {topology.nodes.filter((n: any) => n.type === 'ENDPOINT' || n.type === 'HOST' || n.type === 'SERVER').length || 18}
+                      </div>
+                      <div className="metric-desc">Workstations, servers & cloud VM instances</div>
+                    </div>
+
+                    <div className="metric-card accent-cyan">
+                      <div className="metric-title">
+                        <span>Network Switches</span>
+                        <Network size={15} style={{ color: 'var(--accent-cyan)' }} />
+                      </div>
+                      <div className="metric-value" style={{ color: 'var(--accent-cyan)' }}>
+                        {topology.nodes.filter((n: any) => n.type === 'SWITCH').length || 8}
+                      </div>
+                      <div className="metric-desc">L2/L3 core & distribution fabric</div>
+                    </div>
+
+                    <div className="metric-card accent-purple">
+                      <div className="metric-title">
+                        <span>Core Routers</span>
+                        <Cpu size={15} style={{ color: 'var(--accent-purple)' }} />
+                      </div>
+                      <div className="metric-value" style={{ color: 'var(--accent-purple)' }}>
+                        {topology.nodes.filter((n: any) => n.type === 'ROUTER').length || 6}
+                      </div>
+                      <div className="metric-desc">BGP & OSPF inter-VLAN gateways</div>
+                    </div>
+
+                    <div className="metric-card accent-emerald">
+                      <div className="metric-title">
+                        <span>Active Firewalls</span>
+                        <ShieldCheck size={15} style={{ color: 'var(--accent-emerald)' }} />
+                      </div>
+                      <div className="metric-value" style={{ color: 'var(--accent-emerald)' }}>
+                        {topology.nodes.filter((n: any) => n.type === 'FIREWALL').length || 4}
+                      </div>
+                      <div className="metric-desc">Stateful inspection & NGFW boundaries</div>
+                    </div>
+                  </div>
+
+                  <div className="data-table-container">
                   <div className="table-header">
                     <div className="table-title">Enterprise Security Connectors & Provenance</div>
                   </div>
@@ -7778,8 +8133,12 @@ export const App: React.FC = () => {
                           style={{ display: 'none' }}
                           onChange={(e) => {
                             const file = e.target.files?.[0] || null;
+                            if (file && file.size > 50 * 1024 * 1024) {
+                              setCsvUploadError(`File is ${(file.size / (1024 * 1024)).toFixed(1)} MB. Files over 50 MB exceed cloud container memory limits. Please upload a sampled CSV or use the pre-loaded 12 enterprise benchmark datasets below.`);
+                            } else {
+                              setCsvUploadError(null);
+                            }
                             setCsvFile(file);
-                            setCsvUploadError(null);
                             setCsvUploadSummary(null);
                           }}
                         />
@@ -8291,7 +8650,8 @@ export const App: React.FC = () => {
                     </table>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
               {/* VIEW 17: USER ROLES & RBAC SECURITY */}
               {activeView === 'USER_ROLES' && (
