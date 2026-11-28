@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 import logging
 import re
 from typing import Any, Dict, List, Optional, Set, Tuple
+import uuid
 
 from backend.app.connectors.models import (
     DeviceType,
@@ -292,24 +293,25 @@ class AssetDiscoveryEngine:
         node_type_map = {
             DeviceType.ENDPOINT_WINDOWS: NodeType.ENDPOINT,
             DeviceType.ENDPOINT_LINUX: NodeType.ENDPOINT,
-            DeviceType.SWITCH: NodeType.ROUTER,
-            DeviceType.ROUTER: NodeType.ROUTER,
-            DeviceType.FIREWALL: NodeType.FIREWALL,
+            DeviceType.SWITCH: NodeType.DEVICE,
+            DeviceType.ROUTER: NodeType.DEVICE,
+            DeviceType.FIREWALL: NodeType.SECURITY_CONTROL,
             DeviceType.SERVER: NodeType.SERVER,
             DeviceType.DATABASE: NodeType.DATABASE,
-            DeviceType.SOFTWARE_SIEM: NodeType.SERVER,
-            DeviceType.SOFTWARE_EDR: NodeType.SERVER,
-            DeviceType.SOFTWARE_CSV: NodeType.SERVER,
+            DeviceType.SOFTWARE_SIEM: NodeType.APPLICATION,
+            DeviceType.SOFTWARE_EDR: NodeType.SECURITY_CONTROL,
+            DeviceType.SOFTWARE_CSV: NodeType.APPLICATION,
         }
 
         nt = node_type_map.get(asset.device_type, NodeType.ENDPOINT)
+        crit_val = min(1.0, max(0.0, float(asset.criticality) / 5.0)) if asset.criticality > 1.0 else float(asset.criticality)
         gn = GraphNode(
             id=asset.asset_id,
             name=asset.name,
             type=nt,
-            criticality=asset.criticality,
+            criticality=crit_val,
             is_compromised=False,
-            is_crown_jewel=(asset.criticality == 5),
+            is_crown_jewel=(asset.criticality >= 4 or crit_val >= 0.8),
             provenance=DataProvenance.LIVE_TELEMETRY,
             properties={
                 "ip": asset.current_ip,
@@ -341,7 +343,7 @@ class AssetDiscoveryEngine:
             id=edge_id,
             source=src.asset_id,
             target=dst.asset_id,
-            type=RelationshipType.COMMUNICATES_WITH,
+            type=RelationshipType.CONNECTED_TO,
             evidence_status=EvidenceStatus.CONFIRMED,
             confidence=event.confidence,
             weight=1.0,

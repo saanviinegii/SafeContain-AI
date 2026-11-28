@@ -1227,6 +1227,22 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('safecontain:unauthorized', onUnauthorized);
   }, []);
 
+  // Dynamic Real-Time Graph Synchronization (Requirement 4)
+  useEffect(() => {
+    if (!currentUser) return;
+    const interval = setInterval(() => {
+      // Quiet background topology sync without full-screen loading spinner
+      api.getTopology()
+        .then(t => {
+          if (t && t.nodes && t.edges) {
+            setTopology(t);
+          }
+        })
+        .catch(() => {});
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [currentUser]);
+
   const handleSelectScenario = async (scenId: string) => {
     try {
       setLoading(true);

@@ -290,16 +290,22 @@ class GraphEngine:
         if dataset_id and dataset_id != "all":
             filtered_nodes = [
                 n for n in all_nodes
-                if (n.dataset_id == dataset_id or n.properties.get("dataset_id") == dataset_id or n.properties.get("upload_batch_id") == dataset_id)
+                if (
+                    n.dataset_id == dataset_id
+                    or n.properties.get("dataset_id") == dataset_id
+                    or n.properties.get("upload_batch_id") == dataset_id
+                    or getattr(n, "provenance", None) == DataProvenance.LIVE_TELEMETRY
+                )
             ]
             node_id_set = {n.id for n in filtered_nodes}
             filtered_edges = [
                 e for e in all_edges
                 if (
-                    e.dataset_id == dataset_id or
-                    e.properties.get("dataset_id") == dataset_id or
-                    e.properties.get("upload_batch_id") == dataset_id or
-                    (e.source in node_id_set and e.target in node_id_set)
+                    e.dataset_id == dataset_id
+                    or e.properties.get("dataset_id") == dataset_id
+                    or e.properties.get("upload_batch_id") == dataset_id
+                    or (e.source in node_id_set and e.target in node_id_set)
+                    or getattr(e, "provenance", None) == DataProvenance.LIVE_TELEMETRY
                 )
             ]
             return {
